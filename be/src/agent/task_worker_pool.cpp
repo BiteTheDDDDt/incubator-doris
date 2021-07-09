@@ -1153,7 +1153,6 @@ void TaskWorkerPool::_report_disk_state_worker_thread_callback() {
             std::filesystem::path trash_path(root_path_info.path + TRASH_PREFIX);
             disk.__set_trash_used_capacity(
                     _env->storage_engine()->get_file_or_directory_size(trash_path));
-
             disk.__set_used(root_path_info.is_used);
             disks[root_path_info.path] = disk;
         }
