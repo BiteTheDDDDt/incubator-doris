@@ -164,6 +164,9 @@ set_target_properties(tcmalloc PROPERTIES IMPORTED_LOCATION
 add_library(protobuf STATIC IMPORTED)
 set_target_properties(protobuf PROPERTIES IMPORTED_LOCATION ${THIRDPARTY_DIR}/lib/libprotobuf.a)
 
+add_library(benchmark STATIC IMPORTED)
+set_target_properties(benchmark PROPERTIES IMPORTED_LOCATION ${THIRDPARTY_DIR}/lib/libbenchmark.a)
+
 add_library(protoc STATIC IMPORTED)
 set_target_properties(protoc PROPERTIES IMPORTED_LOCATION ${THIRDPARTY_DIR}/lib/libprotoc.a)
 
@@ -494,6 +497,7 @@ set(COMMON_THIRDPARTY
     gflags
     brpc
     protobuf
+    benchmark
     openssl
     crypto
     leveldb
@@ -614,6 +618,7 @@ if (${MAKE_TEST} STREQUAL "ON")
 endif ()
 
 add_subdirectory(${SRC_DIR}/agent)
+add_subdirectory(${SRC_DIR}/benchmark)
 add_subdirectory(${SRC_DIR}/common)
 add_subdirectory(${SRC_DIR}/env)
 add_subdirectory(${SRC_DIR}/exec)
@@ -626,7 +631,6 @@ add_subdirectory(${SRC_DIR}/olap)
 add_subdirectory(${SRC_DIR}/runtime)
 add_subdirectory(${SRC_DIR}/service)
 add_subdirectory(${SRC_DIR}/testutil)
-#add_subdirectory(${SRC_DIR}/tools)
 add_subdirectory(${SRC_DIR}/udf)
 add_subdirectory(${SRC_DIR}/tools)
 add_subdirectory(${SRC_DIR}/util)
