@@ -15,13 +15,32 @@
 // specific language governing permissions and limitations
 // under the License.
 
+//Tcompare: 
+//Tid: tinyint,smallint,largeint,int,bigint,char,varchar
+
 template <class Tcompare, class Tid>
 class WindowFunnelArray {
 public:
-    void add(std::pair<Tcompare, Tid> element);
-    void merge(WindowFunnelArray other);
-    void serialize(uint8_t* writer);
-    void unserialize(const uint8_t* type_reader);
+    void add(std::pair<Tcompare, Tid> element) { array.emplace_back(element); }
+    void merge(WindowFunnelArray other) { array.emplace_back(other.begin(), other.end()); }
+    uint32_t serialized_size() { return (sizeof(Tcompare) + sizeof(Tid)) * array.size()+sizeof(uint32_t); }
+
+    void serialize(uint8_t* writer) {
+        memcpy(writer,sizeof(uint32_t),size(sizeof(uint32_t)));
+        uint32_t first_size = sizeof(Tcompare);
+        uint32_t second_size = sizeof(Tid);
+        for (auto element : array) {
+            memcpy(writer, &element.first, sizeof(first_size));
+            writer += first_size;
+            memcpy(writer, &element.second, sizeof(second_size));
+            writer += second_size;
+        }
+    }
+    void unserialize(const uint8_t* type_reader)
+    {
+        uint32_t size;
+        memcpy(*size,)
+    }
     int get_max_chain_length();
 
 private:
