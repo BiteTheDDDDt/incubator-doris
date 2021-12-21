@@ -104,6 +104,18 @@ public:
 
     static StringVal percentile_approx_serialize(FunctionContext* ctx, const StringVal& state_sv);
 
+    // Implementation of window_funnel
+    static void window_funnel_init(doris_udf::FunctionContext* ctx, doris_udf::StringVal* dst);
+
+    template <typename T>
+    static void window_funnel_update(FunctionContext* ctx, const T& src, StringVal* dst);
+
+    static void window_funnel_merge(FunctionContext* ctx, const StringVal& src, StringVal* dst);
+
+    static DoubleVal window_funnel_finalize(FunctionContext* ctx, const StringVal& src);
+
+    static StringVal window_funnel_serialize(FunctionContext* ctx, const StringVal& state_sv);
+
     // Implementation of Avg.
     // TODO: Change this to use a fixed-sized BufferVal as intermediate type.
     static void avg_init(doris_udf::FunctionContext* ctx, doris_udf::StringVal* dst);

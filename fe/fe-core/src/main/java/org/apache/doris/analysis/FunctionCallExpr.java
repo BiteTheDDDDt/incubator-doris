@@ -560,6 +560,17 @@ public class FunctionCallExpr extends Expr {
                 }
             }
         }
+        
+        if (fnName.getFunction().equalsIgnoreCase("window_funnel")) {
+            if (children.size() <= 2) {
+                throw new AnalysisException(
+                        "window_funnel(expr, cond_expr..., window_size) requires least three parameters");
+            }
+            if (!getChild(children.size() - 1).isConstant()) {
+                throw new AnalysisException(
+                        "window_funnel requires window_size parameter must be a constant : " + this.toSql());
+            }
+        }
 
         if (fnName.getFunction().equalsIgnoreCase("topn")) {
             if (children.size() != 2 && children.size() != 3) {
