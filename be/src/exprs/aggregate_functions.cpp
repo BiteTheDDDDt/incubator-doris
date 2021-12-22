@@ -350,55 +350,101 @@ DoubleVal AggregateFunctions::percentile_approx_finalize(FunctionContext* ctx,
     return DoubleVal(result);
 }
 
-struct WindowFunnelData{
+template <typename T>
+struct WindowFunnelData {
+    uint32_t serialized_size() { return 0; }
 
+    void add(int cond_id, const T& timestamp) {}
+
+    void serialize(uint8_t* writer) {}
+
+    void unserialize(const uint8_t* type_reader) {}
+
+    void merge(const WindowFunnelData* other) {}
+
+    int get_result(int window_size) { return window_size; }
 };
 
+template <typename T>
 struct WindowFunnelState {
-    WindowFunnelState(int window) : data(new WindowFunnelData()),window_size(window) {}
+    WindowFunnelState(int window) : data(new WindowFunnelData<T>()), window_size(window) {}
     ~WindowFunnelState() { delete data; }
 
-    WindowFunnelData* data = nullptr;
-    int window_size=0;
+    WindowFunnelData<T>* data = nullptr;
+    int window_size = 0;
 };
 
+template <typename T>
 void AggregateFunctions::window_funnel_init(FunctionContext* ctx, StringVal* dst) {
     dst->is_null = false;
-    dst->len = sizeof(WindowFunnelState);
+    dst->len = sizeof(WindowFunnelState<T>);
 
     const AnyVal* window_size = ctx->get_constant_arg(0);
     if (window_size != nullptr) {
         int window = reinterpret_cast<const IntVal*>(window_size)->val;
-        dst->ptr = (uint8_t*)new WindowFunnelState(window);
+        dst->ptr = (uint8_t*)new WindowFunnelState<T>(window);
     }
 
-    dst->ptr = (uint8_t*)new WindowFunnelState(0);
+    dst->ptr = (uint8_t*)new WindowFunnelState<T>(0);
 };
 
 template <typename T>
-void AggregateFunctions::window_funnel_update(FunctionContext* ctx, const T& src, StringVal* dst) {
-    if (src.is_null) {
-        return;
-    }
+void AggregateFunctions::window_funnel_update(FunctionContext* ctx, const T& timestamp,
+                                              const T& window_size, int num_args,
+                                              const BooleanVal* conds, StringVal* dst) {
     DCHECK(dst->ptr != nullptr);
-    DCHECK_EQ(sizeof(WindowFunnelState), dst->len);
+    DCHECK_EQ(sizeof(WindowFunnelState<T>), dst->len);
 
-    WindowFunnelState* state = reinterpret_cast<WindowFunnelState*>(dst->ptr);
-    percentile->data->add(src.val);
+    WindowFunnelState<T>* state = reinterpret_cast<WindowFunnelState<T>*>(dst->ptr);
+    for (int i = 0; i < num_args; i++) {
+        if (conds[i] == BooleanVal(true)) {
+            state->data->add(i, timestamp);
+            break;
+        }
+    }
 }
 
-StringVal AggregateFunctions::window_funnel_serialize(FunctionContext* ctx,
-                                                          const StringVal& src) {
+template <typename T>
+StringVal AggregateFunctions::window_funnel_serialize(FunctionContext* ctx, const StringVal& src) {
     DCHECK(!src.is_null);
 
-    WindowFunnelState* percentile = reinterpret_cast<WindowFunnelState*>(src.ptr);
-    uint32_t serialized_size = percentile->data->serialized_size();
+    WindowFunnelState<T>* state = reinterpret_cast<WindowFunnelState<T>*>(src.ptr);
+    uint32_t serialized_size = state->data->serialized_size();
     StringVal result(ctx, sizeof(int) + serialized_size);
-    memcpy(result.ptr, &percentile->window_size, sizeof(int));
-    percentile->data->serialize(result.ptr + sizeof(int));
+    memcpy(result.ptr, &state->window_size, sizeof(int));
+    state->data->serialize(result.ptr + sizeof(int));
 
-    delete percentile;
+    delete state;
     return result;
+}
+
+template <typename T>
+void AggregateFunctions::window_funnel_merge(FunctionContext* ctx, const StringVal& src,
+                                             StringVal* dst) {
+    DCHECK(dst->ptr != nullptr);
+    DCHECK_EQ(sizeof(WindowFunnelState<T>), dst->len);
+
+    int window_size = 0;
+    memcpy(&window_size, src.ptr, sizeof(int));
+
+    WindowFunnelState<T>* src_state = new WindowFunnelState<T>(window_size);
+    src_state->data->unserialize(src.ptr + sizeof(int));
+
+    WindowFunnelState<T>* dst_state = reinterpret_cast<WindowFunnelState<T>*>(dst->ptr);
+    dst_state->data->merge(src_state->data);
+
+    delete src_state;
+}
+
+template <typename T>
+IntVal AggregateFunctions::window_funnel_finalize(FunctionContext* ctx, const StringVal& src) {
+    DCHECK(!src.is_null);
+
+    WindowFunnelState<T>* state = reinterpret_cast<WindowFunnelState<T>*>(src.ptr);
+    int result = state->data->get_result(state->window_size);
+
+    delete state;
+    return IntVal(result);
 }
 
 struct AvgState {
