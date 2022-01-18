@@ -189,6 +189,7 @@ void VOlapScanNode::scanner_thread(VOlapScanner* scanner) {
     int64_t raw_rows_threshold = raw_rows_read + config::doris_scanner_row_num;
     bool get_free_block = true;
 
+    Block* block = nullptr;
     while (!eos && raw_rows_read < raw_rows_threshold && get_free_block) {
         if (UNLIKELY(_transfer_done)) {
             eos = true;
@@ -197,7 +198,7 @@ void VOlapScanNode::scanner_thread(VOlapScanner* scanner) {
             break;
         }
 
-        auto block = _alloc_block(get_free_block);
+        block = block == nullptr ? _alloc_block(get_free_block) : block;
         status = scanner->get_block(_runtime_state, block, &eos);
         VLOG_ROW << "VOlapScanNode input rows: " << block->rows();
         if (!status.ok()) {
@@ -211,6 +212,7 @@ void VOlapScanNode::scanner_thread(VOlapScanner* scanner) {
         if (UNLIKELY(block->rows() == 0)) {
             std::lock_guard<std::mutex> l(_free_blocks_lock);
             _free_blocks.emplace_back(block);
+        } else if (!blocks.empty() and block->rows() + blocks.back()->rows() <= state->batch_size()) {
         } else {
             blocks.push_back(block);
         }

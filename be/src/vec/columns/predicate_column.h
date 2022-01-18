@@ -179,9 +179,16 @@ public:
         data.push_back_without_reserve(val);
     }
     
-    void insert_default_type(char* data_ptr, size_t length) {
+    void insert_default_type(const char* data_ptr, size_t length) {
         T* val = (T*)data_ptr;
         data.push_back_without_reserve(*val);
+    }
+
+    void insert_many_data(const char* __restrict data_ptr, size_t size) override {
+        const auto* __restrict datas = reinterpret_cast<const T*>(data_ptr);
+        for (int i = 0; i < size; ++i) {
+            data.push_back_without_reserve(datas[i]);
+        }
     }
 
     void insert_data(const char* data_ptr, size_t length) override {

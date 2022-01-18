@@ -403,10 +403,11 @@ public:
                 dst_col_ptr->insert_data(reinterpret_cast<char*>(&date), 0);
             }
         } else {
-            // todo(wb) batch insert here
-            for (; begin < end; begin++) {
-                dst_col_ptr->insert_data((const char*)&_chunk.data[begin * SIZE_OF_TYPE], 0);
-            }
+            dst_col_ptr->insert_many_data((const char*)&_chunk.data[begin * SIZE_OF_TYPE], max_fetch);
+//            // todo(wb) batch insert here
+//            for (; begin < end; begin++) {
+//                dst_col_ptr->insert_data((const char*)&_chunk.data[begin * SIZE_OF_TYPE], 0);
+//            }
         }
 
         *n = max_fetch;

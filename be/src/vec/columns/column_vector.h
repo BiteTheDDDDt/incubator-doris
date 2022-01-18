@@ -198,6 +198,13 @@ public:
         data.push_back(doris::vectorized::get<NearestFieldType<T>>(x));
     }
 
+    void insert_many_data(const char* __restrict data_ptr, size_t size) override {
+        const auto* __restrict datas = reinterpret_cast<const T*>(data_ptr);
+        for (int i = 0; i < size; ++i) {
+            data.push_back(datas[i]);
+        }
+    }
+
     void insert_range_from(const IColumn& src, size_t start, size_t length) override;
 
     void insert_indices_from(const IColumn& src, const int* indices_begin, const int* indices_end) override;

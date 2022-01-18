@@ -702,11 +702,7 @@ Status SegmentIterator::_read_columns(const std::vector<ColumnId>& column_ids, v
 void SegmentIterator::_init_current_block(vectorized::Block* block, std::vector<vectorized::MutableColumnPtr>& current_columns) {
     bool is_block_mem_reuse= block->mem_reuse();
     if (is_block_mem_reuse) {
-        size_t column_to_keep = _schema.num_column_ids();
-        for (int i = block->columns() - 1; i >= column_to_keep; i--) {
-            block->erase(i);
-        }
-        block->clear_column_data();
+        block->clear_column_data(_schema.num_column_ids());
     } else { // pre fill output block here
         for (size_t i = 0; i < _schema.num_column_ids(); i++) {
             auto cid = _schema.column_ids()[i];
@@ -725,7 +721,7 @@ void SegmentIterator::_init_current_block(vectorized::Block* block, std::vector<
         if (_is_pred_column[cid]) {  //todo(wb) maybe we can relase it after output block
             current_columns[cid]->clear();
         } else { // non-predicate column
-            auto &column_desc = _schema.columns()[cid];
+            auto& column_desc = _schema.columns()[cid];
             if (is_block_mem_reuse) {
                 current_columns[cid] = std::move(*block->get_by_position(i).column).mutate();
             } else {
@@ -750,12 +746,12 @@ void SegmentIterator::_output_non_pred_columns(vectorized::Block* block, bool is
     for (auto cid : _non_predicate_columns) {
         block->replace_by_position(_schema_block_id_map[cid], std::move(_current_return_columns[cid]));
     }
- }
+}
 
 void SegmentIterator::_output_column_by_sel_idx(vectorized::Block* block, std::vector<ColumnId> columnIds, 
         uint16_t* sel_rowid_idx, uint16_t select_size, bool is_block_mem_reuse) {
     for (auto cid : columnIds) {
-        auto &column_ptr = _current_return_columns[cid];
+        auto& column_ptr = _current_return_columns[cid];
         if (is_block_mem_reuse) {
             column_ptr->filter_by_selector(sel_rowid_idx, select_size, 
                 &block->get_by_position(_schema_block_id_map[cid]).column);
@@ -803,12 +799,12 @@ void SegmentIterator::_evaluate_vectorization_predicate(uint16_t* sel_rowid_idx,
         return;
     }
 
-    uint16_t original_size = selected_size;
-    bool ret_flags[selected_size];
-    memset(ret_flags, 1, selected_size);
-    _pre_eval_block_predicate->evaluate_vec(_current_return_columns, selected_size, ret_flags);
-    
-    for (uint32_t i = 0; i < selected_size; ++i) {
+    const uint16_t original_size = selected_size;
+    bool ret_flags[original_size];
+    memset(ret_flags, 1, original_size);
+    _pre_eval_block_predicate->evaluate_vec(_current_return_columns, original_size, ret_flags);
+
+    for (uint16_t i = 0; i < original_size; ++i) {
         if (ret_flags[i]) {
             sel_rowid_idx[new_size++] = i;
         }
@@ -850,7 +846,6 @@ void SegmentIterator::_read_columns_by_rowids(std::vector<ColumnId>& read_column
 
 Status SegmentIterator::next_batch(vectorized::Block* block) {
     bool is_mem_reuse = block->mem_reuse();
-    SCOPED_RAW_TIMER(&_opts.stats->block_load_ns);
     if (UNLIKELY(!_inited)) {
         RETURN_IF_ERROR(_init(true));
         _inited = true;

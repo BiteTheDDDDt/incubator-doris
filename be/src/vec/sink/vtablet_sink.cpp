@@ -154,7 +154,8 @@ int VOlapTableSink::_validate_data(doris::RuntimeState* state, doris::vectorized
 
             switch (desc->type().type) {
                 case TYPE_CHAR:
-                case TYPE_VARCHAR: {
+                case TYPE_VARCHAR:
+                case TYPE_STRING: {
                     const auto column_string = assert_cast<const vectorized::ColumnString *>(real_column_ptr.get());
 
                     for (int j = 0; j < num_rows; ++j) {
@@ -172,21 +173,6 @@ int VOlapTableSink::_validate_data(doris::RuntimeState* state, doris::vectorized
                     }
                     break;
                 }
-                    // TODO: Support TYPE_STRING in the future
-//            case TYPE_STRING: {
-//                StringValue* str_val = (StringValue*)slot;
-//                if (str_val->len > desc->type().MAX_STRING_LENGTH) {
-//                    ss << "the length of input is too long than schema. "
-//                       << "column_name: " << desc->col_name() << "; "
-//                       << "first 128 bytes of input_str: [" << std::string(str_val->ptr, 128)
-//                       << "] "
-//                       << "schema length: " << desc->type().MAX_STRING_LENGTH << "; "
-//                       << "actual length: " << str_val->len << "; ";
-//                    row_valid = false;
-//                    continue;
-//                }
-//                break;
-//            }
                 case TYPE_DECIMALV2: {
                     auto column_decimal = const_cast<vectorized::ColumnDecimal
                             <vectorized::Decimal128> *>(assert_cast<const vectorized::ColumnDecimal

@@ -171,6 +171,9 @@ public:
     /// All data will be inserted as single element
     virtual void insert_data(const char* pos, size_t length) = 0;
 
+    virtual void insert_many_data(const char* __restrict data_ptr, size_t size) {
+    }
+
     /// Appends "default value".
     /// Is used when there are need to increase column size, but inserting value doesn't make sense.
     /// For example, ColumnNullable(Nested) absolutely ignores values of nested column if it is marked as NULL.
