@@ -205,18 +205,27 @@ void VOlapScanNode::scanner_thread(VOlapScanner* scanner) {
             LOG(WARNING) << "Scan thread read OlapScanner failed: " << status.to_string();
             // Add block ptr in blocks, prevent mem leak in read failed
             blocks.push_back(block);
+            block = nullptr;
             eos = true;
             break;
         }
         // 4. if status not ok, change status_.
         if (UNLIKELY(block->rows() == 0)) {
-            std::lock_guard<std::mutex> l(_free_blocks_lock);
-            _free_blocks.emplace_back(block);
+            continue;
         } else if (!blocks.empty() and block->rows() + blocks.back()->rows() <= state->batch_size()) {
+            MutableBlock(blocks.back()).merge(*block);
+            block->clear_column_data();
         } else {
             blocks.push_back(block);
+            block = nullptr;
         }
         raw_rows_read = scanner->raw_rows_read();
+    }
+
+    if (block != nullptr) {
+        DCHECK(block->rows() == 0);
+        std::lock_guard<std::mutex> l(_free_blocks_lock);
+        _free_blocks.emplace_back(block);
     }
 
     {

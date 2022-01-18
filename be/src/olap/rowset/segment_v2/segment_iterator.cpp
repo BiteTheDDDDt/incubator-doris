@@ -19,6 +19,7 @@
 
 #include <set>
 #include <utility>
+#include <vec/columns/columns_common.h>
 
 #include "gutil/strings/substitute.h"
 #include "olap/column_predicate.h"
@@ -764,6 +765,8 @@ void SegmentIterator::_output_column_by_sel_idx(vectorized::Block* block, std::v
 
 
 Status SegmentIterator::_read_columns_by_index(uint32_t nrows_read_limit, uint32_t& nrows_read, bool set_block_rowid) {
+    if (set_block_rowid) { _block_ranges.clear(); }
+
     do {
         uint32_t range_from;
         uint32_t range_to;
@@ -780,13 +783,26 @@ Status SegmentIterator::_read_columns_by_index(uint32_t nrows_read_limit, uint32
         RETURN_IF_ERROR(_read_columns(_first_read_column_ids, _current_return_columns, rows_to_read));
         _cur_rowid += rows_to_read;
         if (set_block_rowid) {
-            for (uint32_t rid = range_from; rid < range_to; rid++) {
-                _block_rowids[nrows_read++] = rid;
+            if (_block_ranges.empty() || _block_ranges.back().second != range_from + 1) {
+                _block_ranges.emplace_back(range_from, range_to);
+            } else {
+                _block_ranges.back().second = range_to;
             }
-        } else {
-            nrows_read += rows_to_read;
         }
+        nrows_read += rows_to_read;
     } while (nrows_read < nrows_read_limit);
+
+    if (set_block_rowid) {
+        uint32_t count = 0;
+        for (auto [range_from, range_to] : _block_ranges) {
+            auto* __restrict rowids = _block_rowids.data() + count;
+            for (int i = 0; i < range_to - range_from; ++i) {
+                rowids[i] = range_from + i;
+            }
+            count += (range_to - range_from);
+        }
+
+    }
     return Status::OK();
 }
 
@@ -804,9 +820,32 @@ void SegmentIterator::_evaluate_vectorization_predicate(uint16_t* sel_rowid_idx,
     memset(ret_flags, 1, original_size);
     _pre_eval_block_predicate->evaluate_vec(_current_return_columns, original_size, ret_flags);
 
-    for (uint16_t i = 0; i < original_size; ++i) {
-        if (ret_flags[i]) {
-            sel_rowid_idx[new_size++] = i;
+    uint8_t step = 32;
+    uint8_t* ret_flag_start_ptr = reinterpret_cast<uint8_t*>(ret_flags);
+    uint8_t tail = selected_size % step;
+    uint8_t* ret_flag_end_ptr = ret_flag_start_ptr + (selected_size - tail);
+
+    uint16_t iter_count = 0;
+    while (ret_flag_start_ptr < ret_flag_end_ptr) {
+        uint32_t mask = vectorized::bytes32_mask_to_bits32_mask(ret_flag_start_ptr);
+        if (mask == 0xffffffff) {
+            for (uint16_t j = 0; j < 32; j++) {
+                sel_rowid_idx[new_size++] = iter_count + j;
+            }
+        } else if (mask != 0) {
+            while (mask) {
+                const size_t bit_pos = __builtin_ctzll(mask);
+                sel_rowid_idx[new_size++] = iter_count + bit_pos;
+                mask = mask & (mask - 1);
+            }
+        }
+        ret_flag_start_ptr += step;
+        iter_count += 32;
+    }
+
+    for (uint16_t i = 0; i < tail; ++i) {
+        if (ret_flags[iter_count + i]) {
+            sel_rowid_idx[new_size++] = iter_count + i;
         }
     }
 

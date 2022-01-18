@@ -374,19 +374,19 @@ Status UnionIterator::next_batch(RowBlockV2* block) {
     return Status::EndOfFile("End of UnionIterator");
 }
 
-RowwiseIterator* new_merge_iterator(std::vector<RowwiseIterator*> inputs, std::shared_ptr<MemTracker> parent, int sequence_id_idx) {
-    if (inputs.size() == 1) {
-        return *(inputs.begin());
-    }
-    return new MergeIterator(std::move(inputs), parent, sequence_id_idx);
-}
-
 RowwiseIterator* new_union_iterator(std::vector<RowwiseIterator*>& inputs, std::shared_ptr<MemTracker> parent) {
     if (inputs.size() == 1) {
         return *(inputs.begin());
     }
     return new UnionIterator(inputs, parent);
 }
+
+    RowwiseIterator* new_merge_iterator(std::vector<RowwiseIterator*> inputs, std::shared_ptr<MemTracker> parent, int sequence_id_idx) {
+        if (inputs.size() == 1) {
+            return *(inputs.begin());
+        }
+        return new MergeIterator(std::move(inputs), parent, sequence_id_idx);
+    }
 
 RowwiseIterator* new_auto_increment_iterator(const Schema& schema, size_t num_rows) {
     return new AutoIncrementIterator(schema, num_rows);

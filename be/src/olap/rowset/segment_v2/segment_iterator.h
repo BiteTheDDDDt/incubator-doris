@@ -128,6 +128,8 @@ private:
     // could be a local variable of next_batch(), kept here to reuse vector memory
     std::vector<rowid_t> _block_rowids;
 
+    std::vector<std::pair<uint32_t, uint32_t>> _block_ranges;
+
     // fields for vectorization execution 
     bool _is_all_column_basic_type;
     std::vector<ColumnId> _vec_pred_column_ids; // keep columnId of columns for vectorized predicate evaluation
