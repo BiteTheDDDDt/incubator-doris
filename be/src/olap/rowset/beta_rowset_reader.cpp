@@ -26,7 +26,6 @@
 #include "olap/row_cursor.h"
 #include "olap/rowset/segment_v2/segment_iterator.h"
 #include "olap/schema.h"
-
 #include "vec/core/block.h"
 #include "vec/olap/vgeneric_iterators.h"
 
@@ -97,7 +96,8 @@ OLAPStatus BetaRowsetReader::init(RowsetReaderContext* read_context) {
 
     // load segments
     RETURN_NOT_OK(SegmentLoader::instance()->load_segments(
-            _rowset, &_segment_cache_handle, read_context->reader_type == ReaderType::READER_QUERY));
+            _rowset, &_segment_cache_handle,
+            read_context->reader_type == ReaderType::READER_QUERY));
 
     // create iterator for each segment
     std::vector<std::unique_ptr<RowwiseIterator>> seg_iterators;
@@ -118,11 +118,11 @@ OLAPStatus BetaRowsetReader::init(RowsetReaderContext* read_context) {
     }
 
     // merge or union segment iterator
-    RowwiseIterator* final_iterator;
+    RowwiseIterator* final_iterator = nullptr;
     if (read_context->need_ordered_result && _rowset->rowset_meta()->is_segments_overlapping()) {
-        final_iterator = new_merge_iterator(iterators, _parent_tracker, read_context->sequence_id_idx);
+        final_iterator = vectorized::new_merge_iterator(iterators, _parent_tracker);
     } else {
-        final_iterator = new_union_iterator(iterators, _parent_tracker);
+        final_iterator = vectorized::new_union_iterator(iterators, _parent_tracker);
     }
     auto s = final_iterator->init(read_options);
     if (!s.ok()) {
@@ -178,21 +178,21 @@ OLAPStatus BetaRowsetReader::next_block(RowBlock** block) {
 
 OLAPStatus BetaRowsetReader::next_block(vectorized::Block* block) {
     SCOPED_RAW_TIMER(&_stats->block_fetch_ns);
-//    bool is_first = true;
+    //    bool is_first = true;
 
     do {
         // read next input block
         {
-//            _input_block->clear();
+            //            _input_block->clear();
             {
                 auto s = _iterator->next_batch(block);
                 if (!s.ok()) {
                     if (s.is_end_of_file()) {
-//                        if (is_first) {
-                            return OLAP_ERR_DATA_EOF;
-//                        } else {
-//                            break;
-//                        }
+                        //                        if (is_first) {
+                        return OLAP_ERR_DATA_EOF;
+                        //                        } else {
+                        //                            break;
+                        //                        }
                     } else {
                         LOG(WARNING) << "failed to read next block: " << s.to_string();
                         return OLAP_ERR_ROWSET_READ_FAILED;
@@ -205,16 +205,16 @@ OLAPStatus BetaRowsetReader::next_block(vectorized::Block* block) {
             }
         }
 
-//        {
-//            SCOPED_RAW_TIMER(&_stats->block_convert_ns);
-//            auto s = _input_block->convert_to_vec_block(block);
-//            if (UNLIKELY(!s.ok())) {
-//                LOG(WARNING) << "failed to read next block: " << s.to_string();
-//                return OLAP_ERR_STRING_OVERFLOW_IN_VEC_ENGINE;
-//            }
-//        }
-//        is_first = false;
-//    } while (block->rows() < _context->runtime_state->batch_size()); // here we should keep block.rows() < batch_size
+        //        {
+        //            SCOPED_RAW_TIMER(&_stats->block_convert_ns);
+        //            auto s = _input_block->convert_to_vec_block(block);
+        //            if (UNLIKELY(!s.ok())) {
+        //                LOG(WARNING) << "failed to read next block: " << s.to_string();
+        //                return OLAP_ERR_STRING_OVERFLOW_IN_VEC_ENGINE;
+        //            }
+        //        }
+        //        is_first = false;
+        //    } while (block->rows() < _context->runtime_state->batch_size()); // here we should keep block.rows() < batch_size
     } while (true); // here we should keep block.rows() < batch_size
 
     return OLAP_SUCCESS;
