@@ -96,6 +96,7 @@ class VectorizedRowBatch;
         void evaluate_and(vectorized::IColumn& column, uint16_t* sel, uint16_t size, bool* flags) const override {} \
         void evaluate_or(vectorized::IColumn& column, uint16_t* sel, uint16_t size, bool* flags) const override {} \
         bool is_in_predicate() override { return true; }                                                                                          \
+        std::string get_name() const override { return "InListPredicate";}         \
     private:                                                                                      \
         phmap::flat_hash_set<type> _values;                                                       \
     };

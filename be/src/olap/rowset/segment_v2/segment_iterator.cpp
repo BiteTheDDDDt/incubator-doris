@@ -117,6 +117,9 @@ SegmentIterator::~SegmentIterator() {
 Status SegmentIterator::init(const StorageReadOptions& opts) {
     _opts = opts;
     if (!opts.column_predicates.empty()) {
+        for(auto p:opts.column_predicates){
+            LOG(INFO)<<"MYTEST "<<p->get_name();
+        }
         _col_predicates = opts.column_predicates;
     }
     return Status::OK();
@@ -615,8 +618,10 @@ void SegmentIterator::_vec_init_lazy_materialization() {
                 || type == OLAP_FIELD_TYPE_DATE || predicate->is_in_predicate()) {
                 short_cir_pred_col_id_set.insert(cid);
                 _short_cir_eval_predicate.push_back(predicate);
+                LOG(INFO)<<"MYTEST _short_cir_eval_predicate"<<predicate->get_name();
                 _is_all_column_basic_type = false;
             } else {
+                LOG(INFO)<<"MYTEST vec_pred_col_id_set"<<predicate->get_name();
                 vec_pred_col_id_set.insert(predicate->column_id());
                 if (_pre_eval_block_predicate == nullptr) {
                     _pre_eval_block_predicate = new AndBlockColumnPredicate();

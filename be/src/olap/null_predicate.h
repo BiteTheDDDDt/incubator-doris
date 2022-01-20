@@ -50,6 +50,7 @@ public:
 
     void evaluate_and(vectorized::IColumn& column, uint16_t* sel, uint16_t size,
                       bool* flags) const override;
+    std::string get_name() const override { return "NullPredicate";}
 
 private:
     bool _is_null; //true for null, false for not null

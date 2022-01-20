@@ -70,6 +70,7 @@ public:
     uint32_t column_id() const { return _column_id; }
 
     virtual bool is_in_predicate() { return false; }
+    virtual std::string get_name() const { return "ColumnPredicate";}
 
 protected:
     uint32_t _column_id;
