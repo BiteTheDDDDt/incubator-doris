@@ -18,11 +18,12 @@
 // https://github.com/ClickHouse/ClickHouse/blob/master/src/AggregateFunctions/AggregateFunctionDistinct.cpp
 // and modified by Doris
 
+#include "vec/aggregate_functions/aggregate_function_distinct.h"
+
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 
 #include "vec/aggregate_functions/aggregate_function_combinator.h"
-#include "vec/aggregate_functions/aggregate_function_distinct.h"
 #include "vec/aggregate_functions/aggregate_function_simple_factory.h"
 #include "vec/aggregate_functions/helpers.h"
 #include "vec/common/typeid_cast.h"
@@ -42,13 +43,12 @@ public:
         return arguments;
     }
 
-    AggregateFunctionPtr transform_aggregate_function(const AggregateFunctionPtr& nested_function,
-                                                      const DataTypes& arguments,
-                                                      const Array& params,
-                                                      const bool result_is_nullable) const override {
+    AggregateFunctionPtr transform_aggregate_function(
+            const AggregateFunctionPtr& nested_function, const DataTypes& arguments,
+            const Array& params, const bool result_is_nullable) const override {
         DCHECK(nested_function != nullptr);
         if (nested_function == nullptr) return nullptr;
-        
+
         AggregateFunctionPtr res;
         if (arguments.size() == 1) {
             res.reset(create_with_numeric_type<AggregateFunctionDistinct,
@@ -89,7 +89,8 @@ void register_aggregate_function_combinator_distinct(AggregateFunctionSimpleFact
         }
         auto nested_function_name = name.substr(DISTINCT_FUNCTION_PREFIX.size());
         auto nested_function = factory.get(nested_function_name, transform_arguments, params);
-        return function_combinator->transform_aggregate_function(nested_function, types, params, result_is_nullable);
+        return function_combinator->transform_aggregate_function(nested_function, types, params,
+                                                                 result_is_nullable);
     };
     factory.register_distinct_function_combinator(creator, DISTINCT_FUNCTION_PREFIX);
 }

@@ -18,7 +18,6 @@
 #pragma once
 
 #include "exprs/table_function/table_function.h"
-
 #include "util/bitmap_value.h"
 
 namespace doris {
@@ -41,7 +40,6 @@ private:
     void _reset_iterator();
 
 private:
-
     // Read from tuple row.
     // if _cur_bitmap_owned is true, need to delete it when deconstruction
     BitmapValue* _cur_bitmap = nullptr;

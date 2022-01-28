@@ -25,8 +25,8 @@
 #include "vec/columns/column.h"
 #include "vec/columns/column_impl.h"
 #include "vec/columns/column_vector_helper.h"
-#include "vec/common/typeid_cast.h"
 #include "vec/common/assert_cast.h"
+#include "vec/common/typeid_cast.h"
 #include "vec/core/field.h"
 
 namespace doris::vectorized {
@@ -97,7 +97,8 @@ public:
         data.push_back(static_cast<const Self&>(src).get_data()[n]);
     }
 
-    void insert_indices_from(const IColumn& src, const int* indices_begin, const int* indices_end) override {
+    void insert_indices_from(const IColumn& src, const int* indices_begin,
+                             const int* indices_end) override {
         const Self& src_vec = assert_cast<const Self&>(src);
         data.reserve(size() + (indices_end - indices_begin));
         for (auto x = indices_begin; x != indices_end; ++x) {

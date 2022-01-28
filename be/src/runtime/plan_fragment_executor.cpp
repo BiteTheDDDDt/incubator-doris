@@ -36,12 +36,11 @@
 #include "runtime/row_batch.h"
 #include "util/container_util.hpp"
 #include "util/cpu_info.h"
+#include "util/logging.h"
 #include "util/mem_info.h"
 #include "util/parse_util.h"
 #include "util/pretty_printer.h"
 #include "util/uid_util.h"
-#include "util/logging.h"
-
 #include "vec/core/block.h"
 #include "vec/exec/vexchange_node.h"
 #include "vec/runtime/vdata_stream_mgr.h"
@@ -74,10 +73,12 @@ Status PlanFragmentExecutor::prepare(const TExecPlanFragmentParams& request,
     const TPlanFragmentExecParams& params = request.params;
     _query_id = params.query_id;
 
-    TAG(LOG(INFO)).log("PlanFragmentExecutor::prepare")
-                  .query_id(_query_id).instance_id(params.fragment_instance_id)
-                  .tag("backend_num", std::to_string(request.backend_num))
-                  .tag("pthread_id", std::to_string((uintptr_t) pthread_self()));
+    TAG(LOG(INFO))
+            .log("PlanFragmentExecutor::prepare")
+            .query_id(_query_id)
+            .instance_id(params.fragment_instance_id)
+            .tag("backend_num", std::to_string(request.backend_num))
+            .tag("pthread_id", std::to_string((uintptr_t)pthread_self()));
     // VLOG_CRITICAL << "request:\n" << apache::thrift::ThriftDebugString(request);
 
     const TQueryGlobals& query_globals =
@@ -233,9 +234,12 @@ Status PlanFragmentExecutor::prepare(const TExecPlanFragmentParams& request,
 
 Status PlanFragmentExecutor::open() {
     int64_t mem_limit = _runtime_state->fragment_mem_tracker()->limit();
-    TAG(LOG(INFO)).log("PlanFragmentExecutor::open, using query memory limit: " + PrettyPrinter::print(mem_limit, TUnit::BYTES))
-                  .query_id(_query_id).instance_id(_runtime_state->fragment_instance_id())
-                  .tag("mem_limit", std::to_string(mem_limit));
+    TAG(LOG(INFO))
+            .log("PlanFragmentExecutor::open, using query memory limit: " +
+                 PrettyPrinter::print(mem_limit, TUnit::BYTES))
+            .query_id(_query_id)
+            .instance_id(_runtime_state->fragment_instance_id())
+            .tag("mem_limit", std::to_string(mem_limit));
 
     // we need to start the profile-reporting thread before calling Open(), since it
     // may block
@@ -288,7 +292,7 @@ Status PlanFragmentExecutor::open_vectorized_internal() {
 
         if (block == NULL) {
             break;
-        } 
+        }
 
         SCOPED_TIMER(profile()->total_time_counter());
         SCOPED_CPU_TIMER(_fragment_cpu_timer);
@@ -437,7 +441,8 @@ void PlanFragmentExecutor::_collect_query_statistics() {
 
 void PlanFragmentExecutor::_collect_node_statistics() {
     DCHECK(_runtime_state->backend_id() != -1);
-    NodeStatistics* node_statistics = _query_statistics->add_nodes_statistics(_runtime_state->backend_id());
+    NodeStatistics* node_statistics =
+            _query_statistics->add_nodes_statistics(_runtime_state->backend_id());
     node_statistics->add_peak_memory(_mem_tracker->peak_consumption());
 }
 
@@ -450,7 +455,6 @@ void PlanFragmentExecutor::report_profile() {
     std::unique_lock<std::mutex> l(_report_thread_lock);
     // tell Open() that we started
     _report_thread_started_cv.notify_one();
-
 
     // Jitter the reporting time of remote fragments by a random amount between
     // 0 and the report_interval.  This way, the coordinator doesn't get all the
@@ -545,8 +549,10 @@ Status PlanFragmentExecutor::get_next(RowBatch** batch) {
     update_status(status);
 
     if (_done) {
-        TAG(LOG(INFO)).log("PlanFragmentExecutor::get_next finished")
-                      .query_id(_query_id).instance_id(_runtime_state->fragment_instance_id());
+        TAG(LOG(INFO))
+                .log("PlanFragmentExecutor::get_next finished")
+                .query_id(_query_id)
+                .instance_id(_runtime_state->fragment_instance_id());
         // Query is done, return the thread token
         stop_report_thread();
         send_report(true);
@@ -604,8 +610,10 @@ void PlanFragmentExecutor::update_status(const Status& new_status) {
 }
 
 void PlanFragmentExecutor::cancel() {
-    TAG(LOG(INFO)).log("PlanFragmentExecutor::cancel")
-                  .query_id(_query_id).instance_id(_runtime_state->fragment_instance_id());
+    TAG(LOG(INFO))
+            .log("PlanFragmentExecutor::cancel")
+            .query_id(_query_id)
+            .instance_id(_runtime_state->fragment_instance_id());
     DCHECK(_prepared);
     _runtime_state->set_is_cancelled(true);
 

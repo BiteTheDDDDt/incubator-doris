@@ -39,14 +39,14 @@ inline Int64 date_time_add(const Int64& t, Int64 delta, bool& is_null) {
     return binary_cast<doris::vectorized::VecDateTimeValue, Int64>(ts_value);
 }
 
-#define ADD_TIME_FUNCTION_IMPL(CLASS, NAME, UNIT)                                   \
-    struct CLASS {                                                                  \
-        using ReturnType = DataTypeDateTime;                                        \
-        static constexpr auto name = #NAME;                                         \
-        static constexpr auto is_nullable = true;                                   \
+#define ADD_TIME_FUNCTION_IMPL(CLASS, NAME, UNIT)                                 \
+    struct CLASS {                                                                \
+        using ReturnType = DataTypeDateTime;                                      \
+        static constexpr auto name = #NAME;                                       \
+        static constexpr auto is_nullable = true;                                 \
         static inline Int64 execute(const Int64& t, Int64 delta, bool& is_null) { \
-            return date_time_add<TimeUnit::UNIT>(t, delta, is_null);                \
-        }                                                                           \
+            return date_time_add<TimeUnit::UNIT>(t, delta, is_null);              \
+        }                                                                         \
     }
 
 ADD_TIME_FUNCTION_IMPL(AddSecondsImpl, seconds_add, SECOND);
@@ -124,17 +124,17 @@ struct TimeDiffImpl {
     }
 };
 
-#define TIME_DIFF_FUNCTION_IMPL(CLASS, NAME, UNIT)                                         \
-    struct CLASS {                                                                         \
-        using ReturnType = DataTypeInt64;                                                  \
-        static constexpr auto name = #NAME;                                                \
-        static constexpr auto is_nullable = false;                                         \
-        static inline int64_t execute(const Int64& t0, const Int64& t1, bool& is_null) { \
-            const auto& ts0 = reinterpret_cast<const doris::vectorized::VecDateTimeValue&>(t0);           \
-            const auto& ts1 = reinterpret_cast<const doris::vectorized::VecDateTimeValue&>(t1);           \
-            is_null = !ts0.is_valid_date() || !ts1.is_valid_date();                         \
-            return VecDateTimeValue::datetime_diff<TimeUnit::UNIT>(ts1, ts0);                 \
-        }                                                                                  \
+#define TIME_DIFF_FUNCTION_IMPL(CLASS, NAME, UNIT)                                              \
+    struct CLASS {                                                                              \
+        using ReturnType = DataTypeInt64;                                                       \
+        static constexpr auto name = #NAME;                                                     \
+        static constexpr auto is_nullable = false;                                              \
+        static inline int64_t execute(const Int64& t0, const Int64& t1, bool& is_null) {        \
+            const auto& ts0 = reinterpret_cast<const doris::vectorized::VecDateTimeValue&>(t0); \
+            const auto& ts1 = reinterpret_cast<const doris::vectorized::VecDateTimeValue&>(t1); \
+            is_null = !ts0.is_valid_date() || !ts1.is_valid_date();                             \
+            return VecDateTimeValue::datetime_diff<TimeUnit::UNIT>(ts1, ts0);                   \
+        }                                                                                       \
     }
 
 TIME_DIFF_FUNCTION_IMPL(YearsDiffImpl, years_diff, YEAR);
@@ -174,7 +174,7 @@ struct DateTimeOp {
 
         for (size_t i = 0; i < size; ++i)
             vec_to[i] = Transform::execute(vec_from0[i], vec_from1[i],
-                    reinterpret_cast<bool&>(null_map[i]));
+                                           reinterpret_cast<bool&>(null_map[i]));
     }
 
     // use for (DateTime, const DateTime) -> other_type
@@ -252,12 +252,12 @@ struct DateTimeAddIntervalImpl {
                 }
             } else {
                 if (const auto* delta_vec_column0 =
-                        check_and_get_column<ColumnVector<FromType>>(delta_column)) {
+                            check_and_get_column<ColumnVector<FromType>>(delta_column)) {
                     Op::vector_vector(sources->get_data(), delta_vec_column0->get_data(),
                                       col_to->get_data(), null_map->get_data());
                 } else {
                     const auto* delta_vec_column1 =
-                        check_and_get_column<ColumnVector<Int32>>(delta_column);
+                            check_and_get_column<ColumnVector<Int32>>(delta_column);
                     DCHECK(delta_vec_column1 != nullptr);
                     Op::vector_vector(sources->get_data(), delta_vec_column1->get_data(),
                                       col_to->get_data(), null_map->get_data());
@@ -265,7 +265,7 @@ struct DateTimeAddIntervalImpl {
             }
 
             block.get_by_position(result).column =
-                        ColumnNullable::create(std::move(col_to), std::move(null_map));
+                    ColumnNullable::create(std::move(col_to), std::move(null_map));
         } else if (const auto* sources_const =
                            check_and_get_column_const<ColumnVector<FromType>>(source_col.get())) {
             auto col_to = ColumnVector<ToType>::create();
@@ -282,7 +282,7 @@ struct DateTimeAddIntervalImpl {
                                     *block.get_by_position(arguments[1]).column);
             }
             block.get_by_position(result).column =
-                        ColumnNullable::create(std::move(col_to), std::move(null_map));
+                    ColumnNullable::create(std::move(col_to), std::move(null_map));
         } else {
             return Status::RuntimeError(fmt::format(
                     "Illegal column {} of first argument of function {}",
@@ -374,7 +374,7 @@ public:
     }
 };
 
-template<typename FunctionName>
+template <typename FunctionName>
 struct CurrentDateTimeImpl {
     using ReturnType = DataTypeDateTime;
     static constexpr auto name = FunctionName::name;
@@ -387,13 +387,13 @@ struct CurrentDateTimeImpl {
             reinterpret_cast<VecDateTimeValue*>(&dtv)->set_type(TIME_DATETIME);
             auto date_packed_int = binary_cast<doris::vectorized::VecDateTimeValue, int64_t>(
                     *reinterpret_cast<VecDateTimeValue*>(&dtv));
-            for (int i = 0; i < input_rows_count; i ++) {
+            for (int i = 0; i < input_rows_count; i++) {
                 col_to->insert_data(
                         const_cast<const char*>(reinterpret_cast<char*>(&date_packed_int)), 0);
             }
         } else {
             auto invalid_val = 0;
-            for (int i = 0; i < input_rows_count; i ++) {
+            for (int i = 0; i < input_rows_count; i++) {
                 col_to->insert_data(const_cast<const char*>(reinterpret_cast<char*>(&invalid_val)),
                                     0);
             }
@@ -403,7 +403,7 @@ struct CurrentDateTimeImpl {
     }
 };
 
-template<typename FunctionName>
+template <typename FunctionName>
 struct CurrentDateImpl {
     using ReturnType = DataTypeDate;
     static constexpr auto name = FunctionName::name;
@@ -416,13 +416,13 @@ struct CurrentDateImpl {
             reinterpret_cast<VecDateTimeValue*>(&dtv)->set_type(TIME_DATE);
             auto date_packed_int = binary_cast<doris::vectorized::VecDateTimeValue, int64_t>(
                     *reinterpret_cast<VecDateTimeValue*>(&dtv));
-            for (int i = 0; i < input_rows_count; i ++) {
+            for (int i = 0; i < input_rows_count; i++) {
                 col_to->insert_data(
                         const_cast<const char*>(reinterpret_cast<char*>(&date_packed_int)), 0);
             }
         } else {
             auto invalid_val = 0;
-            for (int i = 0; i < input_rows_count; i ++) {
+            for (int i = 0; i < input_rows_count; i++) {
                 col_to->insert_data(const_cast<const char*>(reinterpret_cast<char*>(&invalid_val)),
                                     0);
             }
@@ -432,7 +432,7 @@ struct CurrentDateImpl {
     }
 };
 
-template<typename FunctionName>
+template <typename FunctionName>
 struct CurrentTimeImpl {
     using ReturnType = DataTypeFloat64;
     static constexpr auto name = FunctionName::name;
@@ -443,12 +443,12 @@ struct CurrentTimeImpl {
         if (dtv.from_unixtime(context->impl()->state()->timestamp_ms() / 1000,
                               context->impl()->state()->timezone_obj())) {
             double time = dtv.hour() * 3600 + dtv.minute() * 60 + dtv.second();
-            for (int i = 0; i < input_rows_count; i ++) {
+            for (int i = 0; i < input_rows_count; i++) {
                 col_to->insert_data(const_cast<const char*>(reinterpret_cast<char*>(&time)), 0);
             }
         } else {
             auto invalid_val = 0;
-            for (int i = 0; i < input_rows_count; i ++) {
+            for (int i = 0; i < input_rows_count; i++) {
                 col_to->insert_data(const_cast<const char*>(reinterpret_cast<char*>(&invalid_val)),
                                     0);
             }
@@ -469,13 +469,13 @@ struct UtcTimestampImpl {
             reinterpret_cast<VecDateTimeValue*>(&dtv)->set_type(TIME_DATETIME);
             auto date_packed_int = binary_cast<doris::vectorized::VecDateTimeValue, int64_t>(
                     *reinterpret_cast<VecDateTimeValue*>(&dtv));
-            for (int i = 0; i < input_rows_count; i ++) {
+            for (int i = 0; i < input_rows_count; i++) {
                 col_to->insert_data(
                         const_cast<const char*>(reinterpret_cast<char*>(&date_packed_int)), 0);
             }
         } else {
             auto invalid_val = 0;
-            for (int i = 0; i < input_rows_count; i ++) {
+            for (int i = 0; i < input_rows_count; i++) {
                 col_to->insert_data(const_cast<const char*>(reinterpret_cast<char*>(&invalid_val)),
                                     0);
             }

@@ -22,17 +22,17 @@ set(LIBRARY_OUTPUT_PATH "${BUILD_DIR}/src/tools")
 set(EXECUTABLE_OUTPUT_PATH "${BUILD_DIR}/src/tools")
 
 add_executable(meta_tool
-    meta_tool.cpp
-)
+        meta_tool.cpp
+        )
 
 # This permits libraries loaded by dlopen to link to the symbols in the program.
 set_target_properties(meta_tool PROPERTIES ENABLE_EXPORTS 1)
 
 target_link_libraries(meta_tool
-    ${DORIS_LINK_LIBS}
-)
+        ${DORIS_LINK_LIBS}
+        )
 
 install(DIRECTORY DESTINATION ${OUTPUT_DIR}/lib/)
 
 install(TARGETS meta_tool
-    DESTINATION ${OUTPUT_DIR}/lib/)
+        DESTINATION ${OUTPUT_DIR}/lib/)

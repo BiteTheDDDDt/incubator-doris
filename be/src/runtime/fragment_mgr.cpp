@@ -82,7 +82,6 @@ public:
     FragmentExecState(const TUniqueId& query_id, const TUniqueId& instance_id, int backend_num,
                       ExecEnv* exec_env, const TNetworkAddress& coord_addr);
 
-
     Status prepare(const TExecPlanFragmentParams& params);
 
     // just no use now
@@ -165,7 +164,6 @@ private:
 
     int _timeout_second;
 
-
     // This context is shared by all fragments of this host in a query
     std::shared_ptr<QueryFragmentsCtx> _fragments_ctx;
 
@@ -206,7 +204,6 @@ FragmentExecState::FragmentExecState(const TUniqueId& query_id,
           _timeout_second(-1) {
     _start_time = DateTimeValue::local_time();
 }
-
 
 Status FragmentExecState::prepare(const TExecPlanFragmentParams& params) {
     if (params.__isset.query_options) {
@@ -635,9 +632,9 @@ Status FragmentMgr::exec_plan_fragment(const TExecPlanFragmentParams& params, Fi
             _fragment_map.erase(params.params.fragment_instance_id);
         }
         exec_state->cancel_before_execute();
-        return Status::InternalError(strings::Substitute(
-                "Put planfragment to thread pool failed. err = $0, BE: $1",
-                st.get_error_msg(), BackendOptions::get_localhost()));
+        return Status::InternalError(
+                strings::Substitute("Put planfragment to thread pool failed. err = $0, BE: $1",
+                                    st.get_error_msg(), BackendOptions::get_localhost()));
     }
 
     return Status::OK();

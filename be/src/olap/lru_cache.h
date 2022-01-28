@@ -368,37 +368,3 @@ public:
     virtual ~ShardedLRUCache();
     virtual Handle* insert(const CacheKey& key, void* value, size_t charge,
                            void (*deleter)(const CacheKey& key, void* value),
-                           CachePriority priority = CachePriority::NORMAL);
-    virtual Handle* lookup(const CacheKey& key);
-    virtual void release(Handle* handle);
-    virtual void erase(const CacheKey& key);
-    virtual void* value(Handle* handle);
-    Slice value_slice(Handle* handle) override;
-    virtual uint64_t new_id();
-    virtual int64_t prune();
-    virtual int64_t prune_if(CacheValuePredicate pred);
-
-private:
-    void update_cache_metrics() const;
-
-private:
-    static inline uint32_t _hash_slice(const CacheKey& s);
-    static uint32_t _shard(uint32_t hash);
-
-    std::string _name;
-    LRUCache* _shards[kNumShards];
-    std::atomic<uint64_t> _last_id;
-
-    std::shared_ptr<MemTracker> _mem_tracker;
-    std::shared_ptr<MetricEntity> _entity = nullptr;
-    IntGauge* capacity = nullptr;
-    IntGauge* usage = nullptr;
-    DoubleGauge* usage_ratio = nullptr;
-    IntAtomicCounter* lookup_count = nullptr;
-    IntAtomicCounter* hit_count = nullptr;
-    DoubleGauge* hit_ratio = nullptr;
-};
-
-} // namespace doris
-
-#endif // DORIS_BE_SRC_OLAP_LRU_CACHE_H

@@ -26,36 +26,23 @@ namespace doris {
 
 class VectorizedRowBatch;
 
-#define COMPARISON_PRED_CLASS_DEFINE(CLASS)                                                   \
-    template <class type>                                                                     \
-    class CLASS : public ColumnPredicate {                                                    \
-    public:                                                                                   \
-        CLASS(uint32_t column_id, const type& value, bool opposite = false);                  \
-        virtual void evaluate(VectorizedRowBatch* batch) const override;                      \
-        void evaluate(ColumnBlock* block, uint16_t* sel, uint16_t* size) const override;      \
-        void evaluate_or(ColumnBlock* block, uint16_t* sel, uint16_t size,                    \
-                         bool* flags) const override;                                         \
-        void evaluate_and(ColumnBlock* block, uint16_t* sel, uint16_t size,                   \
-                          bool* flags) const override;                                        \
-        virtual Status evaluate(const Schema& schema,                                         \
-                                const std::vector<BitmapIndexIterator*>& iterators,           \
-                                uint32_t num_rows, roaring::Roaring* roaring) const override; \
+#define COMPARISON_PRED_CLASS_DEFINE(CLASS)                                                       \
+    template <class type>                                                                         \
+    class CLASS : public ColumnPredicate {                                                        \
+    public:                                                                                       \
+        CLASS(uint32_t column_id, const type& value, bool opposite = false);                      \
+        virtual void evaluate(VectorizedRowBatch* batch) const override;                          \
+        void evaluate(ColumnBlock* block, uint16_t* sel, uint16_t* size) const override;          \
+        void evaluate_or(ColumnBlock* block, uint16_t* sel, uint16_t size,                        \
+                         bool* flags) const override;                                             \
+        void evaluate_and(ColumnBlock* block, uint16_t* sel, uint16_t size,                       \
+                          bool* flags) const override;                                            \
+        virtual Status evaluate(const Schema& schema,                                             \
+                                const std::vector<BitmapIndexIterator*>& iterators,               \
+                                uint32_t num_rows, roaring::Roaring* roaring) const override;     \
         void evaluate(vectorized::IColumn& column, uint16_t* sel, uint16_t* size) const override; \
-        void evaluate_and(vectorized::IColumn& column, uint16_t* sel, uint16_t size, bool* flags) const override; \
-        void evaluate_or(vectorized::IColumn& column, uint16_t* sel, uint16_t size, bool* flags) const override; \
-        void evaluate_vec(vectorized::IColumn& column, uint16_t size, bool* flags) const override; \
-                                                                                              \
-    private:                                                                                  \
-        type _value;                                                                          \
-    };
-
-COMPARISON_PRED_CLASS_DEFINE(EqualPredicate)
-COMPARISON_PRED_CLASS_DEFINE(NotEqualPredicate)
-COMPARISON_PRED_CLASS_DEFINE(LessPredicate)
-COMPARISON_PRED_CLASS_DEFINE(LessEqualPredicate)
-COMPARISON_PRED_CLASS_DEFINE(GreaterPredicate)
-COMPARISON_PRED_CLASS_DEFINE(GreaterEqualPredicate)
-
-} //namespace doris
-
-#endif //DORIS_BE_SRC_OLAP_COMPARISON_PREDICATE_H
+        void evaluate_and(vectorized::IColumn& column, uint16_t* sel, uint16_t size,              \
+                          bool* flags) const override;                                            \
+        void evaluate_or(vectorized::IColumn& column, uint16_t* sel, uint16_t size,               \
+                         bool* flags) const override;                                             \
+        void evaluate_vec(vectorized::IColumn& column, uint16_t size, bool* flags) c

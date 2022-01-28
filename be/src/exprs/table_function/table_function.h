@@ -23,8 +23,7 @@ namespace doris {
 
 // TODO: think about how to manager memeory consumption of table functions.
 // Currently, the memory allocated from table function is from malloc directly.
-class TableFunctionState {
-};
+class TableFunctionState {};
 
 class ExprContext;
 class TupleRow;
@@ -39,14 +38,12 @@ public:
     virtual Status get_value(void** output) = 0;
     virtual Status close() = 0;
 
-    virtual Status forward(bool *eos) = 0;
+    virtual Status forward(bool* eos) = 0;
 
 public:
     bool eos() const { return _eos; }
 
-    void set_expr_context(ExprContext* expr_context) {
-        _expr_context = expr_context;
-    }
+    void set_expr_context(ExprContext* expr_context) { _expr_context = expr_context; }
 
 protected:
     std::string _fn_name;

@@ -226,18 +226,18 @@ std::unique_ptr<BaseScanner> BrokerScanNode::create_scanner(const TBrokerScanRan
         break;
     case TFileFormatType::FORMAT_ORC:
         scan = new ORCScanner(_runtime_state, runtime_profile(), scan_range.params,
-                              scan_range.ranges, scan_range.broker_addresses,
-                              _pre_filter_texprs, counter);
+                              scan_range.ranges, scan_range.broker_addresses, _pre_filter_texprs,
+                              counter);
         break;
     case TFileFormatType::FORMAT_JSON:
         scan = new JsonScanner(_runtime_state, runtime_profile(), scan_range.params,
-                               scan_range.ranges, scan_range.broker_addresses,
-                               _pre_filter_texprs, counter);
+                               scan_range.ranges, scan_range.broker_addresses, _pre_filter_texprs,
+                               counter);
         break;
     default:
         scan = new BrokerScanner(_runtime_state, runtime_profile(), scan_range.params,
-                                 scan_range.ranges, scan_range.broker_addresses,
-                                 _pre_filter_texprs, counter);
+                                 scan_range.ranges, scan_range.broker_addresses, _pre_filter_texprs,
+                                 counter);
     }
     std::unique_ptr<BaseScanner> scanner(scan);
     return scanner;
@@ -273,7 +273,7 @@ Status BrokerScanNode::scanner_scan(const TBrokerScanRange& scan_range,
             }
 
             // This row batch has been filled up, and break this
-            if (row_batch->is_full() || row_batch->is_full_uncommited() ) {
+            if (row_batch->is_full() || row_batch->is_full_uncommited()) {
                 break;
             }
 
@@ -290,7 +290,7 @@ Status BrokerScanNode::scanner_scan(const TBrokerScanRange& scan_range,
                 continue;
             }
 
-            // if read row succeed, but fill dest tuple fail, we need to increase # of uncommitted rows, 
+            // if read row succeed, but fill dest tuple fail, we need to increase # of uncommitted rows,
             // once reach the capacity of row batch, will transfer the row batch to next operator to release memory
             if (!tuple_fill) {
                 row_batch->increase_uncommitted_rows();

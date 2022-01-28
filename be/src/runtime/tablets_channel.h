@@ -54,14 +54,16 @@ class OlapTableSchemaParam;
 // Write channel for a particular (load, index).
 class TabletsChannel {
 public:
-    TabletsChannel(const TabletsChannelKey& key, const std::shared_ptr<MemTracker>& mem_tracker, bool is_high_priority);
+    TabletsChannel(const TabletsChannelKey& key, const std::shared_ptr<MemTracker>& mem_tracker,
+                   bool is_high_priority);
 
     ~TabletsChannel();
 
     Status open(const PTabletWriterOpenRequest& request);
 
     // no-op when this channel has been closed or cancelled
-    Status add_batch(const PTabletWriterAddBatchRequest& request, PTabletWriterAddBatchResult* response);
+    Status add_batch(const PTabletWriterAddBatchRequest& request,
+                     PTabletWriterAddBatchResult* response);
 
     // Mark sender with 'sender_id' as closed.
     // If all senders are closed, close this channel, set '*finished' to true, update 'tablet_vec'

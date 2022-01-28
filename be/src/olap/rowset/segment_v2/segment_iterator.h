@@ -89,15 +89,21 @@ private:
                          size_t row_offset, size_t nrows);
 
     // for vectorization implementation
-    Status _read_columns(const std::vector<ColumnId>& column_ids, vectorized::MutableColumns& column_block, size_t nrows);
-    Status _read_columns_by_index(uint32_t nrows_read_limit, uint32_t& nrows_read, bool set_block_rowid);
-    void _init_current_block(vectorized::Block* block, std::vector<vectorized::MutableColumnPtr>& non_pred_vector);
+    Status _read_columns(const std::vector<ColumnId>& column_ids,
+                         vectorized::MutableColumns& column_block, size_t nrows);
+    Status _read_columns_by_index(uint32_t nrows_read_limit, uint32_t& nrows_read,
+                                  bool set_block_rowid);
+    void _init_current_block(vectorized::Block* block,
+                             std::vector<vectorized::MutableColumnPtr>& non_pred_vector);
     void _evaluate_vectorization_predicate(uint16_t* sel_rowid_idx, uint16_t& selected_size);
     void _evaluate_short_circuit_predicate(uint16_t* sel_rowid_idx, uint16_t* selected_size);
     void _output_non_pred_columns(vectorized::Block* block, bool is_block_mem_reuse);
-    void _output_column_by_sel_idx(vectorized::Block* block, const std::vector<ColumnId>& columnids, uint16_t* sel_rowid_idx, uint16_t select_size, bool is_block_mem_reuse);
-    void _read_columns_by_rowids(std::vector<ColumnId>& read_column_ids, std::vector<rowid_t>& rowid_vector, 
-        uint16_t* sel_rowid_idx, size_t select_size, vectorized::MutableColumns* mutable_columns);
+    void _output_column_by_sel_idx(vectorized::Block* block, const std::vector<ColumnId>& columnids,
+                                   uint16_t* sel_rowid_idx, uint16_t select_size,
+                                   bool is_block_mem_reuse);
+    void _read_columns_by_rowids(std::vector<ColumnId>& read_column_ids,
+                                 std::vector<rowid_t>& rowid_vector, uint16_t* sel_rowid_idx,
+                                 size_t select_size, vectorized::MutableColumns* mutable_columns);
 
 private:
     class BitmapRangeIterator;
@@ -128,11 +134,13 @@ private:
     // could be a local variable of next_batch(), kept here to reuse vector memory
     std::vector<rowid_t> _block_rowids;
 
-    // fields for vectorization execution 
+    // fields for vectorization execution
     bool _is_all_column_basic_type;
-    std::vector<ColumnId> _vec_pred_column_ids; // keep columnId of columns for vectorized predicate evaluation
-    std::vector<ColumnId> _short_cir_pred_column_ids; // keep columnId of columns for short circuit predicate evaluation
-    vector<bool> _is_pred_column; // columns hold by segmentIter
+    std::vector<ColumnId>
+            _vec_pred_column_ids; // keep columnId of columns for vectorized predicate evaluation
+    std::vector<ColumnId>
+            _short_cir_pred_column_ids; // keep columnId of columns for short circuit predicate evaluation
+    vector<bool> _is_pred_column;       // columns hold by segmentIter
     vectorized::MutableColumns _current_return_columns;
     AndBlockColumnPredicate* _pre_eval_block_predicate = nullptr;
     std::vector<ColumnPredicate*> _short_cir_eval_predicate;

@@ -25,7 +25,6 @@
 
 #include "runtime/datetime_value.h"
 #include "util/binary_cast.hpp"
-
 #include "vec/common/nan_utils.h"
 #include "vec/common/uint128.h"
 #include "vec/core/types.h"
@@ -488,9 +487,7 @@ struct EqualsOp {
 
 template <>
 struct EqualsOp<VecDateTimeValue, VecDateTimeValue> {
-    static UInt8 apply(const Int64& a, const Int64& b) {
-        return a == b;
-    }
+    static UInt8 apply(const Int64& a, const Int64& b) { return a == b; }
 };
 
 template <typename A, typename B>
@@ -501,9 +498,7 @@ struct NotEqualsOp {
 
 template <>
 struct NotEqualsOp<VecDateTimeValue, VecDateTimeValue> {
-    static UInt8 apply(const Int64& a, const Int64& b) {
-        return a != b;
-    }
+    static UInt8 apply(const Int64& a, const Int64& b) { return a != b; }
 };
 
 template <typename A, typename B>

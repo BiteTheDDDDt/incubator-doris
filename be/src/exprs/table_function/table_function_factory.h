@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include "exprs/table_function/table_function_factory.h"
-#include "exprs/table_function/explode_split.h"
-
 #include "common/status.h"
+#include "exprs/table_function/explode_split.h"
+#include "exprs/table_function/table_function_factory.h"
 
 namespace doris {
 
@@ -30,7 +29,7 @@ class TableFunctionFactory {
 public:
     TableFunctionFactory() {}
     ~TableFunctionFactory() {}
-    static Status get_fn(const std::string& fn_name, ObjectPool* pool, TableFunction** fn); 
+    static Status get_fn(const std::string& fn_name, ObjectPool* pool, TableFunction** fn);
 };
 
 } // namespace doris

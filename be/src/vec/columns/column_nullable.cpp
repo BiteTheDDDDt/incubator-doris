@@ -131,10 +131,13 @@ void ColumnNullable::insert_range_from(const IColumn& src, size_t start, size_t 
     get_nested_column().insert_range_from(*nullable_col.nested_column, start, length);
 }
 
-void ColumnNullable::insert_indices_from(const IColumn& src, const int* indices_begin, const int* indices_end) {
+void ColumnNullable::insert_indices_from(const IColumn& src, const int* indices_begin,
+                                         const int* indices_end) {
     const ColumnNullable& src_concrete = assert_cast<const ColumnNullable&>(src);
-    get_nested_column().insert_indices_from(src_concrete.get_nested_column(), indices_begin, indices_end);
-    get_null_map_column().insert_indices_from(src_concrete.get_null_map_column(), indices_begin, indices_end);
+    get_nested_column().insert_indices_from(src_concrete.get_nested_column(), indices_begin,
+                                            indices_end);
+    get_null_map_column().insert_indices_from(src_concrete.get_null_map_column(), indices_begin,
+                                              indices_end);
 }
 
 void ColumnNullable::insert(const Field& x) {
@@ -184,7 +187,8 @@ ColumnPtr ColumnNullable::filter(const Filter& filt, ssize_t result_size_hint) c
 
 ColumnPtr ColumnNullable::filter_by_selector(const uint16_t* sel, size_t sel_size, ColumnPtr* ptr) {
     if (ptr != nullptr) {
-        const ColumnNullable* nullable_col_ptr = reinterpret_cast<const ColumnNullable*>((*ptr).get());
+        const ColumnNullable* nullable_col_ptr =
+                reinterpret_cast<const ColumnNullable*>((*ptr).get());
         ColumnPtr nest_col_ptr = nullable_col_ptr->nested_column;
         ColumnPtr null_map_ptr = nullable_col_ptr->null_map;
         get_nested_column().filter_by_selector(sel, sel_size, &nest_col_ptr);

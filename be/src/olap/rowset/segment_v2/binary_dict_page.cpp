@@ -21,9 +21,9 @@
 #include "gutil/strings/substitute.h" // for Substitute
 #include "runtime/mem_pool.h"
 #include "util/slice.h" // for Slice
-#include "vec/columns/column_vector.h"
-#include "vec/columns/column_string.h"
 #include "vec/columns/column_nullable.h"
+#include "vec/columns/column_string.h"
+#include "vec/columns/column_vector.h"
 #include "vec/columns/predicate_column.h"
 
 namespace doris {
@@ -233,29 +233,32 @@ bool BinaryDictPageDecoder::is_dict_encoding() const {
     return _encoding_type == DICT_ENCODING;
 }
 
-void BinaryDictPageDecoder::set_dict_decoder(PageDecoder* dict_decoder, uint32_t* start_offset_array, uint32_t* len_array) {
+void BinaryDictPageDecoder::set_dict_decoder(PageDecoder* dict_decoder,
+                                             uint32_t* start_offset_array, uint32_t* len_array) {
     _dict_decoder = (BinaryPlainPageDecoder*)dict_decoder;
-    _bit_shuffle_ptr = reinterpret_cast<BitShufflePageDecoder<OLAP_FIELD_TYPE_INT>*>(_data_page_decoder.get());
+    _bit_shuffle_ptr =
+            reinterpret_cast<BitShufflePageDecoder<OLAP_FIELD_TYPE_INT>*>(_data_page_decoder.get());
     _start_offset_array = start_offset_array;
     _len_array = len_array;
 };
 
-Status BinaryDictPageDecoder::next_batch(size_t* n, vectorized::MutableColumnPtr &dst) {
+Status BinaryDictPageDecoder::next_batch(size_t* n, vectorized::MutableColumnPtr& dst) {
     if (_encoding_type == PLAIN_ENCODING) {
         return _data_page_decoder->next_batch(n, dst);
     }
     // dictionary encoding
     DCHECK(_parsed);
     DCHECK(_dict_decoder != nullptr) << "dict decoder pointer is nullptr";
- 
+
     if (PREDICT_FALSE(*n == 0 || _bit_shuffle_ptr->_cur_index >= _bit_shuffle_ptr->_num_elements)) {
         *n = 0;
         return Status::OK();
     }
- 
-    size_t max_fetch = std::min(*n, static_cast<size_t>(_bit_shuffle_ptr->_num_elements - _bit_shuffle_ptr->_cur_index));
+
+    size_t max_fetch = std::min(*n, static_cast<size_t>(_bit_shuffle_ptr->_num_elements -
+                                                        _bit_shuffle_ptr->_cur_index));
     *n = max_fetch;
- 
+
     const int32_t* data_array = reinterpret_cast<const int32_t*>(_bit_shuffle_ptr->_chunk.data);
     size_t start_index = _bit_shuffle_ptr->_cur_index;
 
@@ -268,7 +271,8 @@ Status BinaryDictPageDecoder::next_batch(size_t* n, vectorized::MutableColumnPtr
 
     if (dst_col_ptr->is_predicate_column()) {
         // cast columnptr to columnstringvalue just for avoid virtual function call overhead
-        auto* string_value_column_ptr = reinterpret_cast<vectorized::ColumnStringValue*>(dst_col_ptr);
+        auto* string_value_column_ptr =
+                reinterpret_cast<vectorized::ColumnStringValue*>(dst_col_ptr);
         for (int i = 0; i < max_fetch; i++, start_index++) {
             int32_t codeword = data_array[start_index];
             uint32_t start_offset = _start_offset_array[codeword];
@@ -276,7 +280,7 @@ Status BinaryDictPageDecoder::next_batch(size_t* n, vectorized::MutableColumnPtr
             string_value_column_ptr->insert_data(&_dict_decoder->_data[start_offset], str_len);
         }
     } else {
-             // todo(wb) research whether using batch memcpy to insert columnString can has better performance when data set is big
+        // todo(wb) research whether using batch memcpy to insert columnString can has better performance when data set is big
         for (int i = 0; i < max_fetch; i++, start_index++) {
             int32_t codeword = data_array[start_index];
             const uint32_t start_offset = _start_offset_array[codeword];
@@ -285,9 +289,8 @@ Status BinaryDictPageDecoder::next_batch(size_t* n, vectorized::MutableColumnPtr
         }
     }
     _bit_shuffle_ptr->_cur_index += max_fetch;
- 
+
     return Status::OK();
- 
 }
 
 Status BinaryDictPageDecoder::next_batch(size_t* n, ColumnBlockView* dst) {

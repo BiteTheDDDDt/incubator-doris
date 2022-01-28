@@ -95,13 +95,15 @@ public:
                      Arena* arena) const = 0;
 
     /// Merges state (on which place points to) with other state of current aggregation function.
-    virtual void merge(AggregateDataPtr __restrict place, ConstAggregateDataPtr rhs, Arena* arena) const = 0;
+    virtual void merge(AggregateDataPtr __restrict place, ConstAggregateDataPtr rhs,
+                       Arena* arena) const = 0;
 
     /// Serializes state (to transmit it over the network, for example).
     virtual void serialize(ConstAggregateDataPtr __restrict place, BufferWritable& buf) const = 0;
 
     /// Deserializes state. This function is called only for empty (just created) states.
-    virtual void deserialize(AggregateDataPtr __restrict place, BufferReadable& buf, Arena* arena) const = 0;
+    virtual void deserialize(AggregateDataPtr __restrict place, BufferReadable& buf,
+                             Arena* arena) const = 0;
 
     /// Returns true if a function requires Arena to handle own states (see add(), merge(), deserialize()).
     virtual bool allocates_memory_in_arena() const { return false; }
@@ -114,7 +116,7 @@ public:
       */
     virtual bool is_state() const { return false; }
 
-    /// if return false, during insert_result_into function, you colud get nullable result column, 
+    /// if return false, during insert_result_into function, you colud get nullable result column,
     /// so could insert to null value by yourself, rather than by AggregateFunctionNullBase;
     /// because you maybe be calculate a invalid value, but want to use null replace it;
     virtual bool insert_to_null_default() const { return true; }

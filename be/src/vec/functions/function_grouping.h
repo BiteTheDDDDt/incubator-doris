@@ -18,11 +18,11 @@
 #ifndef DORIS_FUNCTION_GROUPING_H
 #define DORIS_FUNCTION_GROUPING_H
 
-#include "vec/functions/simple_function_factory.h"
 #include "vec/columns/column_nullable.h"
-#include "vec/functions/function_helpers.h"
-#include "vec/utils/util.hpp"
 #include "vec/data_types/get_least_supertype.h"
+#include "vec/functions/function_helpers.h"
+#include "vec/functions/simple_function_factory.h"
+#include "vec/utils/util.hpp"
 
 namespace doris::vectorized {
 
@@ -64,5 +64,5 @@ public:
 
     String get_name() const override { return name; }
 };
-}
+} // namespace doris::vectorized
 #endif //DORIS_FUNCTION_GROUPING_H

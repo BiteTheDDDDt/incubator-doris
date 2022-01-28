@@ -95,7 +95,8 @@ Status RowBlockV2::convert_to_row_block(RowCursor* helper, RowBlock* dst) {
     return Status::OK();
 }
 
-Status RowBlockV2::_copy_data_to_column(int cid, doris::vectorized::MutableColumnPtr& origin_column) {
+Status RowBlockV2::_copy_data_to_column(int cid,
+                                        doris::vectorized::MutableColumnPtr& origin_column) {
     constexpr auto MAX_SIZE_OF_VEC_STRING = 1024l * 1024;
 
     auto* column = origin_column.get();
@@ -182,7 +183,8 @@ Status RowBlockV2::_copy_data_to_column(int cid, doris::vectorized::MutableColum
                 if (LIKELY(slice->size <= MAX_SIZE_OF_VEC_STRING)) {
                     column_string->insert_data(slice->data, slice->size);
                 } else {
-                    return Status::NotSupported("Not support string len over than 1MB in vec engine.");
+                    return Status::NotSupported(
+                            "Not support string len over than 1MB in vec engine.");
                 }
             } else {
                 column_string->insert_default();

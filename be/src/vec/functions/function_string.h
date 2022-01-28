@@ -1079,7 +1079,7 @@ struct MoneyFormatDoubleImpl {
     static DataTypes get_variadic_argument_types() { return {std::make_shared<DataTypeFloat64>()}; }
 
     static void execute(FunctionContext* context, ColumnString* result_column,
-                          const ColumnType* data_column, size_t input_rows_count) {
+                        const ColumnType* data_column, size_t input_rows_count) {
         for (size_t i = 0; i < input_rows_count; i++) {
             double value =
                     MathFunctions::my_double_round(data_column->get_element(i), 2, false, false);
@@ -1095,7 +1095,7 @@ struct MoneyFormatInt64Impl {
     static DataTypes get_variadic_argument_types() { return {std::make_shared<DataTypeInt64>()}; }
 
     static void execute(FunctionContext* context, ColumnString* result_column,
-                          const ColumnType* data_column, size_t input_rows_count) {
+                        const ColumnType* data_column, size_t input_rows_count) {
         for (size_t i = 0; i < input_rows_count; i++) {
             Int64 value = data_column->get_element(i);
             StringVal str = StringFunctions::do_money_format<Int64, 26>(context, value);
@@ -1110,7 +1110,7 @@ struct MoneyFormatInt128Impl {
     static DataTypes get_variadic_argument_types() { return {std::make_shared<DataTypeInt128>()}; }
 
     static void execute(FunctionContext* context, ColumnString* result_column,
-                          const ColumnType* data_column, size_t input_rows_count) {
+                        const ColumnType* data_column, size_t input_rows_count) {
         for (size_t i = 0; i < input_rows_count; i++) {
             Int128 value = data_column->get_element(i);
             StringVal str = StringFunctions::do_money_format<Int128, 52>(context, value);
@@ -1127,7 +1127,7 @@ struct MoneyFormatDecimalImpl {
     }
 
     static void execute(FunctionContext* context, ColumnString* result_column,
-                          const ColumnType* data_column, size_t input_rows_count) {
+                        const ColumnType* data_column, size_t input_rows_count) {
         for (size_t i = 0; i < input_rows_count; i++) {
             DecimalV2Val value = DecimalV2Val(data_column->get_element(i));
 

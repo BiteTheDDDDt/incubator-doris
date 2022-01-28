@@ -2379,8 +2379,9 @@ template void AggregateFunctions::sum<IntVal, BigIntVal>(FunctionContext*, const
                                                          BigIntVal* dst);
 template void AggregateFunctions::sum<BigIntVal, BigIntVal>(FunctionContext*, const BigIntVal& src,
                                                             BigIntVal* dst);
-template void AggregateFunctions::sum<LargeIntVal, LargeIntVal>(FunctionContext*, const LargeIntVal& src,
-                                                            LargeIntVal* dst);
+template void AggregateFunctions::sum<LargeIntVal, LargeIntVal>(FunctionContext*,
+                                                                const LargeIntVal& src,
+                                                                LargeIntVal* dst);
 template void AggregateFunctions::sum<FloatVal, DoubleVal>(FunctionContext*, const FloatVal& src,
                                                            DoubleVal* dst);
 template void AggregateFunctions::sum<DoubleVal, DoubleVal>(FunctionContext*, const DoubleVal& src,

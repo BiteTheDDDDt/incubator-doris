@@ -22,6 +22,7 @@
 
 #include <stdint.h>
 #include <unistd.h>
+
 #include "runtime/string_value.hpp"
 
 #ifdef __SSE2__
@@ -44,15 +45,15 @@ public:
         auto end = str.len - 1;
 #ifdef __SSE2__
         char blank = ' ';
-        const auto pattern =  _mm_set1_epi8(blank);
+        const auto pattern = _mm_set1_epi8(blank);
         while (end - begin + 1 >= REGISTER_SIZE) {
-            const auto v_haystack = _mm_loadu_si128(reinterpret_cast<const __m128i *>(str.ptr + end + 1 - REGISTER_SIZE));
+            const auto v_haystack = _mm_loadu_si128(
+                    reinterpret_cast<const __m128i*>(str.ptr + end + 1 - REGISTER_SIZE));
             const auto v_against_pattern = _mm_cmpeq_epi8(v_haystack, pattern);
             const auto mask = _mm_movemask_epi8(v_against_pattern);
             int offset = __builtin_clz(~(mask << REGISTER_SIZE));
             /// means not found
-            if (offset == 0)
-            {
+            if (offset == 0) {
                 return StringVal(str.ptr + begin, end - begin + 1);
             } else {
                 end -= offset;
@@ -76,15 +77,15 @@ public:
         auto end = str.len - 1;
 #ifdef __SSE2__
         char blank = ' ';
-        const auto pattern =  _mm_set1_epi8(blank);
+        const auto pattern = _mm_set1_epi8(blank);
         while (end - begin + 1 >= REGISTER_SIZE) {
-            const auto v_haystack = _mm_loadu_si128(reinterpret_cast<const __m128i *>(str.ptr + begin));
+            const auto v_haystack =
+                    _mm_loadu_si128(reinterpret_cast<const __m128i*>(str.ptr + begin));
             const auto v_against_pattern = _mm_cmpeq_epi8(v_haystack, pattern);
             const auto mask = _mm_movemask_epi8(v_against_pattern);
             const auto offset = __builtin_ctz(mask ^ 0xffff);
             /// means not found
-            if (offset == 0)
-            {
+            if (offset == 0) {
                 return StringVal(str.ptr + begin, end - begin + 1);
             } else if (offset > REGISTER_SIZE) {
                 begin += REGISTER_SIZE;
@@ -108,7 +109,7 @@ public:
     }
 
     static bool is_ascii(StringVal str) {
-    #ifdef __SSE2__
+#ifdef __SSE2__
         size_t i = 0;
         __m128i binary_code = _mm_setzero_si128();
         if (str.len >= REGISTER_SIZE) {
@@ -126,13 +127,13 @@ public:
         mask |= (or_code & 0x80);
 
         return !mask;
-    #else
+#else
         char or_code = 0;
         for (size_t i = 0; i < str.len; i++) {
             or_code |= str.ptr[i];
         }
         return !(or_code & 0x80);
-    #endif
+#endif
     }
 
     static void reverse(const StringVal& str, StringVal dst) {
@@ -145,14 +146,16 @@ public:
             int64_t begin = 0;
             int64_t end = str.len;
             int64_t result_end = dst.len;
-    #if defined(__SSE2__)
-            const auto shuffle_array = _mm_set_epi64((__m64)0x00'01'02'03'04'05'06'07ull, (__m64)0x08'09'0a'0b'0c'0d'0e'0full);
+#if defined(__SSE2__)
+            const auto shuffle_array = _mm_set_epi64((__m64)0x00'01'02'03'04'05'06'07ull,
+                                                     (__m64)0x08'09'0a'0b'0c'0d'0e'0full);
             for (; (begin + REGISTER_SIZE) < end; begin += REGISTER_SIZE) {
                 result_end -= REGISTER_SIZE;
                 _mm_storeu_si128((__m128i*)(dst.ptr + result_end),
-                                 _mm_shuffle_epi8(_mm_loadu_si128((__m128i*)(str.ptr + begin)), shuffle_array));
+                                 _mm_shuffle_epi8(_mm_loadu_si128((__m128i*)(str.ptr + begin)),
+                                                  shuffle_array));
             }
-    #endif
+#endif
             for (; begin < end; ++begin) {
                 --result_end;
                 dst.ptr[result_end] = str.ptr[begin];
@@ -190,13 +193,15 @@ public:
 #if defined(__SSE2__)
         constexpr auto step = sizeof(uint64);
         if (src_str + step < src_str_end) {
-            const auto hex_map = _mm_loadu_si128(reinterpret_cast<const __m128i *>(hex_table));
+            const auto hex_map = _mm_loadu_si128(reinterpret_cast<const __m128i*>(hex_table));
             const auto mask_map = _mm_set1_epi8(0x0F);
 
             do {
                 auto data = _mm_loadu_si64(src_str);
-                auto hex_loc = _mm_and_si128(_mm_unpacklo_epi8(_mm_srli_epi64(data, 4), data), mask_map);
-                _mm_storeu_si128(reinterpret_cast<__m128i *>(dst_str), _mm_shuffle_epi8(hex_map, hex_loc));
+                auto hex_loc =
+                        _mm_and_si128(_mm_unpacklo_epi8(_mm_srli_epi64(data, 4), data), mask_map);
+                _mm_storeu_si128(reinterpret_cast<__m128i*>(dst_str),
+                                 _mm_shuffle_epi8(hex_map, hex_loc));
 
                 src_str += step;
                 dst_str += step * 2;
@@ -214,6 +219,6 @@ public:
         }
     }
 };
-}
+} // namespace doris
 
 #endif //BE_V_STRING_FUNCTIONS_H

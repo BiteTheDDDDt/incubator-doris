@@ -20,7 +20,7 @@
 #include "vec/functions/function.h"
 
 namespace doris::vectorized {
-class VCastExpr final: public VExpr {
+class VCastExpr final : public VExpr {
 public:
     VCastExpr(const TExprNode& node) : VExpr(node) {}
     ~VCastExpr() = default;

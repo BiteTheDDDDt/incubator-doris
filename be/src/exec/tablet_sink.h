@@ -147,7 +147,8 @@ private:
 class IndexChannel;
 class NodeChannel {
 public:
-    NodeChannel(OlapTableSink* parent, IndexChannel* index_channel, int64_t node_id, int32_t schema_hash);
+    NodeChannel(OlapTableSink* parent, IndexChannel* index_channel, int64_t node_id,
+                int32_t schema_hash);
     ~NodeChannel() noexcept;
 
     // called before open, used to add tablet located in this backend
@@ -350,8 +351,8 @@ private:
     // return number of invalid/filtered rows.
     // invalid row number is set in Bitmap
     // set stop_processing is we want to stop the whole process now.
-    Status _validate_data(RuntimeState* state, RowBatch* batch, Bitmap* filter_bitmap, int* filtered_rows,
-                          bool* stop_processing);
+    Status _validate_data(RuntimeState* state, RowBatch* batch, Bitmap* filter_bitmap,
+                          int* filtered_rows, bool* stop_processing);
 
     // the consumer func of sending pending batches in every NodeChannel.
     // use polling & NodeChannel::try_send_and_fetch_status() to achieve nonblocking sending.

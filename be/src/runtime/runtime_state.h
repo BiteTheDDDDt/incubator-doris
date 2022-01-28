@@ -290,8 +290,9 @@ public:
     // append error msg and error line to file when loading data.
     // is_summary is true, means we are going to write the summary line
     // If we need to stop the processing, set stop_processing to true
-    Status append_error_msg_to_file(std::function<std::string()> line, std::function<std::string()> error_msg,
-                                    bool* stop_processing, bool is_summary = false);
+    Status append_error_msg_to_file(std::function<std::string()> line,
+                                    std::function<std::string()> error_msg, bool* stop_processing,
+                                    bool is_summary = false);
 
     int64_t num_bytes_load_total() { return _num_bytes_load_total.load(); }
 
@@ -368,9 +369,7 @@ public:
 
     std::vector<TTabletCommitInfo>& tablet_commit_infos() { return _tablet_commit_infos; }
 
-    const std::vector<TErrorTabletInfo>& error_tablet_infos() const {
-        return _error_tablet_infos;
-    }
+    const std::vector<TErrorTabletInfo>& error_tablet_infos() const { return _error_tablet_infos; }
 
     std::vector<TErrorTabletInfo>& error_tablet_infos() { return _error_tablet_infos; }
 

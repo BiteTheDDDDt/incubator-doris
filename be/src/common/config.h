@@ -653,7 +653,7 @@ CONF_mInt32(default_remote_storage_s3_max_conn, "50");
 CONF_mInt32(default_remote_storage_s3_request_timeout_ms, "3000");
 CONF_mInt32(default_remote_storage_s3_conn_timeout_ms, "1000");
 // Set to true to disable the minidump feature.
-CONF_Bool(disable_minidump , "false");
+CONF_Bool(disable_minidump, "false");
 
 // The dir to save minidump file.
 // Make sure that the user who run Doris has permission to create and visit this dir,
@@ -687,8 +687,6 @@ CONF_mInt32(load_task_high_priority_threshold_second, "120");
 // Because a load rpc may be blocked for a while.
 // Increase this config may avoid rpc timeout.
 CONF_mInt32(min_load_rpc_timeout_ms, "20000");
-
-
 
 } // namespace config
 

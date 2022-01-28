@@ -36,7 +36,7 @@ struct HashTableBuild {
         using KeyGetter = typename HashTableContext::State;
         using Mapped = typename HashTableContext::Mapped;
         int64_t old_bucket_bytes = hash_table_ctx.hash_table.get_buffer_size_in_bytes();
-        
+
         Defer defer {[&]() {
             int64_t bucket_bytes = hash_table_ctx.hash_table.get_buffer_size_in_bytes();
             _operation_node->_mem_tracker->Consume(bucket_bytes - old_bucket_bytes);
@@ -295,7 +295,7 @@ Status VSetOperationNode::extract_build_column(Block& block, ColumnRawPtrs& raw_
         RETURN_IF_ERROR(_child_expr_lists[0][i]->execute(&block, &result_col_id));
 
         block.get_by_position(result_col_id).column =
-                 block.get_by_position(result_col_id).column->convert_to_full_column_if_const();
+                block.get_by_position(result_col_id).column->convert_to_full_column_if_const();
         auto column = block.get_by_position(result_col_id).column.get();
 
         if (auto* nullable = check_and_get_column<ColumnNullable>(*column)) {
@@ -325,7 +325,7 @@ Status VSetOperationNode::extract_probe_column(Block& block, ColumnRawPtrs& raw_
         RETURN_IF_ERROR(_child_expr_lists[child_id][i]->execute(&block, &result_col_id));
 
         block.get_by_position(result_col_id).column =
-                 block.get_by_position(result_col_id).column->convert_to_full_column_if_const();
+                block.get_by_position(result_col_id).column->convert_to_full_column_if_const();
         auto column = block.get_by_position(result_col_id).column.get();
 
         if (auto* nullable = check_and_get_column<ColumnNullable>(*column)) {

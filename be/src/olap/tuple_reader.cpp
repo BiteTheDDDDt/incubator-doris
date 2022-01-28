@@ -38,9 +38,9 @@ using std::set;
 using std::vector;
 
 namespace doris {
-    
+
 OLAPStatus TupleReader::_init_collect_iter(const ReaderParams& read_params,
-        std::vector<RowsetReaderSharedPtr>* valid_rs_readers) {
+                                           std::vector<RowsetReaderSharedPtr>* valid_rs_readers) {
     _collect_iter.init(this);
     std::vector<RowsetReaderSharedPtr> rs_readers;
     auto res = _capture_rs_readers(read_params, &rs_readers);
@@ -75,7 +75,9 @@ OLAPStatus TupleReader::init(const ReaderParams& read_params) {
 
     std::vector<RowsetReaderSharedPtr> rs_readers;
     auto status = _init_collect_iter(read_params, &rs_readers);
-    if (status != OLAP_SUCCESS) { return status; }
+    if (status != OLAP_SUCCESS) {
+        return status;
+    }
 
     if (_optimize_for_single_rowset(rs_readers)) {
         _next_row_func = _tablet->keys_type() == AGG_KEYS ? &TupleReader::_direct_agg_key_next_row
@@ -101,8 +103,8 @@ OLAPStatus TupleReader::init(const ReaderParams& read_params) {
     return OLAP_SUCCESS;
 }
 
-OLAPStatus TupleReader::_direct_next_row(RowCursor* row_cursor, MemPool* mem_pool, ObjectPool* agg_pool,
-                                    bool* eof) {
+OLAPStatus TupleReader::_direct_next_row(RowCursor* row_cursor, MemPool* mem_pool,
+                                         ObjectPool* agg_pool, bool* eof) {
     if (UNLIKELY(_next_key == nullptr)) {
         *eof = true;
         return OLAP_SUCCESS;
@@ -116,7 +118,7 @@ OLAPStatus TupleReader::_direct_next_row(RowCursor* row_cursor, MemPool* mem_poo
 }
 
 OLAPStatus TupleReader::_direct_agg_key_next_row(RowCursor* row_cursor, MemPool* mem_pool,
-                                            ObjectPool* agg_pool, bool* eof) {
+                                                 ObjectPool* agg_pool, bool* eof) {
     if (UNLIKELY(_next_key == nullptr)) {
         *eof = true;
         return OLAP_SUCCESS;
@@ -132,8 +134,8 @@ OLAPStatus TupleReader::_direct_agg_key_next_row(RowCursor* row_cursor, MemPool*
     return OLAP_SUCCESS;
 }
 
-OLAPStatus TupleReader::_agg_key_next_row(RowCursor* row_cursor, MemPool* mem_pool, ObjectPool* agg_pool,
-                                     bool* eof) {
+OLAPStatus TupleReader::_agg_key_next_row(RowCursor* row_cursor, MemPool* mem_pool,
+                                          ObjectPool* agg_pool, bool* eof) {
     if (UNLIKELY(_next_key == nullptr)) {
         *eof = true;
         return OLAP_SUCCESS;
@@ -172,7 +174,7 @@ OLAPStatus TupleReader::_agg_key_next_row(RowCursor* row_cursor, MemPool* mem_po
 }
 
 OLAPStatus TupleReader::_unique_key_next_row(RowCursor* row_cursor, MemPool* mem_pool,
-                                        ObjectPool* agg_pool, bool* eof) {
+                                             ObjectPool* agg_pool, bool* eof) {
     *eof = false;
     bool cur_delete_flag = false;
     do {

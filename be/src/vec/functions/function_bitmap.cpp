@@ -18,25 +18,21 @@
 // https://github.com/ClickHouse/ClickHouse/blob/master/src/Functions/FunctionBitmap.h
 // and modified by Doris
 
-#include "util/string_parser.hpp"
-#include "vec/functions/function_totype.h"
-#include "vec/functions/function_const.h"
-#include "vec/functions/simple_function_factory.h"
-#include "vec/functions/function_string.h"
 #include "gutil/strings/numbers.h"
 #include "gutil/strings/split.h"
+#include "util/string_parser.hpp"
+#include "vec/functions/function_const.h"
+#include "vec/functions/function_string.h"
+#include "vec/functions/function_totype.h"
+#include "vec/functions/simple_function_factory.h"
 
 namespace doris::vectorized {
 
 struct BitmapEmpty {
     static constexpr auto name = "bitmap_empty";
     using ReturnColVec = ColumnBitmap;
-    static DataTypePtr get_return_type() {
-        return std::make_shared<DataTypeBitMap>();
-    }
-    static auto init_value() {
-        return BitmapValue{};
-    }
+    static DataTypePtr get_return_type() { return std::make_shared<DataTypeBitMap>(); }
+    static auto init_value() { return BitmapValue {}; }
 };
 
 struct NameToBitmap {
@@ -62,12 +58,12 @@ struct ToBitmapImpl {
 
             // TODO: which where cause problem in to_bitmap(null), rethink how to slove the problem
             // of null
-//            if (UNLIKELY(parse_result != StringParser::PARSE_SUCCESS)) {
-//                return Status::RuntimeError(
-//                        fmt::format("The input: {:.{}} is not valid, to_bitmap only support bigint "
-//                                    "value from 0 to 18446744073709551615 currently",
-//                                    raw_str, str_size));
-//            }
+            //            if (UNLIKELY(parse_result != StringParser::PARSE_SUCCESS)) {
+            //                return Status::RuntimeError(
+            //                        fmt::format("The input: {:.{}} is not valid, to_bitmap only support bigint "
+            //                                    "value from 0 to 18446744073709551615 currently",
+            //                                    raw_str, str_size));
+            //            }
             res.emplace_back();
             res.back().add(int_value);
         }
@@ -120,7 +116,7 @@ struct BitmapHash {
             const char* raw_str = reinterpret_cast<const char*>(&data[offsets[i - 1]]);
             size_t str_size = offsets[i] - offsets[i - 1] - 1;
             uint32_t hash_value =
-                HashUtil::murmur_hash3_32(raw_str, str_size, HashUtil::MURMUR3_32_SEED);
+                    HashUtil::murmur_hash3_32(raw_str, str_size, HashUtil::MURMUR3_32_SEED);
             res.emplace_back();
             res.back().add(hash_value);
         }
@@ -419,7 +415,7 @@ struct BitmapXorCount {
 
 using FunctionBitmapEmpty = FunctionConst<BitmapEmpty, false>;
 using FunctionToBitmap = FunctionUnaryToType<ToBitmapImpl, NameToBitmap>;
-using FunctionBitmapFromString = FunctionUnaryToType<BitmapFromString,NameBitmapFromString>;
+using FunctionBitmapFromString = FunctionUnaryToType<BitmapFromString, NameBitmapFromString>;
 using FunctionBitmapHash = FunctionUnaryToType<BitmapHash, NameBitmapHash>;
 
 using FunctionBitmapCount = FunctionUnaryToType<BitmapCount, NameBitmapCount>;

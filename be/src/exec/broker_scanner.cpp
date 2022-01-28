@@ -18,6 +18,7 @@
 #include "exec/broker_scanner.h"
 
 #include <fmt/format.h>
+
 #include <iostream>
 #include <sstream>
 
@@ -48,8 +49,7 @@ BrokerScanner::BrokerScanner(RuntimeState* state, RuntimeProfile* profile,
                              const TBrokerScanRangeParams& params,
                              const std::vector<TBrokerRangeDesc>& ranges,
                              const std::vector<TNetworkAddress>& broker_addresses,
-                             const std::vector<TExpr>& pre_filter_texprs,
-                             ScannerCounter* counter)
+                             const std::vector<TExpr>& pre_filter_texprs, ScannerCounter* counter)
         : BaseScanner(state, profile, params, pre_filter_texprs, counter),
           _ranges(ranges),
           _broker_addresses(broker_addresses),
@@ -475,12 +475,14 @@ Status BrokerScanner::_convert_one_row(const Slice& line, Tuple* tuple, MemPool*
 Status BrokerScanner::_line_to_src_tuple(const Slice& line) {
     bool is_proto_format = _file_format_type == TFileFormatType::FORMAT_PROTO;
     if (!is_proto_format && !validate_utf8(line.data, line.size)) {
-        RETURN_IF_ERROR(_state->append_error_msg_to_file([]() -> std::string { return "Unable to display"; },
+        RETURN_IF_ERROR(_state->append_error_msg_to_file(
+                []() -> std::string { return "Unable to display"; },
                 []() -> std::string {
                     fmt::memory_buffer error_msg;
                     fmt::format_to(error_msg, "{}", "Unable to display");
                     return error_msg.data();
-                }, &_scanner_eof));
+                },
+                &_scanner_eof));
         _counter->num_rows_filtered++;
         _success = false;
         return Status::OK();
@@ -497,7 +499,7 @@ Status BrokerScanner::_line_to_src_tuple(const Slice& line) {
     const std::vector<std::string>& columns_from_path = range.columns_from_path;
     // read data by column defination, resize _split_values to _src_solt_size
     if (read_by_column_def) {
-        // fill slots by NULL 
+        // fill slots by NULL
         while (_split_values.size() + columns_from_path.size() < _src_slot_descs.size()) {
             _split_values.emplace_back(_split_values.back().get_data(), 0);
         }
@@ -508,27 +510,39 @@ Status BrokerScanner::_line_to_src_tuple(const Slice& line) {
     } else {
         if (_split_values.size() + columns_from_path.size() < _src_slot_descs.size()) {
             RETURN_IF_ERROR(_state->append_error_msg_to_file(
-                        [&]() -> std::string { return is_proto_format ? "" : std::string(line.data, line.size); },
-                        [&]() -> std::string {
+                    [&]() -> std::string {
+                        return is_proto_format ? "" : std::string(line.data, line.size);
+                    },
+                    [&]() -> std::string {
                         fmt::memory_buffer error_msg;
-                        fmt::format_to(error_msg, "{}", "actual column number is less than schema column number.");
-                        fmt::format_to(error_msg, "actual number: {}, column separator: [{}], ", _split_values.size(), _value_separator);
-                        fmt::format_to(error_msg, "line delimiter: [{}], schema number: {}; ", _line_delimiter, _src_slot_descs.size());
+                        fmt::format_to(error_msg, "{}",
+                                       "actual column number is less than schema column number.");
+                        fmt::format_to(error_msg, "actual number: {}, column separator: [{}], ",
+                                       _split_values.size(), _value_separator);
+                        fmt::format_to(error_msg, "line delimiter: [{}], schema number: {}; ",
+                                       _line_delimiter, _src_slot_descs.size());
                         return error_msg.data();
-                        }, &_scanner_eof));
+                    },
+                    &_scanner_eof));
             _counter->num_rows_filtered++;
             _success = false;
             return Status::OK();
         } else if (_split_values.size() + columns_from_path.size() > _src_slot_descs.size()) {
             RETURN_IF_ERROR(_state->append_error_msg_to_file(
-                        [&]() -> std::string { return is_proto_format ? "" : std::string(line.data, line.size); },
-                        [&]() -> std::string {
+                    [&]() -> std::string {
+                        return is_proto_format ? "" : std::string(line.data, line.size);
+                    },
+                    [&]() -> std::string {
                         fmt::memory_buffer error_msg;
-                        fmt::format_to(error_msg, "{}", "actual column number is more than schema column number.");
-                        fmt::format_to(error_msg, "actual number: {}, column separator: [{}], ", _split_values.size(), _value_separator);
-                        fmt::format_to(error_msg, "line delimiter: [{}], schema number: {}; ", _line_delimiter, _src_slot_descs.size());
+                        fmt::format_to(error_msg, "{}",
+                                       "actual column number is more than schema column number.");
+                        fmt::format_to(error_msg, "actual number: {}, column separator: [{}], ",
+                                       _split_values.size(), _value_separator);
+                        fmt::format_to(error_msg, "line delimiter: [{}], schema number: {}; ",
+                                       _line_delimiter, _src_slot_descs.size());
                         return error_msg.data();
-                        }, &_scanner_eof));
+                    },
+                    &_scanner_eof));
             _counter->num_rows_filtered++;
             _success = false;
             return Status::OK();

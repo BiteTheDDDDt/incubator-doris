@@ -445,7 +445,7 @@ void EsHttpScanNode::scanner_worker(int start_idx, int length, std::promise<Stat
     } else {
         std::unique_ptr<VEsHttpScanner> scanner(
                 new VEsHttpScanner(_runtime_state, runtime_profile(), _tuple_id, properties,
-                                  scanner_expr_ctxs, &counter, doc_value_mode));
+                                   scanner_expr_ctxs, &counter, doc_value_mode));
         status = scanner_scan(std::move(scanner));
     }
     if (!status.ok()) {

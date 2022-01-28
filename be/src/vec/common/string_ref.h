@@ -291,7 +291,7 @@ struct StringRefHash : CRC32Hash {};
 
 struct CRC32Hash {
     size_t operator()(StringRef /* x */) const {
-        throw std::logic_error{"Not implemented CRC32Hash without SSE"};
+        throw std::logic_error {"Not implemented CRC32Hash without SSE"};
     }
 };
 

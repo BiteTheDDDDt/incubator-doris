@@ -17,8 +17,9 @@
 
 #include "runtime/runtime_state.h"
 
-#include <boost/algorithm/string/join.hpp>
 #include <fmt/format.h>
+
+#include <boost/algorithm/string/join.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -418,7 +419,8 @@ Status RuntimeState::create_error_log_file() {
     return Status::OK();
 }
 
-Status RuntimeState::append_error_msg_to_file(std::function<std::string()> line, std::function<std::string()> error_msg,
+Status RuntimeState::append_error_msg_to_file(std::function<std::string()> line,
+                                              std::function<std::string()> error_msg,
                                               bool* stop_processing, bool is_summary) {
     *stop_processing = false;
     if (_query_options.query_type != TQueryType::LOAD) {
@@ -456,7 +458,8 @@ Status RuntimeState::append_error_msg_to_file(std::function<std::string()> line,
             // Note: export reason first in case src line too long and be truncated.
             fmt::format_to(out, "Reason: {}. src line [{}]; ", error_msg(), line());
         } else if (_error_row_number == MAX_ERROR_NUM) {
-            fmt::format_to(out, "TOO MUCH ERROR! already reach {}. show no more next error.", MAX_ERROR_NUM);
+            fmt::format_to(out, "TOO MUCH ERROR! already reach {}. show no more next error.",
+                           MAX_ERROR_NUM);
         }
     }
 

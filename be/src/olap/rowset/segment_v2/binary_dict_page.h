@@ -17,10 +17,11 @@
 
 #pragma once
 
+#include <parallel_hashmap/phmap.h>
+
 #include <functional>
 #include <memory>
 #include <string>
-#include <parallel_hashmap/phmap.h>
 
 #include "gen_cpp/segment_v2.pb.h"
 #include "gutil/hash/string_hash.h"
@@ -28,12 +29,12 @@
 #include "olap/column_vector.h"
 #include "olap/olap_common.h"
 #include "olap/rowset/segment_v2/binary_plain_page.h"
+#include "olap/rowset/segment_v2/bitshuffle_page.h"
 #include "olap/rowset/segment_v2/common.h"
 #include "olap/rowset/segment_v2/options.h"
 #include "olap/types.h"
 #include "runtime/mem_pool.h"
 #include "runtime/mem_tracker.h"
-#include "olap/rowset/segment_v2/bitshuffle_page.h"
 
 namespace doris {
 namespace segment_v2 {
@@ -107,7 +108,7 @@ public:
 
     Status next_batch(size_t* n, ColumnBlockView* dst) override;
 
-    Status next_batch(size_t* n, vectorized::MutableColumnPtr &dst) override;
+    Status next_batch(size_t* n, vectorized::MutableColumnPtr& dst) override;
 
     size_t count() const override { return _data_page_decoder->count(); }
 
@@ -115,7 +116,8 @@ public:
 
     bool is_dict_encoding() const;
 
-    void set_dict_decoder(PageDecoder* dict_decoder, uint32_t* start_offset_array = nullptr, uint32_t* len_array = nullptr);
+    void set_dict_decoder(PageDecoder* dict_decoder, uint32_t* start_offset_array = nullptr,
+                          uint32_t* len_array = nullptr);
 
     ~BinaryDictPageDecoder();
 

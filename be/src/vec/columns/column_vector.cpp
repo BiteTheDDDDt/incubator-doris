@@ -27,6 +27,7 @@
 #include <cstring>
 
 #include "runtime/datetime_value.h"
+#include "util/simd/bits.h"
 #include "vec/common/arena.h"
 #include "vec/common/assert_cast.h"
 #include "vec/common/bit_cast.h"
@@ -34,7 +35,6 @@
 #include "vec/common/nan_utils.h"
 #include "vec/common/sip_hash.h"
 #include "vec/common/unaligned.h"
-#include "util/simd/bits.h"
 
 namespace doris::vectorized {
 
@@ -219,7 +219,8 @@ void ColumnVector<T>::insert_range_from(const IColumn& src, size_t start, size_t
 }
 
 template <typename T>
-void ColumnVector<T>::insert_indices_from(const IColumn& src, const int* indices_begin, const int* indices_end) {
+void ColumnVector<T>::insert_indices_from(const IColumn& src, const int* indices_begin,
+                                          const int* indices_end) {
     const Self& src_vec = assert_cast<const Self&>(src);
     data.reserve(size() + (indices_end - indices_begin));
     for (auto x = indices_begin; x != indices_end; ++x) {

@@ -203,7 +203,8 @@ void TaskWorkerPool::start() {
         break;
     case TaskWorkerType::SUBMIT_TABLE_COMPACTION:
         _worker_count = 1;
-        cb = std::bind<void>(&TaskWorkerPool::_submit_table_compaction_worker_thread_callback, this);
+        cb = std::bind<void>(&TaskWorkerPool::_submit_table_compaction_worker_thread_callback,
+                             this);
         break;
     default:
         // pass
@@ -298,8 +299,9 @@ void TaskWorkerPool::_finish_task(const TFinishTaskRequest& finish_task_request)
             break;
         } else {
             DorisMetrics::instance()->finish_task_requests_failed->increment(1);
-            LOG(WARNING) << "finish task failed. type=" << to_string(finish_task_request.task_type) << ", signature="
-                         << finish_task_request.signature <<  ", status_code=" << result.status.status_code;
+            LOG(WARNING) << "finish task failed. type=" << to_string(finish_task_request.task_type)
+                         << ", signature=" << finish_task_request.signature
+                         << ", status_code=" << result.status.status_code;
             try_time += 1;
         }
         sleep(config::sleep_one_second);
@@ -1694,8 +1696,8 @@ void TaskWorkerPool::_submit_table_compaction_worker_thread_callback() {
                 continue;
             }
 
-            Status status = StorageEngine::instance()->submit_compaction_task(
-                    tablet_ptr, compaction_type);
+            Status status =
+                    StorageEngine::instance()->submit_compaction_task(tablet_ptr, compaction_type);
             if (!status.ok()) {
                 LOG(WARNING) << "failed to submit table compaction task. " << status.to_string();
             }

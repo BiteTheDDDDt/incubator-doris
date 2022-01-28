@@ -62,7 +62,8 @@ void DataTypeBitMap::deserialize(const PColumn& pcolumn, IColumn* column) const 
 
     auto bitmap_size_array_size = *reinterpret_cast<size_t*>(uncompressed.data());
     size_t bitmap_size_array[bitmap_size_array_size];
-    memcpy(bitmap_size_array, uncompressed.data() + sizeof(size_t), sizeof(size_t) * bitmap_size_array_size);
+    memcpy(bitmap_size_array, uncompressed.data() + sizeof(size_t),
+           sizeof(size_t) * bitmap_size_array_size);
     auto bitmap_content_ptr = uncompressed.data() + sizeof(size_t) * (bitmap_size_array_size + 1);
 
     data.resize(bitmap_size_array_size);
@@ -92,8 +93,9 @@ void DataTypeBitMap::deserialize_as_stream(BitmapValue& value, BufferReadable& b
 }
 
 void DataTypeBitMap::to_string(const class doris::vectorized::IColumn& column, size_t row_num,
-        doris::vectorized::BufferWritable& ostr) const {
-    auto& data = const_cast<BitmapValue&>(assert_cast<const ColumnBitmap&>(column).get_element(row_num));
+                               doris::vectorized::BufferWritable& ostr) const {
+    auto& data =
+            const_cast<BitmapValue&>(assert_cast<const ColumnBitmap&>(column).get_element(row_num));
     std::string result(data.getSizeInBytes(), '0');
     data.write((char*)result.data());
 

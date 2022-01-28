@@ -406,7 +406,7 @@ Status AggregationNode::close(RuntimeState* state) {
     RETURN_IF_ERROR(ExecNode::close(state));
     VExpr::close(_probe_expr_ctxs, state);
     if (_executor.close) _executor.close();
-    delete [] _streaming_pre_agg_buffer;
+    delete[] _streaming_pre_agg_buffer;
     return Status::OK();
 }
 
@@ -569,10 +569,8 @@ void AggregationNode::_close_without_key() {
 void AggregationNode::_make_nullable_output_key(Block* block) {
     if (block->rows() != 0) {
         for (auto cid : _make_nullable_keys) {
-            block->get_by_position(cid).column =
-                    make_nullable(block->get_by_position(cid).column);
-            block->get_by_position(cid).type =
-                    make_nullable(block->get_by_position(cid).type);
+            block->get_by_position(cid).column = make_nullable(block->get_by_position(cid).column);
+            block->get_by_position(cid).type = make_nullable(block->get_by_position(cid).type);
         }
     }
 }
@@ -750,7 +748,7 @@ Status AggregationNode::_pre_agg_with_serialized_key(doris::vectorized::Block* i
 
     if (!ret_flag) {
         std::visit(
-                [&](auto &&agg_method) -> void {
+                [&](auto&& agg_method) -> void {
                     using HashMethodType = std::decay_t<decltype(agg_method)>;
                     using AggState = typename HashMethodType::State;
                     AggState state(key_columns, _probe_key_sz, nullptr);
@@ -758,7 +756,8 @@ Status AggregationNode::_pre_agg_with_serialized_key(doris::vectorized::Block* i
                     for (size_t i = 0; i < rows; ++i) {
                         AggregateDataPtr aggregate_data = nullptr;
 
-                        auto emplace_result = state.emplace_key(agg_method.data, i, _agg_arena_pool);
+                        auto emplace_result =
+                                state.emplace_key(agg_method.data, i, _agg_arena_pool);
 
                         /// If a new key is inserted, initialize the states of the aggregate functions, and possibly something related to the key.
                         if (emplace_result.is_inserted()) {
@@ -1001,7 +1000,8 @@ Status AggregationNode::_serialize_with_serialized_key_result(RuntimeState* stat
         ColumnsWithTypeAndName columns_with_schema;
         for (int i = 0; i < key_size; ++i) {
             columns_with_schema.emplace_back(std::move(key_columns[i]),
-                                             _probe_expr_ctxs[i]->root()->data_type(), _probe_expr_ctxs[i]->root()->expr_name());
+                                             _probe_expr_ctxs[i]->root()->data_type(),
+                                             _probe_expr_ctxs[i]->root()->expr_name());
         }
         for (int i = 0; i < agg_size; ++i) {
             columns_with_schema.emplace_back(std::move(value_columns[i]), value_data_types[i], "");

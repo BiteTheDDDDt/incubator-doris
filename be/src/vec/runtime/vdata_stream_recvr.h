@@ -140,7 +140,7 @@ public:
 
 private:
     std::condition_variable _cv;
-}; 
+};
 
 class VDataStreamRecvr::SenderQueue {
 public:

@@ -294,7 +294,7 @@ OLAPStatus PushHandler::_convert_v2(TabletSharedPtr cur_tablet, TabletSharedPtr 
                     if (reader->eof()) {
                         break;
                     }
-                    //if read row but fill tuple fails, 
+                    //if read row but fill tuple fails,
                     if (!reader->is_fill_tuple()) {
                         break;
                     }

@@ -106,6 +106,7 @@ public:
     doris::vectorized::MutableColumnPtr get_empty_mutable_column() const;
 
     doris::vectorized::DataTypePtr get_data_type_ptr() const;
+
 private:
     friend class DescriptorTbl;
     friend class TupleDescriptor;
@@ -380,9 +381,7 @@ public:
     // to GetAvgRowSize()
     int get_row_size() const;
 
-    int num_materialized_slots() const {
-        return _num_materialized_slots;
-    }
+    int num_materialized_slots() const { return _num_materialized_slots; }
 
     int num_null_slots() const { return _num_null_slots; }
 

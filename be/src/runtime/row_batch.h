@@ -43,7 +43,6 @@ class TupleRow;
 class TupleDescriptor;
 class PRowBatch;
 
-
 // A RowBatch encapsulates a batch of rows, each composed of a number of tuples.
 // The maximum number of rows is fixed at the time of construction, and the caller
 // can add rows up to that capacity.
@@ -405,10 +404,10 @@ private:
 
     // All members need to be handled in RowBatch::swap()
 
-    bool _has_in_flight_row;       // if true, last row hasn't been committed yet
-    int _num_rows;                 // # of committed rows
-    int _num_uncommitted_rows;     // # of uncommited rows in row batch mem pool
-    int _capacity;                 // maximum # of rows
+    bool _has_in_flight_row;   // if true, last row hasn't been committed yet
+    int _num_rows;             // # of committed rows
+    int _num_uncommitted_rows; // # of uncommited rows in row batch mem pool
+    int _capacity;             // maximum # of rows
 
     /// If FLUSH_RESOURCES, the resources attached to this batch should be freed or
     /// acquired by a new owner as soon as possible. See MarkFlushResources(). If

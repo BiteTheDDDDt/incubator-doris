@@ -46,7 +46,7 @@ class IndexedColumnIterator;
 class IndexedColumnReader {
 public:
     explicit IndexedColumnReader(const FilePathDesc& path_desc, const IndexedColumnMetaPB& meta)
-            : _path_desc(path_desc), _meta(meta){};
+            : _path_desc(path_desc), _meta(meta) {};
 
     Status load(bool use_page_cache, bool kept_in_memory);
 
@@ -94,7 +94,8 @@ public:
             : _reader(reader),
               _ordinal_iter(&reader->_ordinal_index_reader),
               _value_iter(&reader->_value_index_reader) {
-        fs::BlockManager* block_manager = fs::fs_util::block_manager(_reader->_path_desc.storage_medium);
+        fs::BlockManager* block_manager =
+                fs::fs_util::block_manager(_reader->_path_desc.storage_medium);
         auto st = block_manager->open_block(_reader->_path_desc, &_rblock);
         DCHECK(st.ok());
         WARN_IF_ERROR(st, "open file failed:" + _reader->_path_desc.filepath);

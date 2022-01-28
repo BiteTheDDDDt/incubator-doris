@@ -207,8 +207,11 @@ Status MergeIteratorContext::_load_next_block() {
 class MergeIterator : public RowwiseIterator {
 public:
     // MergeIterator takes the ownership of input iterators
-    MergeIterator(std::vector<RowwiseIterator*> iters, std::shared_ptr<MemTracker> parent, int sequence_id_idx)
-        : _origin_iters(std::move(iters)), _sequence_id_idx(sequence_id_idx), _merge_heap(MergeContextComparator(_sequence_id_idx)) {
+    MergeIterator(std::vector<RowwiseIterator*> iters, std::shared_ptr<MemTracker> parent,
+                  int sequence_id_idx)
+            : _origin_iters(std::move(iters)),
+              _sequence_id_idx(sequence_id_idx),
+              _merge_heap(MergeContextComparator(_sequence_id_idx)) {
         // use for count the mem use of Block use in Merge
         _mem_tracker = MemTracker::CreateTracker(-1, "MergeIterator", parent, false);
     }
@@ -245,7 +248,7 @@ private:
             if (cmp_res != 0) {
                 return cmp_res > 0;
             }
-            
+
             // Second: If sequence_id_idx != 0 means we need to compare sequence. sequence only use
             // in unique key. so keep reverse order of sequence id here
             if (sequence_id_idx != -1) {
@@ -264,9 +267,8 @@ private:
         int sequence_id_idx;
     };
 
-    using MergeHeap = std::priority_queue<MergeIteratorContext*, 
-                                        std::vector<MergeIteratorContext*>,
-                                        MergeContextComparator>;
+    using MergeHeap = std::priority_queue<MergeIteratorContext*, std::vector<MergeIteratorContext*>,
+                                          MergeContextComparator>;
 
     MergeHeap _merge_heap;
 };
@@ -323,13 +325,14 @@ public:
     // Iterators' ownership it transfered to this class.
     // This class will delete all iterators when destructs
     // Client should not use iterators any more.
-    UnionIterator(std::vector<RowwiseIterator*> &v, std::shared_ptr<MemTracker> parent)
+    UnionIterator(std::vector<RowwiseIterator*>& v, std::shared_ptr<MemTracker> parent)
             : _origin_iters(v.begin(), v.end()) {
         _mem_tracker = MemTracker::CreateTracker(-1, "UnionIterator", parent, false);
     }
 
     ~UnionIterator() override {
-        std::for_each(_origin_iters.begin(), _origin_iters.end(), std::default_delete<RowwiseIterator>());
+        std::for_each(_origin_iters.begin(), _origin_iters.end(),
+                      std::default_delete<RowwiseIterator>());
     }
 
     Status init(const StorageReadOptions& opts) override;
@@ -367,29 +370,3 @@ Status UnionIterator::next_batch(RowBlockV2* block) {
             if (!_origin_iters.empty()) {
                 _cur_iter = *(_origin_iters.begin());
             }
-        } else {
-            return st;
-        }
-    }
-    return Status::EndOfFile("End of UnionIterator");
-}
-
-RowwiseIterator* new_merge_iterator(std::vector<RowwiseIterator*> inputs, std::shared_ptr<MemTracker> parent, int sequence_id_idx) {
-    if (inputs.size() == 1) {
-        return *(inputs.begin());
-    }
-    return new MergeIterator(std::move(inputs), parent, sequence_id_idx);
-}
-
-RowwiseIterator* new_union_iterator(std::vector<RowwiseIterator*>& inputs, std::shared_ptr<MemTracker> parent) {
-    if (inputs.size() == 1) {
-        return *(inputs.begin());
-    }
-    return new UnionIterator(inputs, parent);
-}
-
-RowwiseIterator* new_auto_increment_iterator(const Schema& schema, size_t num_rows) {
-    return new AutoIncrementIterator(schema, num_rows);
-}
-
-} // namespace doris

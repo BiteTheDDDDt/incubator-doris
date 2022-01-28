@@ -429,9 +429,11 @@ struct ProcessHashTableProbe {
                 auto new_filter_column = ColumnVector<UInt8>::create();
                 auto& filter_map = new_filter_column->get_data();
 
-                if (!column->empty()) filter_map.emplace_back(column->get_bool(0) && visited_map[0]);
+                if (!column->empty())
+                    filter_map.emplace_back(column->get_bool(0) && visited_map[0]);
                 for (int i = 1; i < column->size(); ++i) {
-                    if ((visited_map[i] && column->get_bool(i)) || (same_to_prev[i] && filter_map[i - 1])) {
+                    if ((visited_map[i] && column->get_bool(i)) ||
+                        (same_to_prev[i] && filter_map[i - 1])) {
                         filter_map.push_back(true);
                         filter_map[i - 1] = !same_to_prev[i] && filter_map[i - 1];
                     } else {
@@ -589,8 +591,8 @@ Status HashJoinNode::init(const TPlanNode& tnode, RuntimeState* state) {
     }
 
     for (const auto& filter_desc : _runtime_filter_descs) {
-        RETURN_IF_ERROR(state->runtime_filter_mgr()->regist_filter(RuntimeFilterRole::PRODUCER,
-                                                                   filter_desc, state->query_options()));
+        RETURN_IF_ERROR(state->runtime_filter_mgr()->regist_filter(
+                RuntimeFilterRole::PRODUCER, filter_desc, state->query_options()));
     }
 
     return Status::OK();

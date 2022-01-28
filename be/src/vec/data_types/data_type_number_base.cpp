@@ -73,8 +73,7 @@ size_t DataTypeNumberBase<T>::serialize(const IColumn& column, PColumn* pcolumn)
 
     // copy the data
     auto ptr = column.convert_to_full_column_if_const();
-    const auto* origin_data =
-            assert_cast<const ColumnVector<T>&>(*ptr.get()).get_data().data();
+    const auto* origin_data = assert_cast<const ColumnVector<T>&>(*ptr.get()).get_data().data();
     memcpy(data, origin_data, column_len * sizeof(FieldType));
 
     return compress_binary(pcolumn);

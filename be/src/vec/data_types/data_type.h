@@ -237,7 +237,8 @@ public:
     virtual void deserialize(const PColumn& pcolumn, IColumn* column) const = 0;
 
     static DataTypePtr from_thrift(const doris::PrimitiveType& type, const bool is_nullable = true);
-    static DataTypePtr from_olap_engine(const doris::FieldType& type, const bool is_nullable = true);
+    static DataTypePtr from_olap_engine(const doris::FieldType& type,
+                                        const bool is_nullable = true);
 
 private:
     friend class DataTypeFactory;

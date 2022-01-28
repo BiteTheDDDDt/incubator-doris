@@ -28,7 +28,6 @@
 #include "runtime/large_int_value.h"
 #include "runtime/string_value.h"
 #include "udf/udf.h"
-
 #include "vec/columns/column_decimal.h"
 #include "vec/columns/column_string.h"
 #include "vec/columns/columns_number.h"

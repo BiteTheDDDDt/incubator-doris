@@ -53,11 +53,9 @@ public:
 
         res = res ? res : arguments[0];
 
-        const ColumnsWithTypeAndName is_not_null_col{
-                {nullptr, make_nullable(res), ""}
-        };
-        func_is_not_null = SimpleFunctionFactory::instance().
-                get_function("is_not_null_pred", is_not_null_col, std::make_shared<DataTypeUInt8>());
+        const ColumnsWithTypeAndName is_not_null_col {{nullptr, make_nullable(res), ""}};
+        func_is_not_null = SimpleFunctionFactory::instance().get_function(
+                "is_not_null_pred", is_not_null_col, std::make_shared<DataTypeUInt8>());
 
         return res;
     }
@@ -74,7 +72,8 @@ public:
             filtered_args.push_back(arguments[i]);
             if (!arg_type->is_nullable()) {
                 if (i == 0) { //if the first column not null, return it's directly
-                    block.get_by_position(result).column = block.get_by_position(arguments[0]).column;
+                    block.get_by_position(result).column =
+                            block.get_by_position(arguments[0]).column;
                     return Status::OK();
                 } else {
                     break;
@@ -84,8 +83,12 @@ public:
 
         size_t remaining_rows = input_rows_count;
         size_t argument_size = filtered_args.size();
-        std::vector<uint32_t> record_idx(input_rows_count, 0); //used to save column idx, record the result data of each row from which column
-        std::vector<uint8_t> filled_flags(input_rows_count, 0); //used to save filled flag, in order to check current row whether have filled data
+        std::vector<uint32_t> record_idx(
+                input_rows_count,
+                0); //used to save column idx, record the result data of each row from which column
+        std::vector<uint8_t> filled_flags(
+                input_rows_count,
+                0); //used to save filled flag, in order to check current row whether have filled data
 
         MutableColumnPtr result_column;
         if (!result_type->is_nullable()) {
@@ -104,7 +107,8 @@ public:
         }
 
         auto return_type = std::make_shared<DataTypeUInt8>();
-        auto null_map = ColumnUInt8::create(input_rows_count, 1);  //if null_map_data==1, the current row should be null
+        auto null_map = ColumnUInt8::create(
+                input_rows_count, 1); //if null_map_data==1, the current row should be null
         auto* __restrict null_map_data = null_map->get_data().data();
         ColumnPtr argument_columns[argument_size]; //use to save nested_column if is nullable column
 
@@ -119,17 +123,17 @@ public:
         }
 
         Block temporary_block {
-            ColumnsWithTypeAndName {
-                    block.get_by_position(filtered_args[0]),
-                    {nullptr, std::make_shared<DataTypeUInt8>(), ""}
-            }
-        };
+                ColumnsWithTypeAndName {block.get_by_position(filtered_args[0]),
+                                        {nullptr, std::make_shared<DataTypeUInt8>(), ""}}};
 
         for (size_t i = 0; i < argument_size && remaining_rows; ++i) {
-            temporary_block.get_by_position(0).column = block.get_by_position(filtered_args[i]).column;
+            temporary_block.get_by_position(0).column =
+                    block.get_by_position(filtered_args[i]).column;
             func_is_not_null->execute(context, temporary_block, {0}, 1, input_rows_count);
 
-            auto res_column = (*temporary_block.get_by_position(1).column->convert_to_full_column_if_const()).mutate();
+            auto res_column =
+                    (*temporary_block.get_by_position(1).column->convert_to_full_column_if_const())
+                            .mutate();
             auto& res_map = assert_cast<ColumnVector<UInt8>*>(res_column.get())->get_data();
             auto* __restrict res = res_map.data();
 
@@ -152,7 +156,8 @@ public:
 
                 if (is_same_column_count == input_rows_count) {
                     if (result_type->is_nullable()) {
-                        block.get_by_position(result).column = make_nullable(argument_columns[i], false);
+                        block.get_by_position(result).column =
+                                make_nullable(argument_columns[i], false);
                     } else {
                         block.get_by_position(result).column = argument_columns[i];
                     }
@@ -170,7 +175,7 @@ public:
         }
 
         if (is_string_result) {
-            //if string type,  should according to the record results, fill in result one by one, 
+            //if string type,  should according to the record results, fill in result one by one,
             for (size_t row = 0; row < input_rows_count; ++row) {
                 if (null_map_data[row]) { //should be null
                     result_column->insert_default();
@@ -181,7 +186,8 @@ public:
         }
 
         if (result_type->is_nullable()) {
-            block.replace_by_position(result, ColumnNullable::create(std::move(result_column), std::move(null_map)));
+            block.replace_by_position(
+                    result, ColumnNullable::create(std::move(result_column), std::move(null_map)));
         } else {
             block.replace_by_position(result, std::move(result_column));
         }
@@ -198,12 +204,12 @@ public:
         auto* __restrict column_raw_data =
                 reinterpret_cast<const ColumnType*>(argument_column.get())->get_data().data();
 
-
         // Here it's SIMD thought the compiler automatically also
         // true: null_map_data[row]==0 && filled_idx[row]==0
         // if true, could filled current row data into result column
         for (size_t row = 0; row < input_rows_count; ++row) {
-            result_raw_data[row] += (!(null_map_data[row] | filled_flag[row])) * column_raw_data[row];
+            result_raw_data[row] +=
+                    (!(null_map_data[row] | filled_flag[row])) * column_raw_data[row];
             filled_flag[row] += (!(null_map_data[row] | filled_flag[row]));
         }
         return Status::OK();

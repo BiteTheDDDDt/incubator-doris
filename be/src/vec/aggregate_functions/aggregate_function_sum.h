@@ -82,12 +82,11 @@ public:
         const auto& column = static_cast<const ColVecType&>(*columns[0]);
         this->data(place).add(column.get_data()[row_num]);
     }
-    
-    void reset(AggregateDataPtr place) const override {
-        this->data(place).sum = {};
-    }
 
-    void merge(AggregateDataPtr __restrict place, ConstAggregateDataPtr rhs, Arena*) const override {
+    void reset(AggregateDataPtr place) const override { this->data(place).sum = {}; }
+
+    void merge(AggregateDataPtr __restrict place, ConstAggregateDataPtr rhs,
+               Arena*) const override {
         this->data(place).merge(this->data(rhs));
     }
 
@@ -95,7 +94,8 @@ public:
         this->data(place).write(buf);
     }
 
-    void deserialize(AggregateDataPtr __restrict place, BufferReadable& buf, Arena*) const override {
+    void deserialize(AggregateDataPtr __restrict place, BufferReadable& buf,
+                     Arena*) const override {
         this->data(place).read(buf);
     }
 
@@ -111,8 +111,8 @@ private:
 };
 
 AggregateFunctionPtr create_aggregate_function_sum_reader(const std::string& name,
-                                                   const DataTypes& argument_types,
-                                                   const Array& parameters,
-                                                   const bool result_is_nullable);
+                                                          const DataTypes& argument_types,
+                                                          const Array& parameters,
+                                                          const bool result_is_nullable);
 
 } // namespace doris::vectorized

@@ -214,7 +214,9 @@ public:
     virtual bool check_file_exist() = 0;
 
     // return an unique identifier string for this rowset
-    std::string unique_id() const { return _rowset_path_desc.filepath + "/" + rowset_id().to_string(); }
+    std::string unique_id() const {
+        return _rowset_path_desc.filepath + "/" + rowset_id().to_string();
+    }
 
     bool need_delete_file() const { return _need_delete_file; }
 
@@ -257,7 +259,8 @@ protected:
 
     DISALLOW_COPY_AND_ASSIGN(Rowset);
     // this is non-public because all clients should use RowsetFactory to obtain pointer to initialized Rowset
-    Rowset(const TabletSchema* schema, const FilePathDesc& rowset_path_desc, RowsetMetaSharedPtr rowset_meta);
+    Rowset(const TabletSchema* schema, const FilePathDesc& rowset_path_desc,
+           RowsetMetaSharedPtr rowset_meta);
 
     // this is non-public because all clients should use RowsetFactory to obtain pointer to initialized Rowset
     virtual OLAPStatus init() = 0;

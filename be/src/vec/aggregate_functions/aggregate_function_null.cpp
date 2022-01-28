@@ -43,10 +43,9 @@ public:
         return res;
     }
 
-    AggregateFunctionPtr transform_aggregate_function(const AggregateFunctionPtr& nested_function,
-                                                      const DataTypes& arguments,
-                                                      const Array& params,
-                                                      const bool result_is_nullable) const override {
+    AggregateFunctionPtr transform_aggregate_function(
+            const AggregateFunctionPtr& nested_function, const DataTypes& arguments,
+            const Array& params, const bool result_is_nullable) const override {
         if (nested_function == nullptr) return nullptr;
 
         bool has_null_types = false;
@@ -84,7 +83,8 @@ void register_aggregate_function_combinator_null(AggregateFunctionSimpleFactory&
         auto function_combinator = std::make_shared<AggregateFunctionCombinatorNull>();
         auto transform_arguments = function_combinator->transform_arguments(types);
         auto nested_function = factory.get(name, transform_arguments, params);
-        return function_combinator->transform_aggregate_function(nested_function, types, params, result_is_nullable);
+        return function_combinator->transform_aggregate_function(nested_function, types, params,
+                                                                 result_is_nullable);
     };
     factory.register_nullable_function_combinator(creator);
 }

@@ -65,9 +65,7 @@ public:
     // It's ok, because we only get ref here, the block's owner is this reader.
     OLAPStatus next_block(RowBlock** block) override;
 
-    OLAPStatus next_block(vectorized::Block *block) override {
-        return OLAP_ERR_DATA_EOF;
-    }
+    OLAPStatus next_block(vectorized::Block* block) override { return OLAP_ERR_DATA_EOF; }
 
     bool delete_flag() override;
 

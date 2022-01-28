@@ -24,7 +24,6 @@
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <initializer_list>
 
-
 /** Copy-on-write shared ptr.
   * Allows to work with shared immutable objects and sometimes unshare and mutate you own unique copy.
   *
@@ -101,13 +100,9 @@ protected:
 
     COW(COW const&) : ref_counter(0) {}
 
-    COW& operator=(COW const&) {
-        return *this;
-    }
+    COW& operator=(COW const&) { return *this; }
 
-    void add_ref() {
-        ++ref_counter;
-    }
+    void add_ref() { ++ref_counter; }
 
     void release_ref() {
         if (--ref_counter == 0) {
@@ -124,7 +119,7 @@ protected:
     public:
         intrusive_ptr() : t(nullptr) {}
 
-        intrusive_ptr(T* t, bool add_ref=true) : t(t) {
+        intrusive_ptr(T* t, bool add_ref = true) : t(t) {
             if (t && add_ref) ((std::remove_const_t<T>*)t)->add_ref();
         }
 
@@ -149,9 +144,7 @@ protected:
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-        intrusive_ptr(intrusive_ptr&& rhs) : t(rhs.t) {
-            rhs.t = nullptr;
-        }
+        intrusive_ptr(intrusive_ptr&& rhs) : t(rhs.t) { rhs.t = nullptr; }
 #pragma GCC diagnostic pop
 
         intrusive_ptr& operator=(intrusive_ptr&& rhs) {
@@ -159,14 +152,15 @@ protected:
             return *this;
         }
 
-        template<class U> friend class intrusive_ptr;
+        template <class U>
+        friend class intrusive_ptr;
 
-        template<class U>
+        template <class U>
         intrusive_ptr(intrusive_ptr<U>&& rhs) : t(rhs.t) {
             rhs.t = nullptr;
         }
 
-        template<class U>
+        template <class U>
         intrusive_ptr& operator=(intrusive_ptr<U>&& rhs) {
             intrusive_ptr(static_cast<intrusive_ptr<U>&&>(rhs)).swap(*this);
             return *this;
@@ -182,21 +176,13 @@ protected:
             return *this;
         }
 
-        void reset() {
-            intrusive_ptr().swap(*this);
-        }
+        void reset() { intrusive_ptr().swap(*this); }
 
-        void reset(T* rhs) {
-            intrusive_ptr(rhs).swap(*this);
-        }
+        void reset(T* rhs) { intrusive_ptr(rhs).swap(*this); }
 
-        void reset(T* rhs, bool add_ref) {
-            intrusive_ptr(rhs, add_ref).swap(*this);
-        }
+        void reset(T* rhs, bool add_ref) { intrusive_ptr(rhs, add_ref).swap(*this); }
 
-        T* get() const {
-            return t;
-        }
+        T* get() const { return t; }
 
         T* detach() {
             T* ret = t;
@@ -210,25 +196,15 @@ protected:
             rhs.t = tmp;
         }
 
-        T& operator*() const& {
-            return *t;
-        }
+        T& operator*() const& { return *t; }
 
-        T&& operator*() const&& {
-            return const_cast<std::remove_const_t<T>&&>(*t);
-        }
+        T&& operator*() const&& { return const_cast<std::remove_const_t<T>&&>(*t); }
 
-        T* operator->() const {
-            return t;
-        }
+        T* operator->() const { return t; }
 
-        operator bool() const {
-            return t != nullptr;
-        }
+        operator bool() const { return t != nullptr; }
 
-        operator T*() const {
-            return t;
-        }
+        operator T*() const { return t; }
 
     private:
         T* t;
@@ -240,10 +216,13 @@ protected:
     private:
         using Base = intrusive_ptr<T>;
 
-        template <typename> friend class COW;
-        template <typename, typename> friend class COWHelper;
+        template <typename>
+        friend class COW;
+        template <typename, typename>
+        friend class COWHelper;
 
         explicit mutable_ptr(T* ptr) : Base(ptr) {}
+
     public:
         /// Copy: not possible.
         mutable_ptr(const mutable_ptr&) = delete;
@@ -264,9 +243,7 @@ protected:
 public:
     using MutablePtr = mutable_ptr<Derived>;
 
-    unsigned int use_count() const {
-        return ref_counter.load();
-    }
+    unsigned int use_count() const { return ref_counter.load(); }
 
 protected:
     template <typename T>
@@ -274,10 +251,13 @@ protected:
     private:
         using Base = intrusive_ptr<const T>;
 
-        template <typename> friend class COW;
-        template <typename, typename> friend class COWHelper;
+        template <typename>
+        friend class COW;
+        template <typename, typename>
+        friend class COWHelper;
 
         explicit immutable_ptr(const T* ptr) : Base(ptr) {}
+
     public:
         /// Copy from immutable ptr: ok.
         immutable_ptr(const immutable_ptr&) = default;
@@ -363,8 +343,8 @@ protected:
         const T& operator*() const { return *value; }
         T& operator*() { return value->assume_mutable_ref(); }
 
-        operator const immutable_ptr<T> &() const { return value; }
-        operator immutable_ptr<T> &() { return value; }
+        operator const immutable_ptr<T>&() const { return value; }
+        operator immutable_ptr<T>&() { return value; }
 
         operator bool() const { return value != nullptr; }
         bool operator!() const { return value == nullptr; }

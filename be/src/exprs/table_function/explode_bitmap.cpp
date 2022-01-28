@@ -44,21 +44,23 @@ Status ExplodeBitmapTableFunction::open() {
 }
 
 Status ExplodeBitmapTableFunction::process(TupleRow* tuple_row) {
-    CHECK(1 == _expr_context->root()->get_num_children()) << _expr_context->root()->get_num_children();
+    CHECK(1 == _expr_context->root()->get_num_children())
+            << _expr_context->root()->get_num_children();
     _eos = false;
     _is_current_empty = false;
     _cur_size = 0;
     _cur_offset = 0;
 
-    StringVal bitmap_str = _expr_context->root()->get_child(0)->get_string_val(_expr_context, tuple_row);
+    StringVal bitmap_str =
+            _expr_context->root()->get_child(0)->get_string_val(_expr_context, tuple_row);
     if (bitmap_str.is_null) {
-       _is_current_empty = true;
+        _is_current_empty = true;
     } else {
         if (bitmap_str.len == 0) {
             _cur_bitmap = reinterpret_cast<BitmapValue*>(bitmap_str.ptr);
             _cur_bitmap_owned = false;
         } else {
-            _cur_bitmap = new BitmapValue((char*) bitmap_str.ptr);
+            _cur_bitmap = new BitmapValue((char*)bitmap_str.ptr);
             _cur_bitmap_owned = true;
         }
         _cur_size = _cur_bitmap->cardinality();

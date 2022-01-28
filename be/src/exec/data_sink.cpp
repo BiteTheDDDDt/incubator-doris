@@ -34,7 +34,6 @@
 #include "runtime/result_file_sink.h"
 #include "runtime/result_sink.h"
 #include "runtime/runtime_state.h"
-
 #include "vec/sink/result_sink.h"
 #include "vec/sink/vdata_stream_sender.h"
 #include "vec/sink/vtablet_sink.h"
@@ -78,7 +77,8 @@ Status DataSink::create_data_sink(ObjectPool* pool, const TDataSink& thrift_sink
 
         // TODO: figure out good buffer size based on size of output row
         if (is_vec) {
-            tmp_sink = new doris::vectorized::VResultSink(row_desc, output_exprs, thrift_sink.result_sink, 4096);
+            tmp_sink = new doris::vectorized::VResultSink(row_desc, output_exprs,
+                                                          thrift_sink.result_sink, 4096);
         } else {
             tmp_sink = new ResultSink(row_desc, output_exprs, thrift_sink.result_sink, 1024);
         }

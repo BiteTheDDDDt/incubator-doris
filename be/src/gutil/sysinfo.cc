@@ -33,9 +33,9 @@
 #endif
 
 #include <ctype.h>
-#include <fcntl.h>  // for open()
-#include <unistd.h> // for read()
+#include <fcntl.h> // for open()
 #include <strings.h>
+#include <unistd.h> // for read()
 
 #if defined __MACH__    // Mac OS X, almost certainly
 #include <sys/sysctl.h> // how we figure out numcpu's on OS X
@@ -51,6 +51,7 @@
 #endif
 
 #include <glog/logging.h>
+
 #include <algorithm>
 #include <cerrno>  // for errno
 #include <cstdio>  // for snprintf(), sscanf()

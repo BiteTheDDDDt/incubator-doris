@@ -32,21 +32,21 @@ set_target_properties(DorisUdf PROPERTIES COMPILE_FLAGS "-DDORIS_UDF_SDK_BUILD")
 
 # We can't use the normal link list since we want to pick up libDorisUdf (the external
 # library) rather than the internal libUdf.
-set (UDF_TEST_LINK_LIBS
-  -Wl,--start-group
-  Common
-  GlobalFlags
-  DorisUdf
-  Runtime
-  Util
-  -Wl,--end-group
-# Below are all external dependencies.  They should some after the doris libs.
-  ${Boost_LIBRARIES}
-  glogstatic
-  gflagsstatic
-  -lboost_date_time
-  gtest)
-  
+set(UDF_TEST_LINK_LIBS
+        -Wl,--start-group
+        Common
+        GlobalFlags
+        DorisUdf
+        Runtime
+        Util
+        -Wl,--end-group
+        # Below are all external dependencies.  They should some after the doris libs.
+        ${Boost_LIBRARIES}
+        glogstatic
+        gflagsstatic
+        -lboost_date_time
+        gtest)
+
 set_target_properties(DorisUdf PROPERTIES PUBLIC_HEADER "udf.h;uda_test_harness.h")
 INSTALL(TARGETS DorisUdf
         ARCHIVE DESTINATION ${OUTPUT_DIR}/udf

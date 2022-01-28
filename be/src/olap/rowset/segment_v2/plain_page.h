@@ -186,7 +186,7 @@ public:
 
     Status next_batch(size_t* n, ColumnBlockView* dst) override { return next_batch<true>(n, dst); }
 
-    Status next_batch(size_t* n, vectorized::MutableColumnPtr &dst) override {
+    Status next_batch(size_t* n, vectorized::MutableColumnPtr& dst) override {
         return Status::NotSupported("plain page not implement vec op now");
     };
 

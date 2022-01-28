@@ -1,12 +1,11 @@
 #include <errno.h>
 #include <pthread.h>
 #include <time.h>
+
 #include "syscall.h"
 
-int clock_nanosleep(clockid_t clk, int flags, const struct timespec * req, struct timespec * rem)
-{
-    if (clk == CLOCK_THREAD_CPUTIME_ID)
-        return EINVAL;
+int clock_nanosleep(clockid_t clk, int flags, const struct timespec* req, struct timespec* rem) {
+    if (clk == CLOCK_THREAD_CPUTIME_ID) return EINVAL;
     int old_cancel_type;
     int status;
     /// We cannot port __syscall_cp because musl has very limited cancellation point implementation.

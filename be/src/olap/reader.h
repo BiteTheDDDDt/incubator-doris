@@ -31,8 +31,8 @@
 #include <vector>
 
 #include "exprs/bloomfilter_predicate.h"
-#include "olap/column_predicate.h"
 #include "olap/collect_iterator.h"
+#include "olap/column_predicate.h"
 #include "olap/delete_handler.h"
 #include "olap/olap_cond.h"
 #include "olap/olap_define.h"
@@ -63,6 +63,7 @@ class TabletReader {
         bool start_key_include = false;
         bool end_key_include = false;
     };
+
 public:
     // Params for Reader,
     // mainly include tablet, data version and fetch range.

@@ -41,15 +41,17 @@ public:
     RowsetConverter(const TabletMetaSharedPtr& tablet_meta) : _tablet_meta(tablet_meta) {}
 
     OLAPStatus convert_beta_to_alpha(const RowsetMetaSharedPtr& src_rowset_meta,
-                                     const FilePathDesc& rowset_path_desc, RowsetMetaPB* dst_rs_meta_pb);
+                                     const FilePathDesc& rowset_path_desc,
+                                     RowsetMetaPB* dst_rs_meta_pb);
 
     OLAPStatus convert_alpha_to_beta(const RowsetMetaSharedPtr& src_rowset_meta,
-                                     const FilePathDesc& rowset_path_desc, RowsetMetaPB* dst_rs_meta_pb);
+                                     const FilePathDesc& rowset_path_desc,
+                                     RowsetMetaPB* dst_rs_meta_pb);
 
 private:
     OLAPStatus _convert_rowset(const RowsetMetaSharedPtr& src_rowset_meta,
-                               const FilePathDesc& rowset_path_desc,
-                               RowsetTypePB dst_type, RowsetMetaPB* dst_rs_meta_pb);
+                               const FilePathDesc& rowset_path_desc, RowsetTypePB dst_type,
+                               RowsetMetaPB* dst_rs_meta_pb);
 
 private:
     TabletMetaSharedPtr _tablet_meta;

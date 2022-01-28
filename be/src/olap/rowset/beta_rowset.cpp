@@ -30,8 +30,8 @@
 
 namespace doris {
 
-FilePathDesc BetaRowset::segment_file_path(const FilePathDesc& segment_dir_desc, const RowsetId& rowset_id,
-                                          int segment_id) {
+FilePathDesc BetaRowset::segment_file_path(const FilePathDesc& segment_dir_desc,
+                                           const RowsetId& rowset_id, int segment_id) {
     FilePathDescStream path_desc_s;
     path_desc_s << segment_dir_desc << "/" << rowset_id.to_string() << "_" << segment_id << ".dat";
     return path_desc_s.path_desc();
@@ -60,7 +60,7 @@ OLAPStatus BetaRowset::load_segments(std::vector<segment_v2::SegmentSharedPtr>* 
         auto s = segment_v2::Segment::open(seg_path_desc, seg_id, _schema, &segment);
         if (!s.ok()) {
             LOG(WARNING) << "failed to open segment. " << seg_path_desc.debug_string()
-                    << " under rowset " << unique_id() << " : " << s.to_string();
+                         << " under rowset " << unique_id() << " : " << s.to_string();
             return OLAP_ERR_ROWSET_LOAD_FAILED;
         }
         segments->push_back(std::move(segment));
@@ -102,8 +102,8 @@ OLAPStatus BetaRowset::remove() {
         fs::BlockManager* block_mgr = fs::fs_util::block_manager(path_desc.storage_medium);
         if (!block_mgr->delete_block(path_desc).ok()) {
             char errmsg[64];
-            LOG(WARNING) << "failed to delete file. err=" << strerror_r(errno, errmsg, 64)
-                         << ", " << path_desc.debug_string();
+            LOG(WARNING) << "failed to delete file. err=" << strerror_r(errno, errmsg, 64) << ", "
+                         << path_desc.debug_string();
             success = false;
         }
     }
@@ -123,7 +123,8 @@ OLAPStatus BetaRowset::link_files_to(const FilePathDesc& dir_desc, RowsetId new_
         FilePathDesc dst_link_path_desc = segment_file_path(dir_desc, new_rowset_id, i);
         // TODO(lingbin): use Env API? or EnvUtil?
         if (FileUtils::check_exist(dst_link_path_desc.filepath)) {
-            LOG(WARNING) << "failed to create hard link, file already exist: " << dst_link_path_desc.filepath;
+            LOG(WARNING) << "failed to create hard link, file already exist: "
+                         << dst_link_path_desc.filepath;
             return OLAP_ERR_FILE_ALREADY_EXIST;
         }
         FilePathDesc src_file_path_desc = segment_file_path(_rowset_path_desc, rowset_id(), i);
@@ -131,7 +132,8 @@ OLAPStatus BetaRowset::link_files_to(const FilePathDesc& dir_desc, RowsetId new_
         //     use copy? or keep refcount to avoid being delete?
         fs::BlockManager* block_mgr = fs::fs_util::block_manager(dir_desc.storage_medium);
         if (!block_mgr->link_file(src_file_path_desc, dst_link_path_desc).ok()) {
-            LOG(WARNING) << "fail to create hard link. from=" << src_file_path_desc.debug_string() << ", "
+            LOG(WARNING) << "fail to create hard link. from=" << src_file_path_desc.debug_string()
+                         << ", "
                          << "to=" << dst_link_path_desc.debug_string() << ", errno=" << Errno::no();
             return OLAP_ERR_OS_ERROR;
         }
@@ -153,10 +155,11 @@ OLAPStatus BetaRowset::copy_files_to(const std::string& dir) {
             return OLAP_ERR_OS_ERROR;
         }
         FilePathDesc src_path_desc = segment_file_path(_rowset_path_desc, rowset_id(), i);
-        if (!Env::get_env(_rowset_path_desc.storage_medium)->copy_path(
-                src_path_desc.filepath, dst_path_desc.filepath).ok()) {
-            LOG(WARNING) << "fail to copy file. from=" << src_path_desc.filepath << ", to="
-                    << dst_path_desc.filepath << ", errno=" << Errno::no();
+        if (!Env::get_env(_rowset_path_desc.storage_medium)
+                     ->copy_path(src_path_desc.filepath, dst_path_desc.filepath)
+                     .ok()) {
+            LOG(WARNING) << "fail to copy file. from=" << src_path_desc.filepath
+                         << ", to=" << dst_path_desc.filepath << ", errno=" << Errno::no();
             return OLAP_ERR_OS_ERROR;
         }
     }
@@ -180,8 +183,8 @@ OLAPStatus BetaRowset::upload_files_to(const FilePathDesc& dir_desc) {
         FilePathDesc src_path_desc = segment_file_path(_rowset_path_desc, rowset_id(), i);
 
         if (!storage_backend->upload(src_path_desc.filepath, dst_path_desc.remote_path).ok()) {
-            LOG(WARNING) << "fail to upload file. from=" << src_path_desc.filepath << ", to="
-                         << dst_path_desc.remote_path << ", errno=" << Errno::no();
+            LOG(WARNING) << "fail to upload file. from=" << src_path_desc.filepath
+                         << ", to=" << dst_path_desc.remote_path << ", errno=" << Errno::no();
             return OLAP_ERR_OS_ERROR;
         }
         LOG(INFO) << "succeed to upload file. from " << src_path_desc.filepath << " to "
@@ -205,7 +208,7 @@ bool BetaRowset::check_file_exist() {
         FilePathDesc path_desc = segment_file_path(_rowset_path_desc, rowset_id(), i);
         if (!env->path_exists(path_desc.filepath).ok()) {
             LOG(WARNING) << "data file not existed: " << path_desc.filepath
-                    << " for rowset_id: " << rowset_id();
+                         << " for rowset_id: " << rowset_id();
             return false;
         }
     }

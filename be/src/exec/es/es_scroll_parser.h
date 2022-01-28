@@ -54,7 +54,7 @@ private:
     Status fill_date_slot_with_timestamp(void* slot, const rapidjson::Value& col,
                                          PrimitiveType type);
     Status fill_date_col_with_timestamp(vectorized::IColumn* col_ptr, const rapidjson::Value& col,
-                                         PrimitiveType type);
+                                        PrimitiveType type);
 
 private:
     std::string _scroll_id;

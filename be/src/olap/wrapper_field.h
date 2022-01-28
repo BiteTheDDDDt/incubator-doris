@@ -111,10 +111,3 @@ private:
     //include fixed and variable length and null bytes
     size_t _length;
     size_t _var_length;
-    // memory for string type field
-    std::unique_ptr<char[]> _string_content;
-};
-
-} // namespace doris
-
-#endif

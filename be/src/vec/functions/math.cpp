@@ -175,11 +175,13 @@ struct HexIntImpl {
     static DataTypes get_variadic_argument_types() {
         return {std::make_shared<vectorized::DataTypeInt64>()};
     }
-    
-    static std::string_view hex(uint64_t num, char* ans){
+
+    static std::string_view hex(uint64_t num, char* ans) {
         static constexpr auto hex_table = "0123456789ABCDEF";
         // uint64_t max value 0xFFFFFFFFFFFFFFFF , 16 'F'
-        if (num == 0) { return {hex_table, 1};}
+        if (num == 0) {
+            return {hex_table, 1};
+        }
 
         size_t i = 0;
         while (num) {
@@ -197,7 +199,7 @@ struct HexIntImpl {
 
         return {ans, i};
     }
-    
+
     static Status vector(const ColumnInt64::Container& data, ColumnString::Chars& res_data,
                          ColumnString::Offsets& res_offsets) {
         res_offsets.resize(data.size());
@@ -257,9 +259,7 @@ template <typename A>
 struct NegativeImpl {
     using ResultType = A;
 
-    static inline ResultType apply(A a) {
-        return -a;
-    }
+    static inline ResultType apply(A a) { return -a; }
 };
 
 struct NameNegative {
@@ -299,7 +299,8 @@ using FunctionTan = FunctionMathUnary<UnaryFunctionVectorized<TanName, std::tan>
 struct FloorName {
     static constexpr auto name = "floor";
 };
-using FunctionFloor = FunctionMathUnary<UnaryFunctionVectorized<FloorName, std::floor, DataTypeInt64>>;
+using FunctionFloor =
+        FunctionMathUnary<UnaryFunctionVectorized<FloorName, std::floor, DataTypeInt64>>;
 
 struct PowName {
     static constexpr auto name = "pow";
@@ -361,7 +362,7 @@ struct BinImpl {
     static constexpr auto TYPE_INDEX = TypeIndex::Int64;
     using Type = Int64;
     using ReturnColumnType = ColumnString;
-    
+
     static std::string bin_impl(Int64 value) {
         uint64_t n = static_cast<uint64_t>(value);
         const size_t max_bits = sizeof(uint64_t) * 8;
@@ -372,13 +373,12 @@ struct BinImpl {
         } while (n >>= 1);
         return std::string(result + index, max_bits - index);
     }
-    
+
     static Status vector(const ColumnInt64::Container& data, ColumnString::Chars& res_data,
                          ColumnString::Offsets& res_offsets) {
-        
         res_offsets.resize(data.size());
         size_t input_size = res_offsets.size();
-        
+
         for (size_t i = 0; i < input_size; ++i) {
             StringOP::push_value_string(bin_impl(data[i]), i, res_data, res_offsets);
         }
@@ -400,11 +400,11 @@ struct RoundOneImpl {
     static constexpr auto name = RoundName::name;
     static constexpr auto rows_per_iteration = 1;
     static constexpr bool always_returns_float64 = false;
-    
+
     static DataTypes get_variadic_argument_types() {
         return {std::make_shared<vectorized::DataTypeFloat64>()};
     }
-    
+
     template <typename T, typename U>
     static void execute(const T* src, U* dst) {
         dst[0] = static_cast<Int64>(std::round(static_cast<Float64>(src[0])));
@@ -418,7 +418,7 @@ template <typename Name>
 struct RoundTwoImpl {
     static constexpr auto name = RoundName::name;
     static constexpr auto rows_per_iteration = 1;
-    
+
     static DataTypes get_variadic_argument_types() {
         return {std::make_shared<vectorized::DataTypeFloat64>(),
                 std::make_shared<vectorized::DataTypeInt32>()};

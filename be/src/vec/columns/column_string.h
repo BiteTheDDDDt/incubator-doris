@@ -187,7 +187,8 @@ public:
 
     void insert_range_from(const IColumn& src, size_t start, size_t length) override;
 
-    void insert_indices_from(const IColumn& src, const int* indices_begin, const int* indices_end) override;
+    void insert_indices_from(const IColumn& src, const int* indices_begin,
+                             const int* indices_end) override;
 
     ColumnPtr filter(const Filter& filt, ssize_t result_size_hint) const override;
 
@@ -210,7 +211,7 @@ public:
 
         const size_t old_size = offsets.size();
         const size_t new_size = old_size + length;
-        const auto num = offsets.back() + 1; 
+        const auto num = offsets.back() + 1;
         offsets.resize_fill(new_size, num);
         for (size_t i = old_size, j = 0; i < new_size; i++, j++) {
             offsets[i] += j;

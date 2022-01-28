@@ -15,18 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "util/doris_metrics.h"
+#include "vec/sink/vtablet_sink.h"
 
+#include "util/doris_metrics.h"
+#include "vec/core/block.h"
 #include "vec/exprs/vexpr.h"
 #include "vec/exprs/vexpr_context.h"
-#include "vec/sink/vtablet_sink.h"
-#include "vec/core/block.h"
 
 namespace doris {
 namespace stream_load {
 
 VOlapTableSink::VOlapTableSink(ObjectPool* pool, const RowDescriptor& row_desc,
-                             const std::vector<TExpr>& texprs, Status* status)
+                               const std::vector<TExpr>& texprs, Status* status)
         : OlapTableSink(pool, row_desc, texprs, status) {
     // From the thrift expressions create the real exprs.
     vectorized::VExpr::create_expr_trees(pool, texprs, &_output_vexpr_ctxs);
@@ -43,7 +43,8 @@ Status VOlapTableSink::init(const TDataSink& sink) {
 
 Status VOlapTableSink::prepare(RuntimeState* state) {
     // Prepare the exprs to run.
-    RETURN_IF_ERROR(vectorized::VExpr::prepare(_output_vexpr_ctxs, state, _input_row_desc, _expr_mem_tracker));
+    RETURN_IF_ERROR(vectorized::VExpr::prepare(_output_vexpr_ctxs, state, _input_row_desc,
+                                               _expr_mem_tracker));
     return OlapTableSink::prepare(state);
 }
 
@@ -55,7 +56,9 @@ Status VOlapTableSink::open(RuntimeState* state) {
 
 Status VOlapTableSink::send(RuntimeState* state, vectorized::Block* input_block) {
     Status status = Status::OK();
-    if (UNLIKELY(input_block->rows() == 0)) { return status; }
+    if (UNLIKELY(input_block->rows() == 0)) {
+        return status;
+    }
 
     SCOPED_TIMER(_profile->total_time_counter());
     _number_input_rows += input_block->rows();
@@ -70,8 +73,10 @@ Status VOlapTableSink::send(RuntimeState* state, vectorized::Block* input_block)
     if (!_output_vexpr_ctxs.empty()) {
         // Do vectorized expr here to speed up load
         block = vectorized::VExprContext::get_output_block_after_execute_exprs(
-            _output_vexpr_ctxs, *input_block, status);
-        if (UNLIKELY(block.rows() == 0)) { return status; }
+                _output_vexpr_ctxs, *input_block, status);
+        if (UNLIKELY(block.rows() == 0)) {
+            return status;
+        }
     }
 
     auto num_rows = block.rows();
@@ -79,7 +84,8 @@ Status VOlapTableSink::send(RuntimeState* state, vectorized::Block* input_block)
     {
         SCOPED_RAW_TIMER(&_validate_data_ns);
         _filter_vec.resize(num_rows);
-        num_invalid_rows = _validate_data(state, &block, reinterpret_cast<bool*>(_filter_vec.data()));
+        num_invalid_rows =
+                _validate_data(state, &block, reinterpret_cast<bool*>(_filter_vec.data()));
         _number_filtered_rows += num_invalid_rows;
     }
 
@@ -96,12 +102,14 @@ Status VOlapTableSink::send(RuntimeState* state, vectorized::Block* input_block)
         uint32_t dist_hash = 0;
         block_row = {&block, i};
         if (!_vpartition->find_tablet(&block_row, &partition, &dist_hash)) {
-            RETURN_IF_ERROR(state->append_error_msg_to_file([]() -> std::string { return ""; },
+            RETURN_IF_ERROR(state->append_error_msg_to_file(
+                    []() -> std::string { return ""; },
                     [&]() -> std::string {
-                    fmt::memory_buffer buf;
-                    fmt::format_to(buf, "no partition for this tuple. tuple=[]");
-                    return buf.data();
-                    }, &stop_processing));
+                        fmt::memory_buffer buf;
+                        fmt::format_to(buf, "no partition for this tuple. tuple=[]");
+                        return buf.data();
+                    },
+                    &stop_processing));
             _number_filtered_rows++;
             continue;
         }
@@ -278,4 +286,3 @@ int VOlapTableSink::_validate_data(doris::RuntimeState* state, doris::vectorized
 
 } // namespace stream_load
 } // namespace doris
-

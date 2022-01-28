@@ -27,15 +27,15 @@
 #include "vec/data_types/data_type_date_time.h"
 #include "vec/data_types/data_type_decimal.h"
 #include "vec/data_types/data_type_nothing.h"
-#include "vec/data_types/data_type_number.h"
 #include "vec/data_types/data_type_nullable.h"
+#include "vec/data_types/data_type_number.h"
 #include "vec/data_types/data_type_string.h"
 
 namespace doris::vectorized {
 
 class DataTypeFactory {
-using DataTypeMap = std::unordered_map<std::string, DataTypePtr>;
-using InvertedDataTypeMap = std::vector<std::pair<DataTypePtr, std::string>>;
+    using DataTypeMap = std::unordered_map<std::string, DataTypePtr>;
+    using InvertedDataTypeMap = std::vector<std::pair<DataTypePtr, std::string>>;
 
 public:
     static DataTypeFactory& instance() {
@@ -57,15 +57,16 @@ public:
             instance.regist_data_type("DateTime",
                                       DataTypePtr(std::make_shared<DataTypeDateTime>()));
             instance.regist_data_type("String", DataTypePtr(std::make_shared<DataTypeString>()));
-            instance.regist_data_type("Decimal",
-                    DataTypePtr(std::make_shared<DataTypeDecimal<Decimal128>>(27, 9)));
+            instance.regist_data_type(
+                    "Decimal", DataTypePtr(std::make_shared<DataTypeDecimal<Decimal128>>(27, 9)));
         });
         return instance;
     }
     DataTypePtr get(const std::string& name) { return _data_type_map[name]; }
     const std::string& get(const DataTypePtr& data_type) const {
-        auto type_ptr = data_type->is_nullable() ?
-                        ((DataTypeNullable*)(data_type.get()))->get_nested_type() : data_type;
+        auto type_ptr = data_type->is_nullable()
+                                ? ((DataTypeNullable*)(data_type.get()))->get_nested_type()
+                                : data_type;
         for (const auto& entity : _invert_data_type_map) {
             if (entity.first->equals(*type_ptr)) {
                 return entity.second;

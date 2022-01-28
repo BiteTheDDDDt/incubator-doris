@@ -32,7 +32,6 @@
 #include "util/blocking_queue.hpp"
 #include "util/runtime_profile.h"
 #include "util/uid_util.h" // for print_id
-
 #include "vec/exprs/vexpr_context.h"
 
 namespace doris {

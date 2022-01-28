@@ -68,7 +68,8 @@ public:
     OLAPStatus close();
     // wait for all memtables to be flushed.
     // mem_consumption() should be 0 after this function returns.
-    OLAPStatus close_wait(google::protobuf::RepeatedPtrField<PTabletInfo>* tablet_vec, bool is_broken);
+    OLAPStatus close_wait(google::protobuf::RepeatedPtrField<PTabletInfo>* tablet_vec,
+                          bool is_broken);
 
     // abandon current memtable and wait for all pending-flushing memtables to be destructed.
     // mem_consumption() should be 0 after this function returns.
@@ -116,16 +117,4 @@ private:
     bool _delta_written_success;
 
     StorageEngine* _storage_engine;
-    std::unique_ptr<FlushToken> _flush_token;
-    std::shared_ptr<MemTracker> _parent_mem_tracker;
-    std::shared_ptr<MemTracker> _mem_tracker;
-
-    // The counter of number of segment flushed already.
-    int64_t _segment_counter = 0;
-
-    std::mutex _lock;
-};
-
-} // namespace doris
-
-#endif // DORIS_BE_SRC_OLAP_DELTA_WRITER_H
+    std::unique_ptr<FlushToken> _flush

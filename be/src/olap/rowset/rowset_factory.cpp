@@ -28,7 +28,8 @@
 
 namespace doris {
 
-OLAPStatus RowsetFactory::create_rowset(const TabletSchema* schema, const FilePathDesc& rowset_path_desc,
+OLAPStatus RowsetFactory::create_rowset(const TabletSchema* schema,
+                                        const FilePathDesc& rowset_path_desc,
                                         RowsetMetaSharedPtr rowset_meta, RowsetSharedPtr* rowset) {
     if (rowset_meta->rowset_type() == ALPHA_ROWSET) {
         rowset->reset(new AlphaRowset(schema, rowset_path_desc, rowset_meta));

@@ -33,28 +33,28 @@ BlockManager* block_manager(TStorageMedium::type storage_medium) {
     fs::BlockManagerOptions bm_opts;
     bm_opts.read_only = false;
     switch (storage_medium) {
-        case TStorageMedium::S3:
-            bm_opts.read_only = true;
-            static RemoteBlockManager remote_block_mgr(
-                    Env::Default(), dynamic_cast<RemoteEnv*>(Env::get_env(storage_medium)), bm_opts);
-            return &remote_block_mgr;
-        case TStorageMedium::SSD:
-        case TStorageMedium::HDD:
-        default:
-            static FileBlockManager block_mgr(Env::Default(), std::move(bm_opts));
-            return &block_mgr;
+    case TStorageMedium::S3:
+        bm_opts.read_only = true;
+        static RemoteBlockManager remote_block_mgr(
+                Env::Default(), dynamic_cast<RemoteEnv*>(Env::get_env(storage_medium)), bm_opts);
+        return &remote_block_mgr;
+    case TStorageMedium::SSD:
+    case TStorageMedium::HDD:
+    default:
+        static FileBlockManager block_mgr(Env::Default(), std::move(bm_opts));
+        return &block_mgr;
     }
 }
 
 StorageMediumPB get_storage_medium_pb(TStorageMedium::type t_storage_medium) {
     switch (t_storage_medium) {
-        case TStorageMedium::S3:
-            return StorageMediumPB::S3;
-        case TStorageMedium::SSD:
-            return StorageMediumPB::SSD;
-        case TStorageMedium::HDD:
-        default:
-            return StorageMediumPB::HDD;
+    case TStorageMedium::S3:
+        return StorageMediumPB::S3;
+    case TStorageMedium::SSD:
+        return StorageMediumPB::SSD;
+    case TStorageMedium::HDD:
+    default:
+        return StorageMediumPB::HDD;
     }
 }
 

@@ -29,7 +29,6 @@
 #include "runtime/runtime_state.h"
 #include "runtime/string_value.h"
 #include "runtime/tuple_row.h"
-
 #include "vec/columns/column_vector.h"
 #include "vec/core/block.h"
 
@@ -497,11 +496,10 @@ size_t RowBatch::serialize(PRowBatch* output_batch) {
     return get_batch_size(*output_batch) - mutable_tuple_data->size() + size;
 }
 
-// when row from files can't fill into tuple with schema limitation, increase the _num_uncommitted_rows in row batch, 
+// when row from files can't fill into tuple with schema limitation, increase the _num_uncommitted_rows in row batch,
 void RowBatch::increase_uncommitted_rows() {
     _num_uncommitted_rows++;
 }
-
 
 void RowBatch::add_io_buffer(DiskIoMgr::BufferDescriptor* buffer) {
     DCHECK(buffer != nullptr);

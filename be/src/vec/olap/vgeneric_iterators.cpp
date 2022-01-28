@@ -61,28 +61,28 @@ public:
                 size_t data_len = 0;
                 const auto* col_schema = _schema.column(j);
                 switch (col_schema->type()) {
-                    case OLAP_FIELD_TYPE_SMALLINT:
-                        *(int16_t*)data = _rows_returned + j;
-                        data_len = sizeof(int16_t);
-                        break; 
-                    case OLAP_FIELD_TYPE_INT:
-                        *(int32_t*)data = _rows_returned + j;
-                        data_len = sizeof(int32_t);
-                        break;
-                    case OLAP_FIELD_TYPE_BIGINT:
-                        *(int64_t*)data = _rows_returned + j;
-                        data_len = sizeof(int64_t);
-                        break;
-                    case OLAP_FIELD_TYPE_FLOAT: 
-                        *(float*)data = _rows_returned + j;
-                        data_len = sizeof(float);
-                        break;
-                    case OLAP_FIELD_TYPE_DOUBLE: 
-                        *(double*)data = _rows_returned + j;
-                        data_len = sizeof(double);
-                        break;
-                    default:
-                        break;
+                case OLAP_FIELD_TYPE_SMALLINT:
+                    *(int16_t*)data = _rows_returned + j;
+                    data_len = sizeof(int16_t);
+                    break;
+                case OLAP_FIELD_TYPE_INT:
+                    *(int32_t*)data = _rows_returned + j;
+                    data_len = sizeof(int32_t);
+                    break;
+                case OLAP_FIELD_TYPE_BIGINT:
+                    *(int64_t*)data = _rows_returned + j;
+                    data_len = sizeof(int64_t);
+                    break;
+                case OLAP_FIELD_TYPE_FLOAT:
+                    *(float*)data = _rows_returned + j;
+                    data_len = sizeof(float);
+                    break;
+                case OLAP_FIELD_TYPE_DOUBLE:
+                    *(double*)data = _rows_returned + j;
+                    data_len = sizeof(double);
+                    break;
+                default:
+                    break;
                 }
 
                 vi.insert_data(data, data_len);
@@ -92,8 +92,7 @@ public:
             ++_rows_returned;
         }
 
-        if (row_idx > 0)
-            return Status::OK();
+        if (row_idx > 0) return Status::OK();
         return Status::EndOfFile("End of VAutoIncrementIterator");
     }
 
@@ -121,7 +120,8 @@ Status VAutoIncrementIterator::init(const StorageReadOptions& opts) {
 //      }
 class VMergeIteratorContext {
 public:
-    VMergeIteratorContext(RowwiseIterator* iter, std::shared_ptr<MemTracker> parent) : _iter(iter) {}
+    VMergeIteratorContext(RowwiseIterator* iter, std::shared_ptr<MemTracker> parent)
+            : _iter(iter) {}
     VMergeIteratorContext(const VMergeIteratorContext&) = delete;
     VMergeIteratorContext(VMergeIteratorContext&&) = delete;
     VMergeIteratorContext& operator=(const VMergeIteratorContext&) = delete;
@@ -132,16 +132,16 @@ public:
         _iter = nullptr;
     }
 
-    Status block_reset()
-    {
+    Status block_reset() {
         if (!_block) {
             const Schema& schema = _iter->schema();
-            for (auto &column_desc : schema.columns()) {
+            for (auto& column_desc : schema.columns()) {
                 auto data_type = Schema::get_data_type_ptr(column_desc->type());
                 if (data_type == nullptr) {
                     return Status::RuntimeError("invalid data type");
                 }
-                _block.insert(ColumnWithTypeAndName(data_type->create_column(), data_type, column_desc->name()));
+                _block.insert(ColumnWithTypeAndName(data_type->create_column(), data_type,
+                                                    column_desc->name()));
             }
         } else {
             _block.clear_column_data();
@@ -276,7 +276,8 @@ Status VMergeIteratorContext::_load_next_block() {
 class VMergeIterator : public RowwiseIterator {
 public:
     // VMergeIterator takes the ownership of input iterators
-    VMergeIterator(std::vector<RowwiseIterator*>& iters, std::shared_ptr<MemTracker> parent) : _origin_iters(iters) {
+    VMergeIterator(std::vector<RowwiseIterator*>& iters, std::shared_ptr<MemTracker> parent)
+            : _origin_iters(iters) {
         // use for count the mem use of Block use in Merge
         _mem_tracker = MemTracker::CreateTracker(-1, "VMergeIterator", parent, false);
     }
@@ -307,9 +308,9 @@ private:
         }
     };
 
-    using VMergeHeap = std::priority_queue<VMergeIteratorContext*, 
-                                        std::vector<VMergeIteratorContext*>,
-                                        VMergeContextComparator>;
+    using VMergeHeap =
+            std::priority_queue<VMergeIteratorContext*, std::vector<VMergeIteratorContext*>,
+                                VMergeContextComparator>;
 
     VMergeHeap _merge_heap;
 
@@ -340,8 +341,7 @@ Status VMergeIterator::init(const StorageReadOptions& opts) {
 
 Status VMergeIterator::next_batch(vectorized::Block* block) {
     while (block->rows() < block_row_max) {
-        if (_merge_heap.empty())
-            break;
+        if (_merge_heap.empty()) break;
 
         auto ctx = _merge_heap.top();
         _merge_heap.pop();
@@ -373,7 +373,8 @@ public:
     }
 
     ~VUnionIterator() override {
-        std::for_each(_origin_iters.begin(), _origin_iters.end(), std::default_delete<RowwiseIterator>());
+        std::for_each(_origin_iters.begin(), _origin_iters.end(),
+                      std::default_delete<RowwiseIterator>());
     }
 
     Status init(const StorageReadOptions& opts) override;
@@ -419,15 +420,16 @@ Status VUnionIterator::next_batch(vectorized::Block* block) {
     return Status::EndOfFile("End of VUnionIterator");
 }
 
-
-RowwiseIterator* new_merge_iterator(std::vector<RowwiseIterator*>& inputs, std::shared_ptr<MemTracker> parent) {
+RowwiseIterator* new_merge_iterator(std::vector<RowwiseIterator*>& inputs,
+                                    std::shared_ptr<MemTracker> parent) {
     if (inputs.size() == 1) {
         return *(inputs.begin());
     }
     return new VMergeIterator(inputs, parent);
 }
 
-RowwiseIterator* new_union_iterator(std::vector<RowwiseIterator*>& inputs, std::shared_ptr<MemTracker> parent) {
+RowwiseIterator* new_union_iterator(std::vector<RowwiseIterator*>& inputs,
+                                    std::shared_ptr<MemTracker> parent) {
     if (inputs.size() == 1) {
         return *(inputs.begin());
     }
@@ -438,6 +440,6 @@ RowwiseIterator* new_auto_increment_iterator(const Schema& schema, size_t num_ro
     return new VAutoIncrementIterator(schema, num_rows);
 }
 
-}
+} // namespace vectorized
 
 } // namespace doris

@@ -20,11 +20,12 @@
 
 #pragma once
 
+#include <parallel_hashmap/phmap.h>
+
 #include <initializer_list>
 #include <list>
 #include <set>
 #include <vector>
-#include <parallel_hashmap/phmap.h>
 
 #include "vec/columns/column_nullable.h"
 #include "vec/core/block_info.h"
@@ -130,9 +131,9 @@ public:
     Names get_names() const;
     DataTypes get_data_types() const;
 
-    DataTypePtr get_data_type(size_t index) const { 
+    DataTypePtr get_data_type(size_t index) const {
         CHECK(index < data.size());
-        return data[index].type; 
+        return data[index].type;
     }
 
     /// Returns number of rows from first column in block, not equal to nullptr. If no columns, returns 0.
@@ -142,7 +143,7 @@ public:
     void set_num_rows(size_t length);
 
     // Skip the rows in block, use in OFFSET, LIMIT operation
-    void skip_num_rows(int64_t & offset);
+    void skip_num_rows(int64_t& offset);
 
     size_t columns() const { return data.size(); }
 
@@ -256,7 +257,8 @@ public:
         return 0;
     }
 
-    doris::Tuple* deep_copy_tuple(const TupleDescriptor&, MemPool*, int, int, bool padding_char = false);
+    doris::Tuple* deep_copy_tuple(const TupleDescriptor&, MemPool*, int, int,
+                                  bool padding_char = false);
 
 private:
     void erase_impl(size_t position);

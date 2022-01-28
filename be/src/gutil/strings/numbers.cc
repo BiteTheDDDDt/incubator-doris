@@ -1442,7 +1442,6 @@ char* SimpleItoaWithCommas(__int128_t i, char* buffer, int32_t buffer_size) {
     return p;
 }
 
-
 // ----------------------------------------------------------------------
 // ItoaKMGT()
 //    Description: converts an integer to a string

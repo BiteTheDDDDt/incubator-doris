@@ -36,8 +36,8 @@ OLAPStatus RowsetConverter::convert_alpha_to_beta(const RowsetMetaSharedPtr& src
 }
 
 OLAPStatus RowsetConverter::_convert_rowset(const RowsetMetaSharedPtr& src_rowset_meta,
-                                            const FilePathDesc& rowset_path_desc, RowsetTypePB dst_type,
-                                            RowsetMetaPB* dst_rs_meta_pb) {
+                                            const FilePathDesc& rowset_path_desc,
+                                            RowsetTypePB dst_type, RowsetMetaPB* dst_rs_meta_pb) {
     const TabletSchema& tablet_schema = _tablet_meta->tablet_schema();
     RowsetWriterContext context;
     context.rowset_id = src_rowset_meta->rowset_id();
@@ -61,8 +61,8 @@ OLAPStatus RowsetConverter::_convert_rowset(const RowsetMetaSharedPtr& src_rowse
     RETURN_NOT_OK(RowsetFactory::create_rowset_writer(context, &rowset_writer));
     if (!src_rowset_meta->empty()) {
         RowsetSharedPtr rowset;
-        RETURN_NOT_OK(RowsetFactory::create_rowset(&tablet_schema, rowset_path_desc, src_rowset_meta,
-                                                   &rowset));
+        RETURN_NOT_OK(RowsetFactory::create_rowset(&tablet_schema, rowset_path_desc,
+                                                   src_rowset_meta, &rowset));
         RowsetReaderSharedPtr rowset_reader;
         RETURN_NOT_OK(rowset->create_reader(&rowset_reader));
         std::vector<uint32_t> cids;

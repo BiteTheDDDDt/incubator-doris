@@ -229,7 +229,7 @@ public:
         return Status::OK();
     }
 
-    Status next_batch(size_t* n, vectorized::MutableColumnPtr &dst) override {
+    Status next_batch(size_t* n, vectorized::MutableColumnPtr& dst) override {
         DCHECK(_parsed);
         if (PREDICT_FALSE(*n == 0 || _cur_idx >= _num_elems)) {
             *n = 0;
@@ -250,9 +250,9 @@ public:
         if (dst_col_ptr->is_bitmap()) {
             auto& bitmap_column = reinterpret_cast<vectorized::ColumnBitmap&>(*dst_col_ptr);
             for (size_t i = 0; i < max_fetch; i++, _cur_idx++) {
-                const uint32_t start_offset  = offset(_cur_idx);
+                const uint32_t start_offset = offset(_cur_idx);
                 uint32_t len = offset(_cur_idx + 1) - start_offset;
-                
+
                 bitmap_column.insert_default();
                 BitmapValue* pvalue = &bitmap_column.get_element(bitmap_column.size() - 1);
                 if (len != 0) {
@@ -260,13 +260,14 @@ public:
                     value.deserialize(&_data[start_offset]);
                     *pvalue = std::move(value);
                 } else {
-                    *pvalue = std::move(*reinterpret_cast<BitmapValue*>(const_cast<char*>(&_data[start_offset])));   
+                    *pvalue = std::move(*reinterpret_cast<BitmapValue*>(
+                            const_cast<char*>(&_data[start_offset])));
                 }
             }
         } else if (dst_col_ptr->is_predicate_column()) {
             // todo(wb) padding sv here for better comparison performance
             for (size_t i = 0; i < max_fetch; i++, _cur_idx++) {
-                const uint32_t start_offset  = offset(_cur_idx);
+                const uint32_t start_offset = offset(_cur_idx);
                 uint32_t len = offset(_cur_idx + 1) - start_offset;
                 StringValue sv(const_cast<char*>(&_data[start_offset]), len);
                 dst_col_ptr->insert_data(reinterpret_cast<char*>(&sv), 0);
@@ -274,12 +275,12 @@ public:
         } else {
             for (size_t i = 0; i < max_fetch; i++, _cur_idx++) {
                 // todo(wb) need more test case and then improve here
-                const uint32_t start_offset  = offset(_cur_idx);
+                const uint32_t start_offset = offset(_cur_idx);
                 uint32_t len = offset(_cur_idx + 1) - start_offset;
                 dst_col_ptr->insert_data(&_data[start_offset], len);
             }
         }
- 
+
         *n = max_fetch;
         return Status::OK();
     };

@@ -53,7 +53,7 @@ public:
             consumer_filter->signal();
         };
 
-        auto ignore_remote_filter = [](IRuntimeFilter* runtime_filter, std::string &msg) {
+        auto ignore_remote_filter = [](IRuntimeFilter* runtime_filter, std::string& msg) {
             runtime_filter->set_ignored();
             runtime_filter->set_ignored_msg(msg);
             runtime_filter->publish();
@@ -87,8 +87,8 @@ public:
                 if (is_in_filter && over_max_in_num) {
                     LOG(INFO) << "fragment instance " << print_id(state->fragment_instance_id())
                               << " ignore runtime filter(in filter id " << filter_desc.filter_id
-                              << ") because: in_num(" << hash_table_size
-                              << ") >= max_in_num(" << max_in_num << ")";
+                              << ") because: in_num(" << hash_table_size << ") >= max_in_num("
+                              << max_in_num << ")";
                     ignore_local_filter(filter_desc.filter_id);
                     continue;
                 } else if (!is_in_filter && exists_in_filter) {
@@ -102,8 +102,11 @@ public:
                     continue;
                 }
             } else if (is_in_filter && over_max_in_num) {
-                std::string msg = fmt::format("fragment instance {} ignore runtime filter(in filter id {}) because: in_num({}) >= max_in_num({})",
-                  print_id(state->fragment_instance_id()), filter_desc.filter_id, hash_table_size, max_in_num);
+                std::string msg = fmt::format(
+                        "fragment instance {} ignore runtime filter(in filter id {}) because: "
+                        "in_num({}) >= max_in_num({})",
+                        print_id(state->fragment_instance_id()), filter_desc.filter_id,
+                        hash_table_size, max_in_num);
                 ignore_remote_filter(runtime_filter, msg);
                 continue;
             }

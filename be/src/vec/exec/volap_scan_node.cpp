@@ -62,15 +62,15 @@ void VOlapScanNode::transfer_thread(RuntimeState* state) {
     _total_assign_num = 0;
     _nice = 18 + std::max(0, 2 - (int)_volap_scanners.size() / 5);
 
-    auto block_per_scanner = (config::doris_scanner_row_num + (state->batch_size() - 1)) / state->batch_size();
+    auto block_per_scanner =
+            (config::doris_scanner_row_num + (state->batch_size() - 1)) / state->batch_size();
     for (int i = 0; i < _volap_scanners.size() * block_per_scanner; ++i) {
         auto block = new Block;
         for (const auto slot_desc : _tuple_desc->slots()) {
             auto column_ptr = slot_desc->get_empty_mutable_column();
             column_ptr->reserve(state->batch_size());
-            block->insert(ColumnWithTypeAndName(std::move(column_ptr),
-                                                    slot_desc->get_data_type_ptr(),
-                                                    slot_desc->col_name()));
+            block->insert(ColumnWithTypeAndName(
+                    std::move(column_ptr), slot_desc->get_data_type_ptr(), slot_desc->col_name()));
         }
         _free_blocks.emplace_back(block);
         _buffered_bytes += block->allocated_bytes();
@@ -333,9 +333,8 @@ Status VOlapScanNode::start_scan_thread(RuntimeState* state) {
                  ++j, ++i) {
                 scanner_ranges.push_back((*ranges)[i].get());
             }
-            VOlapScanner* scanner =
-                    new VOlapScanner(state, this, _olap_scan_node.is_preaggregation,
-                                     _need_agg_finalize, *scan_range);
+            VOlapScanner* scanner = new VOlapScanner(state, this, _olap_scan_node.is_preaggregation,
+                                                     _need_agg_finalize, *scan_range);
             // add scanner to pool before doing prepare.
             // so that scanner can be automatically deconstructed if prepare failed.
             _scanner_pool.add(scanner);
@@ -381,7 +380,8 @@ Status VOlapScanNode::close(RuntimeState* state) {
     // clear some block in queue
     // TODO: The presence of transfer_thread here may cause Block's memory alloc and be released not in a thread,
     // which may lead to potential performance problems. we should rethink whether to delete the transfer thread
-    std::for_each(_materialized_blocks.begin(), _materialized_blocks.end(), std::default_delete<Block>());
+    std::for_each(_materialized_blocks.begin(), _materialized_blocks.end(),
+                  std::default_delete<Block>());
     std::for_each(_scan_blocks.begin(), _scan_blocks.end(), std::default_delete<Block>());
     std::for_each(_free_blocks.begin(), _free_blocks.end(), std::default_delete<Block>());
     _mem_tracker->Release(_buffered_bytes);
@@ -520,7 +520,8 @@ int VOlapScanNode::_start_scanner_thread_task(RuntimeState* state, int block_per
         size_t thread_slot_num = 0;
         {
             std::lock_guard<std::mutex> l(_free_blocks_lock);
-            thread_slot_num = (_free_blocks.size() - (assigned_thread_num * block_per_scanner)) / block_per_scanner;
+            thread_slot_num = (_free_blocks.size() - (assigned_thread_num * block_per_scanner)) /
+                              block_per_scanner;
             if (thread_slot_num == 0) thread_slot_num++;
         }
 
@@ -554,6 +555,5 @@ int VOlapScanNode::_start_scanner_thread_task(RuntimeState* state, int block_per
 
     return assigned_thread_num;
 }
-
 
 } // namespace doris::vectorized

@@ -28,9 +28,9 @@
 #include "vec/exprs/vcompound_pred.h"
 #include "vec/exprs/vectorized_fn_call.h"
 #include "vec/exprs/vin_predicate.h"
+#include "vec/exprs/vinfo_func.h"
 #include "vec/exprs/vliteral.h"
 #include "vec/exprs/vslot_ref.h"
-#include "vec/exprs/vinfo_func.h"
 
 namespace doris::vectorized {
 using doris::Status;

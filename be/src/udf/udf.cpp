@@ -131,7 +131,8 @@ void FunctionContextImpl::set_constant_args(const std::vector<doris_udf::AnyVal*
     _constant_args = constant_args;
 }
 
-void FunctionContextImpl::set_constant_cols(const std::vector<doris::ColumnPtrWrapper*>& constant_cols) {
+void FunctionContextImpl::set_constant_cols(
+        const std::vector<doris::ColumnPtrWrapper*>& constant_cols) {
     _constant_cols = constant_cols;
 }
 

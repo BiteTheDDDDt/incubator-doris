@@ -20,8 +20,8 @@
 #include "olap/field.h"
 #include "runtime/string_value.hpp"
 #include "runtime/vectorized_row_batch.h"
-#include "vec/columns/predicate_column.h"
 #include "vec/columns/column_nullable.h"
+#include "vec/columns/predicate_column.h"
 
 namespace doris {
 
@@ -123,11 +123,13 @@ IN_LIST_PRED_COLUMN_BLOCK_EVALUATE(NotInListPredicate, ==)
         uint16_t new_size = 0;                                                                     \
         if (column.is_nullable()) {                                                                \
             auto* nullable_column =                                                                \
-                vectorized::check_and_get_column<vectorized::ColumnNullable>(column);              \
-            auto& null_bitmap = reinterpret_cast<const vectorized::ColumnVector<uint8_t>&>(*(      \
-                nullable_column->get_null_map_column_ptr())).get_data();                           \
-            auto* nest_column_vector = vectorized::check_and_get_column                            \
-                <vectorized::PredicateColumnType<type>>(nullable_column->get_nested_column());     \
+                    vectorized::check_and_get_column<vectorized::ColumnNullable>(column);          \
+            auto& null_bitmap = reinterpret_cast<const vectorized::ColumnVector<uint8_t>&>(        \
+                                        *(nullable_column->get_null_map_column_ptr()))             \
+                                        .get_data();                                               \
+            auto* nest_column_vector =                                                             \
+                    vectorized::check_and_get_column<vectorized::PredicateColumnType<type>>(       \
+                            nullable_column->get_nested_column());                                 \
             auto& data_array = nest_column_vector->get_data();                                     \
             for (uint16_t i = 0; i < *size; i++) {                                                 \
                 uint16_t idx = sel[i];                                                             \
@@ -138,7 +140,8 @@ IN_LIST_PRED_COLUMN_BLOCK_EVALUATE(NotInListPredicate, ==)
             }                                                                                      \
             *size = new_size;                                                                      \
         } else {                                                                                   \
-            auto& number_column = reinterpret_cast<vectorized::PredicateColumnType<type>&>(column);\
+            auto& number_column =                                                                  \
+                    reinterpret_cast<vectorized::PredicateColumnType<type>&>(column);              \
             auto& data_array = number_column.get_data();                                           \
             for (uint16_t i = 0; i < *size; i++) {                                                 \
                 uint16_t idx = sel[i];                                                             \

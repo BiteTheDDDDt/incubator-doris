@@ -119,7 +119,8 @@ private:
     /// Sugar constructor.
     ColumnVector(std::initializer_list<T> il) : data {il} {}
 
-    void insert_res_column(const uint16_t* sel, size_t sel_size, vectorized::ColumnVector<T>* res_ptr) {
+    void insert_res_column(const uint16_t* sel, size_t sel_size,
+                           vectorized::ColumnVector<T>* res_ptr) {
         for (size_t i = 0; i < sel_size; i++) {
             T* val_ptr = &data[sel[i]];
             res_ptr->insert_data((char*)val_ptr, 0);
@@ -206,7 +207,8 @@ public:
 
     void insert_range_from(const IColumn& src, size_t start, size_t length) override;
 
-    void insert_indices_from(const IColumn& src, const int* indices_begin, const int* indices_end) override;
+    void insert_indices_from(const IColumn& src, const int* indices_begin,
+                             const int* indices_end) override;
 
     void insert_elements(void* elements, size_t num) {
         auto old_size = data.size();
@@ -240,7 +242,8 @@ public:
     ColumnPtr filter(const IColumn::Filter& filt, ssize_t result_size_hint) const override;
 
     // note(wb) this method is only used in storage layer now
-    ColumnPtr filter_by_selector(const uint16_t* sel, size_t sel_size, ColumnPtr* ptr = nullptr) override {
+    ColumnPtr filter_by_selector(const uint16_t* sel, size_t sel_size,
+                                 ColumnPtr* ptr = nullptr) override {
         if (ptr == nullptr) {
             auto res_ptr = vectorized::ColumnVector<T>::create();
             if (sel_size == 0) {
@@ -253,7 +256,8 @@ public:
             if (sel_size == 0) {
                 return res_ptr;
             }
-            insert_res_column(sel, sel_size, reinterpret_cast<vectorized::ColumnVector<T>*>(res_ptr.get()));
+            insert_res_column(sel, sel_size,
+                              reinterpret_cast<vectorized::ColumnVector<T>*>(res_ptr.get()));
             return *ptr;
         }
     }

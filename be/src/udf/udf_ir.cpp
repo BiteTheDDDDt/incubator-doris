@@ -17,12 +17,12 @@
 
 #include <vector>
 
-#include "udf/udf_internal.h"
 #include "udf/udf.h"
+#include "udf/udf_internal.h"
 
 namespace doris {
 class ColumnPtrWrapper;
-}  // namespace doris
+} // namespace doris
 
 namespace doris_udf {
 bool FunctionContext::is_arg_constant(int i) const {

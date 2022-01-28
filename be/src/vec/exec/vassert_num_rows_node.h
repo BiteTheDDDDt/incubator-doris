@@ -39,4 +39,4 @@ private:
     TAssertion::type _assertion;
 };
 
-} // namespace doris
+} // namespace doris::vectorized

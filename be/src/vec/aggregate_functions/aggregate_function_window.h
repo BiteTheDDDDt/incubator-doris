@@ -233,7 +233,7 @@ public:
                 return;
             }
             if constexpr (is_string) {
-                const auto *sources = check_and_get_column<ColumnString>(
+                const auto* sources = check_and_get_column<ColumnString>(
                         nullable_column->get_nested_column_ptr().get());
                 _data_value.set_value(sources->get_data_at(pos));
             } else {

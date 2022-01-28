@@ -67,8 +67,9 @@ Status StreamLoadExecutor::execute_plan_fragment(StreamLoadContext* ctx,
 
                     int64_t num_selected_rows =
                             ctx->number_total_rows - ctx->number_unselected_rows;
-                    if (num_selected_rows > 0 && (double)ctx->number_filtered_rows / num_selected_rows >
-                        ctx->max_filter_ratio) {
+                    if (num_selected_rows > 0 &&
+                        (double)ctx->number_filtered_rows / num_selected_rows >
+                                ctx->max_filter_ratio) {
                         // NOTE: Do not modify the error message here, for historical reasons,
                         // some users may rely on this error message.
                         status = Status::InternalError("too many filtered rows");

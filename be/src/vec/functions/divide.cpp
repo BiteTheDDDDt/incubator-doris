@@ -18,7 +18,6 @@
 // https://github.com/ClickHouse/ClickHouse/blob/master/src/Functions/divide.cpp
 // and modified by Doris
 
-
 #include "vec/functions/function_binary_arithmetic_to_null_type.h"
 #include "vec/functions/simple_function_factory.h"
 

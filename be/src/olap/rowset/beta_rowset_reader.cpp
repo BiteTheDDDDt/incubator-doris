@@ -26,7 +26,6 @@
 #include "olap/row_cursor.h"
 #include "olap/rowset/segment_v2/segment_iterator.h"
 #include "olap/schema.h"
-
 #include "vec/core/block.h"
 
 namespace doris {
@@ -96,7 +95,8 @@ OLAPStatus BetaRowsetReader::init(RowsetReaderContext* read_context) {
 
     // load segments
     RETURN_NOT_OK(SegmentLoader::instance()->load_segments(
-            _rowset, &_segment_cache_handle, read_context->reader_type == ReaderType::READER_QUERY));
+            _rowset, &_segment_cache_handle,
+            read_context->reader_type == ReaderType::READER_QUERY));
 
     // create iterator for each segment
     std::vector<std::unique_ptr<RowwiseIterator>> seg_iterators;
@@ -119,7 +119,8 @@ OLAPStatus BetaRowsetReader::init(RowsetReaderContext* read_context) {
     // merge or union segment iterator
     RowwiseIterator* final_iterator;
     if (read_context->need_ordered_result && _rowset->rowset_meta()->is_segments_overlapping()) {
-        final_iterator = new_merge_iterator(iterators, _parent_tracker, read_context->sequence_id_idx);
+        final_iterator =
+                new_merge_iterator(iterators, _parent_tracker, read_context->sequence_id_idx);
     } else {
         final_iterator = new_union_iterator(iterators, _parent_tracker);
     }
@@ -211,7 +212,9 @@ OLAPStatus BetaRowsetReader::next_block(vectorized::Block* block) {
             }
         }
         is_first = false;
-    } while (block->rows() < _context->runtime_state->batch_size()); // here we should keep block.rows() < batch_size
+    } while (
+            block->rows() <
+            _context->runtime_state->batch_size()); // here we should keep block.rows() < batch_size
 
     return OLAP_SUCCESS;
 }

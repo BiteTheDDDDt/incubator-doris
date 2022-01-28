@@ -18,12 +18,11 @@
 #pragma once
 
 #include "exprs/hybrid_set.h"
-
 #include "vec/exprs/vexpr.h"
 #include "vec/functions/function.h"
 
 namespace doris::vectorized {
-class VInPredicate final: public VExpr {
+class VInPredicate final : public VExpr {
 public:
     VInPredicate(const TExprNode& node);
     ~VInPredicate() = default;
@@ -46,6 +45,7 @@ private:
 
     const bool _is_not_in;
     bool _is_prepare;
+
 private:
     static const constexpr char* function_name = "in";
 };

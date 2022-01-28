@@ -24,22 +24,23 @@
 
 namespace doris {
 
-Status TableFunctionFactory::get_fn(const std::string& fn_name, ObjectPool* pool, TableFunction** fn) {
+Status TableFunctionFactory::get_fn(const std::string& fn_name, ObjectPool* pool,
+                                    TableFunction** fn) {
     if (fn_name == "explode_split") {
         *fn = pool->add(new ExplodeSplitTableFunction());
-        return Status::OK(); 
+        return Status::OK();
     } else if (fn_name == "explode_bitmap") {
         *fn = pool->add(new ExplodeBitmapTableFunction());
-        return Status::OK(); 
+        return Status::OK();
     } else if (fn_name == "explode_json_array_int") {
         *fn = pool->add(new ExplodeJsonArrayTableFunction(ExplodeJsonArrayType::INT));
-        return Status::OK(); 
+        return Status::OK();
     } else if (fn_name == "explode_json_array_double") {
         *fn = pool->add(new ExplodeJsonArrayTableFunction(ExplodeJsonArrayType::DOUBLE));
-        return Status::OK(); 
+        return Status::OK();
     } else if (fn_name == "explode_json_array_string") {
         *fn = pool->add(new ExplodeJsonArrayTableFunction(ExplodeJsonArrayType::STRING));
-        return Status::OK(); 
+        return Status::OK();
     } else {
         return Status::NotSupported("Unknown table function: " + fn_name);
     }

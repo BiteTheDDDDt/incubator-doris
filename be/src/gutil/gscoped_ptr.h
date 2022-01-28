@@ -468,7 +468,7 @@ public:
     //   to work around this may use implicit_cast<const T*>().
     //   However, because of the first bullet in this comment, users MUST
     //   NOT use implicit_cast<Base*>() to upcast the static type of the array.
-    explicit gscoped_ptr(element_type* array) : impl_(array) {}
+    explicit gscoped_ptr(element_type * array) : impl_(array) {}
 
     // Constructor.  Move constructor for C++03 move emulation of this type.
     gscoped_ptr(RValue rvalue) : impl_(&rvalue.object->impl_) {}
@@ -509,7 +509,7 @@ public:
     bool operator!=(element_type* array) const { return impl_.get() != array; }
 
     // Swap two scoped pointers.
-    void swap(gscoped_ptr& p2) { impl_.swap(p2.impl_); }
+    void swap(gscoped_ptr & p2) { impl_.swap(p2.impl_); }
 
     // Release a pointer.
     // The return value is the current pointer held by this object.
@@ -531,13 +531,13 @@ private:
     // call delete[] on an array whose static type does not match its dynamic
     // type.
     template <typename U>
-    explicit gscoped_ptr(U* array);
+    explicit gscoped_ptr(U * array);
     explicit gscoped_ptr(int disallow_construction_from_null);
 
     // Disable reset() from any type other than element_type*, for the same
     // reasons as the constructor above.
     template <typename U>
-    void reset(U* array);
+    void reset(U * array);
     void reset(int disallow_reset_from_null);
 
     // Forbid comparison of gscoped_ptr types.  If U != T, it totally

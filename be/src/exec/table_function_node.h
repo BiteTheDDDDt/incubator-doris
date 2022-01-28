@@ -39,7 +39,6 @@ public:
     virtual Status close(RuntimeState* state);
 
 private:
-
     Status _prepare_output_slot_ids(const TPlanNode& tnode);
 
     // return:
@@ -53,7 +52,6 @@ private:
     bool _roll_table_functions(int last_eos_idx);
 
 private:
-
     int64_t _cur_child_offset = 0;
     TupleRow* _cur_child_tuple_row = nullptr;
     std::shared_ptr<RowBatch> _cur_child_batch;

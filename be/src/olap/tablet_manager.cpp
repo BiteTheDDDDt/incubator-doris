@@ -1009,10 +1009,13 @@ OLAPStatus TabletManager::start_trash_sweep() {
                     string meta_file_path = path_util::join_path_segments(
                             tablet_path_desc.filepath, std::to_string((*it)->tablet_id()) + ".hdr");
                     (*it)->tablet_meta()->save(meta_file_path);
-                    LOG(INFO) << "start to move tablet to trash. " << tablet_path_desc.debug_string();
-                    OLAPStatus rm_st = move_to_trash(tablet_path_desc.filepath, tablet_path_desc.filepath);
+                    LOG(INFO) << "start to move tablet to trash. "
+                              << tablet_path_desc.debug_string();
+                    OLAPStatus rm_st =
+                            move_to_trash(tablet_path_desc.filepath, tablet_path_desc.filepath);
                     if (rm_st != OLAP_SUCCESS) {
-                        LOG(WARNING) << "fail to move dir to trash. " << tablet_path_desc.debug_string();
+                        LOG(WARNING)
+                                << "fail to move dir to trash. " << tablet_path_desc.debug_string();
                         ++it;
                         continue;
                     }
