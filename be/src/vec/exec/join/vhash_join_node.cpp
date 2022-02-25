@@ -187,11 +187,14 @@ struct ProcessHashTableProbe {
         int current_offset = 0;
 
         _items_counts.resize(_probe_rows);
+        _build_block_offsets.resize(_batch_size);
+        _build_block_rows.resize(_batch_size);
         memset(_items_counts.data(), 0, sizeof(uint32_t) * _probe_rows);
 
-        constexpr auto is_right_join = JoinOpType::value == TJoinOp::RIGHT_ANTI_JOIN ||
+        constexpr auto need_to_set_visited = JoinOpType::value == TJoinOp::RIGHT_ANTI_JOIN ||
                                        JoinOpType::value == TJoinOp::RIGHT_SEMI_JOIN ||
-                                       JoinOpType::value == TJoinOp::RIGHT_OUTER_JOIN;
+                                       JoinOpType::value == TJoinOp::RIGHT_OUTER_JOIN ||
+                                       JoinOpType::value == TJoinOp::FULL_OUTER_JOIN;
 
         constexpr auto is_right_semi_anti_join = JoinOpType::value == TJoinOp::RIGHT_ANTI_JOIN ||
                                             JoinOpType::value == TJoinOp::RIGHT_SEMI_JOIN;
@@ -230,7 +233,7 @@ struct ProcessHashTableProbe {
                     // TODO: Iterators are currently considered to be a heavy operation and have a certain impact on performance.
                     // We should rethink whether to use this iterator mode in the future. Now just opt the one row case
                     if (mapped.get_row_count() == 1) {
-                        if constexpr (is_right_join)
+                        if constexpr (need_to_set_visited)
                             mapped.visited = true;
 
                         if constexpr (!is_right_semi_anti_join) {
@@ -254,7 +257,7 @@ struct ProcessHashTableProbe {
                                 }
                                 ++current_offset;
                             }
-                            if constexpr (is_right_join)
+                            if constexpr (need_to_set_visited)
                                 it->visited = true;
                         }
                     }
@@ -941,7 +944,9 @@ Status HashJoinNode::extract_build_join_column(Block& block, NullMap& null_map,
             SCOPED_TIMER(&expr_call_timer);
             RETURN_IF_ERROR(_build_expr_ctxs[i]->execute(&block, &result_col_id));
         }
-
+        // TODO: opt the column is const
+        block.get_by_position(result_col_id).column =
+                block.get_by_position(result_col_id).column->convert_to_full_column_if_const();
         // MutableBlock assume no const column in build block
         if (_is_null_safe_eq_join[i]) {
             raw_ptrs[i] = block.get_by_position(result_col_id).column.get();
