@@ -398,7 +398,7 @@ set(CXX_FLAGS_DEBUG "${CXX_GCC_FLAGS} -O0")
 #   -DNDEBUG: Turn off dchecks/asserts/debug only code.
 set(CXX_FLAGS_RELEASE "${CXX_GCC_FLAGS} -O3 -DNDEBUG")
 
-SET(CXX_FLAGS_ASAN "${CXX_GCC_FLAGS} -O3 -fsanitize=address -DADDRESS_SANITIZER")
+SET(CXX_FLAGS_ASAN "${CXX_GCC_FLAGS} -O3 -fsanitize=address -DADDRESS_SANITIZER -DNDEBUG")
 SET(CXX_FLAGS_LSAN "${CXX_GCC_FLAGS} -O0 -fsanitize=leak -DLEAK_SANITIZER")
 
 # Set the flags to the undefined behavior sanitizer, also known as "ubsan"
@@ -604,6 +604,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(UBSAN_LIBS -static-libubsan tcmalloc)
     set(TSAN_LIBS -static-libtsan)
 else ()
+    set(ASAN_LIBS -static-libasan)
     set(UBSAN_LIBS tcmalloc)
 endif ()
 

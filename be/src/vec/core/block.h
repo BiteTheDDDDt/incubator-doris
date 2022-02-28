@@ -282,7 +282,7 @@ public:
         return res;
     }
 
-    doris::Tuple* deep_copy_tuple(const TupleDescriptor&, MemPool*, int, int, bool padding_char = false);
+    doris::Tuple* deep_copy_tuple(const TupleDescriptor&, MemPool*, int, int, bool padding_char = true);
 
 private:
     void erase_impl(size_t position);

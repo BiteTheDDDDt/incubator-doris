@@ -23,6 +23,7 @@
 #include "common/utils.h"
 #include "gen_cpp/Data_types.h"
 #include "gen_cpp/data.pb.h"
+#include "gutil/integral_types.h"
 #include "runtime/buffered_tuple_stream2.inline.h"
 #include "runtime/collection_value.h"
 #include "runtime/exec_env.h"
@@ -159,7 +160,7 @@ RowBatch::RowBatch(const RowDescriptor& row_desc, const PRowBatch& input_batch, 
             for (auto slot : desc->string_slots()) {
                 DCHECK(slot->type().is_string_type());
                 StringValue* string_val = tuple->get_string_slot(slot->tuple_offset());
-                int offset = convert_to<int>(string_val->ptr);
+                int offset = convert_to<long int>(string_val->ptr);
                 string_val->ptr = tuple_data + offset;
 
                 // Why we do this mask? Field len of StringValue is changed from int to size_t in
@@ -285,7 +286,7 @@ Status RowBatch::serialize(PRowBatch* output_batch, size_t* uncompressed_size,
                 continue;
             }
             // Record offset before creating copy (which increments offset and tuple_data)
-            mutable_tuple_offsets->Add((int32_t) offset);
+            mutable_tuple_offsets->Add((int32_t)offset);
             mutable_new_tuple_offsets->Add(offset);
             row->get_tuple(j)->deep_copy(*desc, &tuple_data, &offset, /* convert_ptrs */ true);
             CHECK_LE(offset, size);
