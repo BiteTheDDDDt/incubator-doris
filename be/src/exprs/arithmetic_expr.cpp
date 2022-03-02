@@ -21,6 +21,10 @@
 
 namespace doris {
 
+std::set<std::string> ArithmeticExpr::_s_valid_fn_names = {
+        "add", "subtract", "multiply", "divide", "int_divide",
+        "mod", "bitand",   "bitor",    "bitxor", "bitnot"};
+
 Expr* ArithmeticExpr::from_thrift(const TExprNode& node) {
     switch (node.opcode) {
     case TExprOpcode::ADD:
@@ -45,6 +49,31 @@ Expr* ArithmeticExpr::from_thrift(const TExprNode& node) {
     default:
         return nullptr;
     }
+    return nullptr;
+}
+
+Expr* ArithmeticExpr::from_fn_name(const TExprNode& node) {
+    std::string fn_name = node.fn.name.function_name;
+    if (fn_name == "add") {
+        return new AddExpr(node);
+    } else if (fn_name == "subtract") {
+        return new SubExpr(node);
+    } else if (fn_name == "multiply") {
+        return new MulExpr(node);
+    } else if (fn_name == "divide" || fn_name == "int_divide") {
+        return new DivExpr(node);
+    } else if (fn_name == "mod") {
+        return new ModExpr(node);
+    } else if (fn_name == "bitand") {
+        return new BitAndExpr(node);
+    } else if (fn_name == "bitor") {
+        return new BitOrExpr(node);
+    } else if (fn_name == "bitxor") {
+        return new BitXorExpr(node);
+    } else if (fn_name == "bitnot") {
+        return new BitNotExpr(node);
+    }
+
     return nullptr;
 }
 
