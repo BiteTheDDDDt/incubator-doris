@@ -110,7 +110,8 @@ Expr* ArithmeticExpr::from_fn_name(const TExprNode& node) {
     BINARY_OP_FN(BigIntVal, CLASS, get_big_int_val, OP)     \
     BINARY_OP_FN(LargeIntVal, CLASS, get_large_int_val, OP) \
     BINARY_OP_FN(FloatVal, CLASS, get_float_val, OP)        \
-    BINARY_OP_FN(DoubleVal, CLASS, get_double_val, OP)
+    BINARY_OP_FN(DoubleVal, CLASS, get_double_val, OP)      \
+    BINARY_OP_FN(DecimalV2Val, CLASS, get_decimalv2_val, OP)
 
 BINARY_ARITH_FNS(AddExpr, +)
 BINARY_ARITH_FNS(SubExpr, -)
@@ -123,7 +124,8 @@ BINARY_ARITH_FNS(MulExpr, *)
     BINARY_OP_CHECK_ZERO_FN(BigIntVal, DivExpr, get_big_int_val, /)     \
     BINARY_OP_CHECK_ZERO_FN(LargeIntVal, DivExpr, get_large_int_val, /) \
     BINARY_OP_CHECK_ZERO_FN(FloatVal, DivExpr, get_float_val, /)        \
-    BINARY_OP_CHECK_ZERO_FN(DoubleVal, DivExpr, get_double_val, /)
+    BINARY_OP_CHECK_ZERO_FN(DoubleVal, DivExpr, get_double_val, /)      \
+    BINARY_OP_CHECK_ZERO_FN(DecimalV2Val, DivExpr, get_decimalv2_val, /)
 
 BINARY_DIV_FNS()
 
@@ -158,6 +160,18 @@ DoubleVal ModExpr::get_double_val(ExprContext* context, TupleRow* row) {
         return DoubleVal::null();
     }
     return DoubleVal(fmod(v1.val, v2.val));
+}
+
+DecimalV2Val ModExpr::get_decimalv2_val(ExprContext* context, TupleRow* row) {
+    DecimalV2Val v1 = _children[0]->get_decimalv2_val(context, row);
+    if (v1.is_null) {
+        return DecimalV2Val::null();
+    }
+    DecimalV2Val v2 = _children[1]->get_decimalv2_val(context, row);
+    if (v2.is_null || v2.val == 0) {
+        return DecimalV2Val::null();
+    }
+    return DecimalV2Val(fmod(v1.val, v2.val));
 }
 
 #define BINARY_BIT_FNS(CLASS, OP)                           \

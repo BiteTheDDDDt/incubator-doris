@@ -62,6 +62,7 @@ public:
     virtual LargeIntVal get_large_int_val(ExprContext* context, TupleRow*) override;
     virtual FloatVal get_float_val(ExprContext* context, TupleRow*) override;
     virtual DoubleVal get_double_val(ExprContext* context, TupleRow*) override;
+    virtual DecimalV2Val get_decimalv2_val(ExprContext* context, TupleRow*) override;
 };
 
 class SubExpr : public ArithmeticExpr {
@@ -76,6 +77,7 @@ public:
     virtual LargeIntVal get_large_int_val(ExprContext* context, TupleRow*) override;
     virtual FloatVal get_float_val(ExprContext* context, TupleRow*) override;
     virtual DoubleVal get_double_val(ExprContext* context, TupleRow*) override;
+    virtual DecimalV2Val get_decimalv2_val(ExprContext* context, TupleRow*) override;
 };
 
 class MulExpr : public ArithmeticExpr {
@@ -90,6 +92,7 @@ public:
     virtual LargeIntVal get_large_int_val(ExprContext* context, TupleRow*) override;
     virtual FloatVal get_float_val(ExprContext* context, TupleRow*) override;
     virtual DoubleVal get_double_val(ExprContext* context, TupleRow*) override;
+    virtual DecimalV2Val get_decimalv2_val(ExprContext* context, TupleRow*) override;
 };
 
 class DivExpr : public ArithmeticExpr {
@@ -104,6 +107,7 @@ public:
     virtual LargeIntVal get_large_int_val(ExprContext* context, TupleRow*) override;
     virtual FloatVal get_float_val(ExprContext* context, TupleRow*) override;
     virtual DoubleVal get_double_val(ExprContext* context, TupleRow*) override;
+    virtual DecimalV2Val get_decimalv2_val(ExprContext* context, TupleRow*) override;
 };
 
 class ModExpr : public ArithmeticExpr {
@@ -118,6 +122,7 @@ public:
     virtual LargeIntVal get_large_int_val(ExprContext* context, TupleRow*) override;
     virtual FloatVal get_float_val(ExprContext* context, TupleRow*) override;
     virtual DoubleVal get_double_val(ExprContext* context, TupleRow*) override;
+    virtual DecimalV2Val get_decimalv2_val(ExprContext* context, TupleRow*) override;
 };
 
 class BitAndExpr : public ArithmeticExpr {
