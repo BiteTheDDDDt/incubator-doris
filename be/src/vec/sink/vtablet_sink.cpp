@@ -110,11 +110,12 @@ Status VOlapTableSink::send(RuntimeState* state, vectorized::Block* input_block)
         uint32_t dist_hash = 0;
         block_row = {&block, i};
         if (!_vpartition->find_tablet(&block_row, &partition, &dist_hash)) {
-            RETURN_IF_ERROR(state->append_error_msg_to_file([]() -> std::string { return ""; },
+            RETURN_IF_ERROR(state->append_error_msg_to_file(
+                    []() -> std::string { return ""; },
                     [&]() -> std::string {
                         fmt::memory_buffer buf;
                         fmt::format_to(buf, "no partition for this tuple. tuple=[]");
-                        return buf.data();
+                        return fmt::to_string(buf);
                     },
                     &stop_processing));
             _number_filtered_rows++;
@@ -154,7 +155,8 @@ Status VOlapTableSink::_validate_data(RuntimeState* state, vectorized::Block* bl
         filter_bitmap->Set(row, true);
         return state->append_error_msg_to_file(
                 []() -> std::string { return ""; },
-                [&error_msg]() -> std::string { return error_msg.data(); }, stop_processing);
+                [&error_msg]() -> std::string { return fmt::to_string(error_msg); },
+                stop_processing);
     };
 
     for (int i = 0; i < _output_tuple_desc->slots().size(); ++i) {
