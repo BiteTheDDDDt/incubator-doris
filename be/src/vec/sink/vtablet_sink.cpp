@@ -152,18 +152,11 @@ Status VOlapTableSink::_validate_data(RuntimeState* state, vectorized::Block* bl
     const auto num_rows = block->rows();
     fmt::memory_buffer error_msg;
     auto set_invalid_and_append_error_msg = [&](int row) {
-<<<<<<< HEAD
-        filter_bitmap->Set(row, true);
-        return state->append_error_msg_to_file(
-                []() -> std::string { return ""; },
-                [&error_msg]() -> std::string { return error_msg.data(); }, stop_processing);
-=======
         filter_bitmap->Set(row, true);
         return state->append_error_msg_to_file(
                 []() -> std::string { return ""; },
                 [&error_msg]() -> std::string { return fmt::to_string(error_msg); },
                 stop_processing);
->>>>>>> eb235a756 ([Bug] Use fmt::to_string replace memory buffer::data())
     };
 
     for (int i = 0; i < _output_tuple_desc->slots().size(); ++i) {
