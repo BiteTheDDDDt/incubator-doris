@@ -324,7 +324,7 @@ if [ ${FE_MODULES}x != ""x ]; then
 fi
 
 # Clean and prepare output dir
-DORIS_OUTPUT=${DORIS_HOME}/output/
+DORIS_OUTPUT=${DORIS_HOME}/output/output
 mkdir -p ${DORIS_OUTPUT}
 
 # Copy Frontend and Backend
