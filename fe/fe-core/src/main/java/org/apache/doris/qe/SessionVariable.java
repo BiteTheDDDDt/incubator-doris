@@ -300,7 +300,7 @@ public class SessionVariable implements Serializable, Writable {
     public int codegenLevel = 0;
 
     @VariableMgr.VarAttr(name = BATCH_SIZE)
-    public int batchSize = 1024;
+    public int batchSize = 4096;
 
     @VariableMgr.VarAttr(name = DISABLE_STREAMING_PREAGGREGATIONS)
     public boolean disableStreamPreaggregations = false;
@@ -404,7 +404,7 @@ public class SessionVariable implements Serializable, Writable {
     @VariableMgr.VarAttr(name = RUNTIME_FILTER_MAX_IN_NUM)
     private int runtimeFilterMaxInNum = 1024;
     @VariableMgr.VarAttr(name = ENABLE_VECTORIZED_ENGINE)
-    public boolean enableVectorizedEngine = false;
+    public boolean enableVectorizedEngine = true;
     @VariableMgr.VarAttr(name = ENABLE_PARALLEL_OUTFILE)
     public boolean enableParallelOutfile = false;
 
