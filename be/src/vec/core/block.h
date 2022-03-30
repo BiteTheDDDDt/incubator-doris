@@ -104,6 +104,9 @@ public:
                                      doris::vectorized::IColumn* input_col_ptr,
                                      uint16_t* sel_rowid_idx, uint16_t select_size, int block_cid,
                                      size_t batch_size) {
+        if (block_cid >= data.size()) {
+            return Status::OK();
+        }
         if (is_block_mem_reuse) {
             auto* raw_res_ptr = this->get_by_position(block_cid).column.get();
             const_cast<doris::vectorized::IColumn*>(raw_res_ptr)->reserve(batch_size);
