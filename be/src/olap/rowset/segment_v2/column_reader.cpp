@@ -785,14 +785,12 @@ void DefaultValueColumnIterator::insert_default_data(vectorized::MutableColumnPt
     };
 
     switch (_type_info->type()) {
-        case OLAP_FIELD_TYPE_OBJECT: {
+        case OLAP_FIELD_TYPE_OBJECT:
+        case OLAP_FIELD_TYPE_HLL:{
             dst->insert_many_defaults(n);
             break;
         }
-        case OLAP_FIELD_TYPE_HLL: {
-            dst->insert_many_defaults(n);
-            break;
-        }
+
         case OLAP_FIELD_TYPE_DATE: {
             assert(_type_size == sizeof(FieldTypeTraits<OLAP_FIELD_TYPE_DATE>::CppType)); //uint24_t
             std::string str = FieldTypeTraits<OLAP_FIELD_TYPE_DATE>::to_string(_mem_value);
