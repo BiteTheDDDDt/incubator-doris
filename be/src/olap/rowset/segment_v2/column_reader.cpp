@@ -786,15 +786,11 @@ void DefaultValueColumnIterator::insert_default_data(vectorized::MutableColumnPt
 
     switch (_type_info->type()) {
         case OLAP_FIELD_TYPE_OBJECT: {
-            BitmapValue bitmap_value;
-            data_ptr = (char*)(&bitmap_value);
-            insert_column_data();
+            dst->insert_many_defaults(n);
             break;
         }
         case OLAP_FIELD_TYPE_HLL: {
-            HyperLogLog hll;
-            data_ptr = (char*)(&hll);
-            insert_column_data();
+            dst->insert_many_defaults(n);
             break;
         }
         case OLAP_FIELD_TYPE_DATE: {
