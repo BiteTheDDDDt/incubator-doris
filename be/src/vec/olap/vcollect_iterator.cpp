@@ -16,14 +16,14 @@
 // under the License.
 
 #include "vec/olap/vcollect_iterator.h"
+
 #include <memory>
 
 #include "olap/rowset/beta_rowset_reader.h"
 
-namespace doris {
-namespace vectorized {
+namespace doris::vectorized {
 
-VCollectIterator::~VCollectIterator() {}
+VCollectIterator::~VCollectIterator() = default;
 
 void VCollectIterator::init(TabletReader* reader) {
     _reader = reader;
@@ -94,20 +94,21 @@ void VCollectIterator::build_heap(std::vector<RowsetReaderSharedPtr>& rs_readers
             std::list<LevelIterator*> children;
             children.push_back(*base_reader_child);
             children.push_back(cumu_iter);
-            _inner_iter.reset(new Level1Iterator(children, _reader, _merge, _skip_same));
+            _inner_iter = std::make_unique<Level1Iterator>(children, _reader, _merge, _skip_same);
         } else {
             // _children.size() == 1
-            _inner_iter.reset(new Level1Iterator(_children, _reader, _merge, _skip_same));
+            _inner_iter = std::make_unique<Level1Iterator>(_children, _reader, _merge, _skip_same);
         }
     } else {
-        _inner_iter.reset(new Level1Iterator(_children, _reader, _merge, _skip_same));
+        _inner_iter = std::make_unique<Level1Iterator>(_children, _reader, _merge, _skip_same);
     }
     _inner_iter->init();
     // Clear _children earlier to release any related references
     _children.clear();
 }
 
-bool VCollectIterator::LevelIteratorComparator::operator()(LevelIterator* lhs, LevelIterator* rhs) {
+bool VCollectIterator::LevelIteratorComparator::operator()(LevelIterator* lhs,
+                                                           LevelIterator* rhs) const {
     const IteratorRowRef& lhs_ref = *lhs->current_row_ref();
     const IteratorRowRef& rhs_ref = *rhs->current_row_ref();
 
@@ -168,10 +169,12 @@ OLAPStatus VCollectIterator::next(Block* block) {
     }
 }
 
-VCollectIterator::Level0Iterator::Level0Iterator(RowsetReaderSharedPtr rs_reader, TabletReader* reader)
+VCollectIterator::Level0Iterator::Level0Iterator(RowsetReaderSharedPtr rs_reader,
+                                                 TabletReader* reader)
         : LevelIterator(reader), _rs_reader(rs_reader), _reader(reader) {
     DCHECK_EQ(RowsetTypePB::BETA_ROWSET, rs_reader->type());
-    _block = std::make_shared<Block>(_schema.create_block(_reader->_return_columns, _reader->_tablet_columns_convert_to_null_set));
+    _block = std::make_shared<Block>(_schema.create_block(
+            _reader->_return_columns, _reader->_tablet_columns_convert_to_null_set));
     _ref.block = _block;
     _ref.row_pos = 0;
     _ref.is_same = false;
@@ -216,8 +219,8 @@ OLAPStatus VCollectIterator::Level0Iterator::next(Block* block) {
 }
 
 VCollectIterator::Level1Iterator::Level1Iterator(
-        const std::list<VCollectIterator::LevelIterator*>& children, TabletReader* reader, bool merge,
-        bool skip_same)
+        const std::list<VCollectIterator::LevelIterator*>& children, TabletReader* reader,
+        bool merge, bool skip_same)
         : LevelIterator(reader),
           _children(children),
           _reader(reader),
@@ -285,7 +288,7 @@ OLAPStatus VCollectIterator::Level1Iterator::init() {
                 break;
             }
         }
-        _heap.reset(new MergeHeap {LevelIteratorComparator(sequence_loc)});
+        _heap = std::make_unique<MergeHeap>(LevelIteratorComparator(sequence_loc));
         for (auto child : _children) {
             DCHECK(child != nullptr);
             //DCHECK(child->current_row() == OLAP_SUCCESS);
@@ -384,5 +387,4 @@ OLAPStatus VCollectIterator::Level1Iterator::_normal_next(Block* block) {
     }
 }
 
-} // namespace vectorized
-} // namespace doris
+} // namespace doris::vectorized

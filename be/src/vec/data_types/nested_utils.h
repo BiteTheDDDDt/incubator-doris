@@ -22,9 +22,7 @@
 
 #include "vec/core/block.h"
 
-namespace doris::vectorized {
-
-namespace Nested {
+namespace doris::vectorized::Nested {
 std::string concatenate_name(const std::string& nested_table_name,
                              const std::string& nested_field_name);
 
@@ -38,6 +36,4 @@ Block flatten(const Block& block);
 
 /// Check that sizes of arrays - elements of nested data structures - are equal.
 void validate_array_sizes(const Block& block);
-} // namespace Nested
-
-} // namespace doris::vectorized
+} // namespace doris::vectorized::Nested

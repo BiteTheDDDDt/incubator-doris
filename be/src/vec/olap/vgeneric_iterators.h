@@ -17,9 +17,7 @@
 
 #include "olap/iterators.h"
 
-namespace doris {
-
-namespace vectorized {
+namespace doris::vectorized {
 
 // Create a merge iterator for input iterators. Merge iterator will merge
 // ordered input iterator to one ordered iterator. So client should ensure
@@ -42,6 +40,4 @@ RowwiseIterator* new_union_iterator(std::vector<RowwiseIterator*>& inputs);
 // Client should delete returned iterator.
 RowwiseIterator* new_auto_increment_iterator(const Schema& schema, size_t num_rows);
 
-}
-
-} // namespace doris
+} // namespace doris::vectorized

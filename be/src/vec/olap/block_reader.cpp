@@ -78,8 +78,7 @@ void BlockReader::_init_agg_state(const ReaderParams& read_params) {
         return;
     }
 
-    _stored_data_columns =
-            _next_row.block->create_same_struct_block(_batch_size)->mutate_columns();
+    _stored_data_columns = _next_row.block->create_same_struct_block(_batch_size)->mutate_columns();
 
     _stored_has_null_tag.resize(_stored_data_columns.size());
     _stored_has_string_tag.resize(_stored_data_columns.size());
@@ -330,7 +329,7 @@ size_t BlockReader::_copy_agg_data() {
             for (auto& it : _temp_ref_map) {
                 if (!it.second.empty()) {
                     auto& src_column = *it.first->get_by_position(idx).column;
-                    for (auto &pos : it.second) {
+                    for (auto& pos : it.second) {
                         dst_column->replace_column_data(src_column, pos.first, pos.second);
                     }
                 }

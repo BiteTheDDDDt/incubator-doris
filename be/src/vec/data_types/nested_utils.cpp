@@ -24,9 +24,7 @@
 #include "vec/common/string_utils/string_utils.h"
 #include "vec/common/typeid_cast.h"
 
-namespace doris::vectorized {
-
-namespace Nested {
+namespace doris::vectorized::Nested {
 
 std::string concatenate_name(const std::string& nested_table_name,
                              const std::string& nested_field_name) {
@@ -80,6 +78,4 @@ std::string extract_table_name(const std::string& nested_name) {
     return splitted.first;
 }
 
-} // namespace Nested
-
-} // namespace doris::vectorized
+} // namespace doris::vectorized::Nested

@@ -87,7 +87,7 @@ private:
 
         void set_same(bool same) { _ref.is_same = same; }
 
-        bool is_same() { return _ref.is_same; }
+        bool is_same() const { return _ref.is_same; }
 
         virtual ~LevelIterator() = default;
 
@@ -104,7 +104,7 @@ private:
     public:
         LevelIteratorComparator(int sequence = -1) : _sequence(sequence) {}
 
-        bool operator()(LevelIterator* lhs, LevelIterator* rhs);
+        bool operator()(LevelIterator* lhs, LevelIterator* rhs) const;
 
     private:
         int _sequence;
@@ -122,7 +122,7 @@ private:
     class Level0Iterator : public LevelIterator {
     public:
         Level0Iterator(RowsetReaderSharedPtr rs_reader, TabletReader* reader);
-        ~Level0Iterator() {}
+        ~Level0Iterator() override = default;
 
         OLAPStatus init() override;
 
@@ -154,7 +154,7 @@ private:
 
         OLAPStatus next(Block* block) override;
 
-        ~Level1Iterator();
+        ~Level1Iterator() override;
 
     private:
         inline OLAPStatus _merge_next(IteratorRowRef* ref);

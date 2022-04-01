@@ -171,10 +171,7 @@ public:
 
     bool can_store_whole(T x) const {
         T max = max_whole_value();
-        if (x > max || x < -max) {
-            return false;
-        }
-        return true;
+        return !static_cast<bool>(x > max || x < -max);
     }
 
     /// @returns multiplier for U to become T with correct scale

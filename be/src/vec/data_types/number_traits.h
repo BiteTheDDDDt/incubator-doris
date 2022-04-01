@@ -25,13 +25,10 @@
 #include "vec/common/uint128.h"
 #include "vec/core/types.h"
 
-namespace doris::vectorized {
-
 /** Allows get the result type of the functions +, -, *, /, %, intDiv (integer division).
   * The rules are different from those used in C++.
   */
-
-namespace NumberTraits {
+namespace doris::vectorized::NumberTraits {
 
 struct Error {};
 
@@ -270,6 +267,4 @@ using ResultOfGreatest = std::conditional_t<LeastGreatestSpecialCase<A, B>,
                                             typename Construct<false, false, sizeof(A)>::Type,
                                             typename ResultOfIf<A, B>::Type>;
 
-} // namespace NumberTraits
-
-} // namespace doris::vectorized
+} // namespace doris::vectorized::NumberTraits

@@ -302,7 +302,7 @@ public:
         }
     }
 
-    StringRef get_string_ref() const { return StringRef(get_data(), size); }
+    StringRef get_string_ref() const { return {get_data(), static_cast<size_t>(size)}; }
 
     /// Assuming to.has()
     void change_impl(StringRef value, Arena* arena) {

@@ -28,9 +28,7 @@
 #include "vec/aggregate_functions/aggregate_function_simple_factory.h"
 #include "vec/olap/vcollect_iterator.h"
 
-namespace doris {
-
-namespace vectorized {
+namespace doris::vectorized {
 
 class BlockReader final : public TabletReader {
 public:
@@ -112,5 +110,4 @@ private:
                                                 ObjectPool* agg_pool, bool* eof) = nullptr;
 };
 
-} // namespace vectorized
-} // namespace doris
+} // namespace doris::vectorized

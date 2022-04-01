@@ -164,7 +164,7 @@ struct StringDataImplTopN {
     static std::string to_string(const IColumn& column, size_t row_num) {
         StringRef ref =
                 static_cast<const typename DataType::ColumnType&>(column).get_data_at(row_num);
-        return std::string(ref.data, ref.size);
+        return {ref.data, ref.size};
     }
 };
 

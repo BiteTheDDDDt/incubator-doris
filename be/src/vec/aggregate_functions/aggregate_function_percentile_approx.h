@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include "common/status.h"
 #include "util/counts.h"
 #include "util/tdigest.h"
@@ -35,7 +37,7 @@ struct PercentileApproxState {
 
     void init(double compression = 10000) {
         if (!init_flag) {
-            digest.reset(new TDigest(compression));
+            digest = std::make_unique<TDigest>(compression);
             init_flag = true;
         }
     }
@@ -64,7 +66,7 @@ struct PercentileApproxState {
         read_binary(target_quantile, buf);
         std::string str;
         read_binary(str, buf);
-        digest.reset(new TDigest());
+        digest = std::make_unique<TDigest>();
         digest->unserialize((uint8_t*)str.c_str());
     }
 
@@ -84,7 +86,7 @@ struct PercentileApproxState {
             DCHECK(digest.get() != nullptr);
             digest->merge(rhs.digest.get());
         } else {
-            digest.reset(new TDigest());
+            digest = std::make_unique<TDigest>();
             digest->merge(rhs.digest.get());
             init_flag = true;
         }
