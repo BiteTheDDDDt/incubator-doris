@@ -26,7 +26,6 @@ void register_function_fake(SimpleFunctionFactory& factory) {
     factory.register_function<FunctionFake<FunctionExplodeJsonArrayDoubleImpl>>();
     factory.register_function<FunctionFake<FunctionExplodeJsonArrayIntImpl>>();
     factory.register_function<FunctionFake<FunctionExplodeJsonArrayStringImpl>>();
-    factory.register_function<FunctionFake<FunctionExplodeBitmapImpl>>();
 }
 
 } // namespace doris::vectorized
