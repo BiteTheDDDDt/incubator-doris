@@ -111,6 +111,7 @@ set(VEC_FILES
   exprs/vinfo_func.cpp
   exprs/table_function/vexplode_split.cpp
   exprs/table_function/vexplode_numbers.cpp
+  exprs/table_function/vexplode_bitmap.cpp
   functions/array/function_array_index.cpp
   functions/array/function_array_register.cpp
   exprs/table_function/vexplode_json_array.cpp
