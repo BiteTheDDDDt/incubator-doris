@@ -21,7 +21,6 @@
 #pragma once
 
 #include <cmath>
-#include <type_traits>
 
 #include "olap/uint24.h"
 #include "vec/columns/column.h"
@@ -189,8 +188,7 @@ public:
         for (int i = 0; i < num; i++) {
             const char* cur_ptr = data_ptr + value_size * i;
             uint64_t value = *reinterpret_cast<const uint64_t*>(cur_ptr);
-            vectorized::VecDateTimeValue date;
-            date.from_olap_datetime(value);
+            vectorized::VecDateTimeValue date(value);
             this->insert_data(reinterpret_cast<char*>(&date), 0);
         }
     }
