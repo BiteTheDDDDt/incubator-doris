@@ -884,6 +884,8 @@ void SegmentIterator::_read_columns_by_rowids(std::vector<ColumnId>& read_column
 
 Status SegmentIterator::next_batch(vectorized::Block* block) {
     bool is_mem_reuse = block->mem_reuse();
+    DCHECK(is_mem_reuse);
+
     SCOPED_RAW_TIMER(&_opts.stats->block_load_ns);
     if (UNLIKELY(!_inited)) {
         RETURN_IF_ERROR(_init(true));

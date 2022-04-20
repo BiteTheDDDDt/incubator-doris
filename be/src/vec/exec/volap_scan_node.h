@@ -64,6 +64,8 @@ private:
     std::mutex _volap_scanners_lock;
 
     int _max_materialized_blocks;
+
+    size_t _block_size = 0;
 };
 } // namespace vectorized
 } // namespace doris

@@ -65,9 +65,9 @@ void VOlapScanNode::transfer_thread(RuntimeState* state) {
     auto doris_scanner_row_num =
             _limit == -1 ? config::doris_scanner_row_num
                          : std::min(static_cast<int64_t>(config::doris_scanner_row_num), _limit);
-    auto block_size = _limit == -1 ? state->batch_size()
+    _block_size = _limit == -1 ? state->batch_size()
                                    : std::min(static_cast<int64_t>(state->batch_size()), _limit);
-    auto block_per_scanner = (doris_scanner_row_num + (block_size - 1)) / block_size;
+    auto block_per_scanner = (doris_scanner_row_num + (_block_size - 1)) / _block_size;
     auto pre_block_count =
             std::min(_volap_scanners.size(),
                      static_cast<size_t>(config::doris_scanner_thread_pool_thread_num)) *
@@ -77,7 +77,7 @@ void VOlapScanNode::transfer_thread(RuntimeState* state) {
         auto block = new Block;
         for (const auto slot_desc : _tuple_desc->slots()) {
             auto column_ptr = slot_desc->get_empty_mutable_column();
-            column_ptr->reserve(block_size);
+            column_ptr->reserve(_block_size);
             block->insert(ColumnWithTypeAndName(
                     std::move(column_ptr), slot_desc->get_data_type_ptr(), slot_desc->col_name()));
         }
@@ -545,7 +545,14 @@ Block* VOlapScanNode::_alloc_block(bool& get_free_block) {
         }
     }
     get_free_block = false;
-    return new Block();
+    auto block = new Block();
+    for (const auto slot_desc : _tuple_desc->slots()) {
+        auto column_ptr = slot_desc->get_empty_mutable_column();
+        column_ptr->reserve(_block_size);
+        block->insert(ColumnWithTypeAndName(std::move(column_ptr), slot_desc->get_data_type_ptr(),
+                                            slot_desc->col_name()));
+    }
+    return block;
 }
 
 int VOlapScanNode::_start_scanner_thread_task(RuntimeState* state, int block_per_scanner) {
