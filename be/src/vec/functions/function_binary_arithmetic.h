@@ -414,7 +414,7 @@ struct DecimalBinaryOperation {
         auto column_left_ptr = check_and_get_column<typename Traits::ColumnVectorA>(column_left);
         auto column_right_ptr = check_and_get_column<typename Traits::ColumnVectorB>(column_right);
 
-        auto column_result = ColumnDecimal<ResultType>::create(column_left, column_scale);
+        auto column_result = ColumnDecimal<ResultType>::create(column_left->size(), column_scale);
         DCHECK(column_left_ptr != nullptr && column_right_ptr != nullptr);
 
         if constexpr (is_to_null_type) {
