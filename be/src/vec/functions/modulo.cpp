@@ -20,6 +20,8 @@
 
 #include <libdivide.h>
 
+#include <cmath>
+
 #include "common/status.h"
 #include "runtime/decimalv2_value.h"
 #include "vec/core/types.h"
@@ -42,15 +44,6 @@ struct ModuloImpl {
         memset(null_map.data(), is_null, sizeof(UInt8) * size);
 
         if (!is_null) {
-            if constexpr (!std::is_floating_point_v<A> && !std::is_floating_point_v<B>) {
-                if ((b & (b - 1)) == 0) { // power of 2 division
-                    for (size_t i = 0; i < size; i++) {
-                        c[i] = a[i] & (b - 1);
-                    }
-                    return;
-                }
-            }
-
             for (size_t i = 0; i < size; i++) {
                 if constexpr (std::is_floating_point_v<ResultType>) {
                     c[i] = std::fmod((double)a[i], (double)b);
