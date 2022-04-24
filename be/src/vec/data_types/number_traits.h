@@ -157,7 +157,9 @@ struct ResultOfSubtraction {
     */
 template <typename A, typename B>
 struct ResultOfFloatingPointDivision {
-    using Type = Float64;
+    using Type =
+            std::conditional_t<IsDecimalNumber<A>, ColumnDecimal<A>,
+                               std::conditional_t<IsDecimalNumber<B>, ColumnDecimal<B>, Float64>>;
 };
 
 /** For integer division, we get a number with the same number of bits as in divisible.
