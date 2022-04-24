@@ -286,6 +286,7 @@ public class SlotDescriptor {
         builder.append(prefix).append("SlotDescriptor{")
             .append("id=").append(id)
             .append(", col=").append(colStr)
+            .append(", nullable=").append(isNullable)
             .append(", type=").append(typeStr).append("}\n");
 
         prefix += "  ";
