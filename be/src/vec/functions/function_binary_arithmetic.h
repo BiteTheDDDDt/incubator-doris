@@ -25,6 +25,7 @@
 #include "vec/columns/column_decimal.h"
 #include "vec/columns/column_nullable.h"
 #include "vec/columns/column_vector.h"
+#include "vec/data_types/data_type_nullable.h"
 #include "vec/data_types/number_traits.h"
 #include "vec/functions/cast_type_to_either.h"
 #include "vec/functions/function.h"
@@ -481,7 +482,7 @@ private:
                 } else {
                     b *= scale;
                 }
-                res = Op::template apply<NativeResultType>(a, b);
+                res = apply(a, b);
             }
 
             return res;
@@ -507,7 +508,7 @@ private:
                 a *= scale;
             }
 
-            return Op::template apply<NativeResultType>(a, b, is_null);
+            return apply(a, b, is_null);
         }
     }
 };
@@ -817,6 +818,10 @@ public:
             LOG(FATAL) << fmt::format("Illegal types {} and {} of arguments of function {}",
                                       arguments[0]->get_name(), arguments[1]->get_name(),
                                       get_name());
+        }
+
+        if constexpr (is_to_null_type) {
+            return make_nullable(type_res);
         }
 
         return type_res;
