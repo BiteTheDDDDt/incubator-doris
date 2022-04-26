@@ -611,9 +611,6 @@ struct ConstOrVectorAdapter {
     using ResultType = typename ResultDataType::FieldType;
     using A = typename LeftDataType::FieldType;
     using B = typename RightDataType::FieldType;
-    using ColumnVectorResult =
-            std::conditional_t<IsDecimalNumber<ResultType>, ColumnDecimal<ResultType>,
-                               ColumnVector<ResultType>>;
 
     using OperationImpl = std::conditional_t<
             IsDataTypeDecimal<ResultDataType>,
@@ -723,10 +720,12 @@ private:
     }
 };
 
-template <template <typename, typename> class Op, typename Name, bool is_to_null_type>
+template <template <typename, typename> class Operation, typename Name, bool is_to_null_type>
 class FunctionBinaryArithmetic : public IFunction {
+    using OpTraits = OperationTraits<Operation>;
     static constexpr bool has_variadic_argument =
-            !std::is_void_v<decltype(has_variadic_argument_types(std::declval<Op<int, int>>()))>;
+            !std::is_void_v<decltype(has_variadic_argument_types(
+                    std::declval<Operation<int, int>>()))>;
 
     template <typename F>
     static bool cast_type(const IDataType* type, F&& f) {
@@ -745,16 +744,18 @@ class FunctionBinaryArithmetic : public IFunction {
 
 public:
     static constexpr auto name = Name::name;
+
     static FunctionPtr create() { return std::make_shared<FunctionBinaryArithmetic>(); }
 
     FunctionBinaryArithmetic() = default;
+
     String get_name() const override { return name; }
 
     size_t get_number_of_arguments() const override { return 2; }
 
     DataTypes get_variadic_argument_types_impl() const override {
         if constexpr (has_variadic_argument) {
-            return Op<int, int>::get_variadic_argument_types();
+            return Operation<int, int>::get_variadic_argument_types();
         }
         return {};
     }
@@ -766,17 +767,13 @@ public:
                     using LeftDataType = std::decay_t<decltype(left)>;
                     using RightDataType = std::decay_t<decltype(right)>;
                     using ResultDataType =
-                            typename BinaryOperationTraits<Op, LeftDataType,
+                            typename BinaryOperationTraits<Operation, LeftDataType,
                                                            RightDataType>::ResultDataType;
                     if constexpr (!std::is_same_v<ResultDataType, InvalidType>) {
                         if constexpr (IsDataTypeDecimal<LeftDataType> &&
                                       IsDataTypeDecimal<RightDataType>) {
-                            constexpr bool is_multiply =
-                                    std::is_same_v<Op<UInt8, UInt8>, MultiplyImpl<UInt8, UInt8>>;
-                            constexpr bool is_division = false;
-
-                            ResultDataType result_type =
-                                    decimal_result_type(left, right, is_multiply, is_division);
+                            ResultDataType result_type = decimal_result_type(
+                                    left, right, OpTraits::is_multiply, OpTraits::is_division);
                             type_res = std::make_shared<ResultDataType>(result_type.get_precision(),
                                                                         result_type.get_scale());
                         } else if constexpr (IsDataTypeDecimal<LeftDataType>) {
@@ -825,12 +822,12 @@ public:
                     using LeftDataType = std::decay_t<decltype(left)>;
                     using RightDataType = std::decay_t<decltype(right)>;
                     using ResultDataType =
-                            typename BinaryOperationTraits<Op, LeftDataType,
+                            typename BinaryOperationTraits<Operation, LeftDataType,
                                                            RightDataType>::ResultDataType;
 
                     if constexpr (!std::is_same_v<ResultDataType, InvalidType>) {
-                        auto column_result = ConstOrVectorAdapter<LeftDataType, RightDataType, Op,
-                                                                  is_to_null_type>::
+                        auto column_result = ConstOrVectorAdapter<LeftDataType, RightDataType,
+                                                                  Operation, is_to_null_type>::
                                 execute(block.get_by_position(arguments[0]).column,
                                         block.get_by_position(arguments[1]).column, left, right);
                         block.replace_by_position(result, std::move(column_result));
