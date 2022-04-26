@@ -25,6 +25,7 @@
 #include "vec/columns/column_decimal.h"
 #include "vec/columns/column_nullable.h"
 #include "vec/columns/column_vector.h"
+#include "vec/core/types.h"
 #include "vec/data_types/data_type_nullable.h"
 #include "vec/data_types/number_traits.h"
 #include "vec/functions/cast_type_to_either.h"
@@ -34,6 +35,37 @@ namespace doris::vectorized {
 
 // Arithmetic operations: +, -, *, |, &, ^, ~
 // Arithmetic operations (to null type): /, %, intDiv (integer division), log
+
+template <typename, typename>
+struct PlusImpl;
+template <typename, typename>
+struct MinusImpl;
+template <typename, typename>
+struct MultiplyImpl;
+template <typename, typename>
+struct DivideFloatingImpl;
+template <typename, typename>
+struct DivideIntegralImpl;
+template <typename, typename>
+struct ModuloImpl;
+
+template <template <typename, typename> typename Operation>
+struct OperationTraits {
+    using T = UInt8;
+    static constexpr bool is_plus_minus = std::is_same_v<Operation<T, T>, PlusImpl<T, T>> ||
+                                          std::is_same_v<Operation<T, T>, MinusImpl<T, T>>;
+    static constexpr bool is_multiply = std::is_same_v<Operation<T, T>, MultiplyImpl<T, T>>;
+    static constexpr bool is_division = std::is_same_v<Operation<T, T>, DivideFloatingImpl<T, T>> ||
+                                        std::is_same_v<Operation<T, T>, DivideIntegralImpl<T, T>>;
+    static constexpr bool allow_decimal =
+            std::is_same_v<Operation<T, T>, PlusImpl<T, T>> ||
+            std::is_same_v<Operation<T, T>, MinusImpl<T, T>> ||
+            std::is_same_v<Operation<T, T>, MultiplyImpl<T, T>> ||
+            std::is_same_v<Operation<T, T>, ModuloImpl<T, T>> ||
+            std::is_same_v<Operation<T, T>, DivideFloatingImpl<T, T>> ||
+            std::is_same_v<Operation<T, T>, DivideIntegralImpl<T, T>>;
+    static constexpr bool can_overflow = is_plus_minus || is_multiply;
+};
 
 template <typename A, typename B, typename Op, typename ResultType = typename Op::ResultType>
 struct BinaryOperationImplBase {
@@ -166,19 +198,6 @@ struct BinaryOperationImpl {
     }
 };
 
-template <typename, typename>
-struct PlusImpl;
-template <typename, typename>
-struct MinusImpl;
-template <typename, typename>
-struct MultiplyImpl;
-template <typename, typename>
-struct DivideFloatingImpl;
-template <typename, typename>
-struct DivideIntegralImpl;
-template <typename, typename>
-struct ModuloImpl;
-
 /// Binary operations for Decimals need scale args
 /// +|- scale one of args (which scale factor is not 1). ScaleR = oneof(Scale1, Scale2);
 /// *   no agrs scale. ScaleR = Scale1 + Scale2;
@@ -186,17 +205,7 @@ struct ModuloImpl;
 template <typename A, typename B, template <typename, typename> typename Operation,
           typename ResultType, bool is_to_null_type, bool check_overflow = false>
 struct DecimalBinaryOperation {
-    static constexpr bool is_plus_minus =
-            std::is_same_v<Operation<Int32, Int32>, PlusImpl<Int32, Int32>> ||
-            std::is_same_v<Operation<Int32, Int32>, MinusImpl<Int32, Int32>>;
-    static constexpr bool is_multiply =
-            std::is_same_v<Operation<Int32, Int32>, MultiplyImpl<Int32, Int32>>;
-    static constexpr bool is_float_division =
-            std::is_same_v<Operation<Int32, Int32>, DivideFloatingImpl<Int32, Int32>>;
-    static constexpr bool is_int_division =
-            std::is_same_v<Operation<Int32, Int32>, DivideIntegralImpl<Int32, Int32>>;
-    static constexpr bool is_division = is_float_division || is_int_division;
-    static constexpr bool can_overflow = is_plus_minus || is_multiply;
+    using OpTraits = OperationTraits<Operation>;
 
     using NativeResultType = typename NativeType<ResultType>::Type;
     using Op = Operation<NativeResultType, NativeResultType>;
@@ -208,7 +217,7 @@ struct DecimalBinaryOperation {
                               ArrayC& c, ResultType scale_a [[maybe_unused]],
                               ResultType scale_b [[maybe_unused]]) {
         size_t size = a.size();
-        if constexpr (is_plus_minus) {
+        if constexpr (OpTraits::is_plus_minus) {
             if (scale_a != 1) {
                 for (size_t i = 0; i < size; ++i) {
                     c[i] = apply_scaled<true>(a[i], b[i], scale_a);
@@ -244,7 +253,7 @@ struct DecimalBinaryOperation {
                                 ResultType scale_a [[maybe_unused]],
                                 ResultType scale_b [[maybe_unused]]) {
         size_t size = a.size();
-        if constexpr (is_plus_minus) {
+        if constexpr (OpTraits::is_plus_minus) {
             if (scale_a != 1) {
                 for (size_t i = 0; i < size; ++i) {
                     c[i] = apply_scaled<true>(a[i], b, scale_a);
@@ -256,7 +265,7 @@ struct DecimalBinaryOperation {
                 }
                 return;
             }
-        } else if constexpr (is_division && IsDecimalNumber<B>) {
+        } else if constexpr (OpTraits::is_division && IsDecimalNumber<B>) {
             for (size_t i = 0; i < size; ++i) {
                 c[i] = apply_scaled_div(a[i], b, scale_a);
             }
@@ -273,7 +282,7 @@ struct DecimalBinaryOperation {
                                 ResultType scale_a [[maybe_unused]],
                                 ResultType scale_b [[maybe_unused]], NullMap& null_map) {
         size_t size = a.size();
-        if constexpr (is_division && IsDecimalNumber<B>) {
+        if constexpr (OpTraits::is_division && IsDecimalNumber<B>) {
             for (size_t i = 0; i < size; ++i) {
                 c[i] = apply_scaled_div(a[i], b, scale_a, null_map[i]);
             }
@@ -289,7 +298,7 @@ struct DecimalBinaryOperation {
                                 ResultType scale_a [[maybe_unused]],
                                 ResultType scale_b [[maybe_unused]]) {
         size_t size = b.size();
-        if constexpr (is_plus_minus) {
+        if constexpr (OpTraits::is_plus_minus) {
             if (scale_a != 1) {
                 for (size_t i = 0; i < size; ++i) {
                     c[i] = apply_scaled<true>(a, b[i], scale_a);
@@ -301,7 +310,7 @@ struct DecimalBinaryOperation {
                 }
                 return;
             }
-        } else if constexpr (is_division && IsDecimalNumber<B>) {
+        } else if constexpr (OpTraits::is_division && IsDecimalNumber<B>) {
             for (size_t i = 0; i < size; ++i) {
                 c[i] = apply_scaled_div(a, b[i], scale_a);
             }
@@ -318,7 +327,7 @@ struct DecimalBinaryOperation {
                                 ResultType scale_a [[maybe_unused]],
                                 ResultType scale_b [[maybe_unused]], NullMap& null_map) {
         size_t size = b.size();
-        if constexpr (is_division && IsDecimalNumber<B>) {
+        if constexpr (OpTraits::is_division && IsDecimalNumber<B>) {
             for (size_t i = 0; i < size; ++i) {
                 c[i] = apply_scaled_div(a, b[i], scale_a, null_map[i]);
             }
@@ -332,13 +341,13 @@ struct DecimalBinaryOperation {
 
     static ResultType constant_constant(A a, B b, ResultType scale_a [[maybe_unused]],
                                         ResultType scale_b [[maybe_unused]]) {
-        if constexpr (is_plus_minus) {
+        if constexpr (OpTraits::is_plus_minus) {
             if (scale_a != 1) {
                 return apply_scaled<true>(a, b, scale_a);
             } else if (scale_b != 1) {
                 return apply_scaled<false>(a, b, scale_b);
             }
-        } else if constexpr (is_division && IsDecimalNumber<B>) {
+        } else if constexpr (OpTraits::is_division && IsDecimalNumber<B>) {
             return apply_scaled_div(a, b, scale_a);
         }
         return apply(a, b);
@@ -346,13 +355,13 @@ struct DecimalBinaryOperation {
 
     static ResultType constant_constant(A a, B b, ResultType scale_a [[maybe_unused]],
                                         ResultType scale_b [[maybe_unused]], UInt8& is_null) {
-        if constexpr (is_plus_minus) {
+        if constexpr (OpTraits::is_plus_minus) {
             if (scale_a != 1) {
                 return apply_scaled<true>(a, b, scale_a, is_null);
             } else if (scale_b != 1) {
                 return apply_scaled<false>(a, b, scale_b, is_null);
             }
-        } else if constexpr (is_division && IsDecimalNumber<B>) {
+        } else if constexpr (OpTraits::is_division && IsDecimalNumber<B>) {
             return apply_scaled_div(a, b, scale_a, is_null);
         }
         return apply(a, b, is_null);
@@ -456,7 +465,7 @@ private:
     template <bool scale_left>
     static NativeResultType apply_scaled(NativeResultType a, NativeResultType b,
                                          NativeResultType scale) {
-        if constexpr (is_plus_minus) {
+        if constexpr (OpTraits::is_plus_minus) {
             NativeResultType res;
 
             if constexpr (check_overflow) {
@@ -467,7 +476,7 @@ private:
                     overflow |= common::mul_overflow(b, scale, b);
                 }
 
-                if constexpr (can_overflow) {
+                if constexpr (OpTraits::can_overflow) {
                     overflow |= Op::template apply<NativeResultType>(a, b, res);
                 } else {
                     res = Op::template apply<NativeResultType>(a, b);
@@ -491,7 +500,7 @@ private:
 
     static NativeResultType apply_scaled_div(NativeResultType a, NativeResultType b,
                                              NativeResultType scale, UInt8& is_null) {
-        if constexpr (is_division) {
+        if constexpr (OpTraits::is_division) {
             if constexpr (check_overflow) {
                 bool overflow = false;
                 if constexpr (!IsDecimalNumber<A>) {
@@ -530,12 +539,6 @@ constexpr bool IsIntegral = false;
 template <>
 inline constexpr bool IsIntegral<DataTypeUInt8> = true;
 template <>
-inline constexpr bool IsIntegral<DataTypeUInt16> = true;
-template <>
-inline constexpr bool IsIntegral<DataTypeUInt32> = true;
-template <>
-inline constexpr bool IsIntegral<DataTypeUInt64> = true;
-template <>
 inline constexpr bool IsIntegral<DataTypeInt8> = true;
 template <>
 inline constexpr bool IsIntegral<DataTypeInt16> = true;
@@ -546,14 +549,7 @@ inline constexpr bool IsIntegral<DataTypeInt64> = true;
 template <>
 inline constexpr bool IsIntegral<DataTypeInt128> = true;
 
-template <typename DataType>
-constexpr bool IsFloatingPoint = false;
-template <>
-inline constexpr bool IsFloatingPoint<DataTypeFloat32> = true;
-template <>
-inline constexpr bool IsFloatingPoint<DataTypeFloat64> = true;
-
-template <typename T0, typename T1>
+template <typename A, typename B>
 constexpr bool UseLeftDecimal = false;
 template <>
 inline constexpr bool UseLeftDecimal<DataTypeDecimal<Decimal128>, DataTypeDecimal<Decimal32>> =
@@ -571,26 +567,13 @@ using DataTypeFromFieldType =
 template <template <typename, typename> class Operation, typename LeftDataType,
           typename RightDataType>
 struct BinaryOperationTraits {
-    using T0 = typename LeftDataType::FieldType;
-    using T1 = typename RightDataType::FieldType;
-
-private: /// it's not correct for Decimal
-    using Op = Operation<T0, T1>;
-
-public:
-    static constexpr bool allow_decimal =
-            std::is_same_v<Operation<T0, T0>, PlusImpl<T0, T0>> ||
-            std::is_same_v<Operation<T0, T0>, MinusImpl<T0, T0>> ||
-            std::is_same_v<Operation<T0, T0>, MultiplyImpl<T0, T0>> ||
-            std::is_same_v<Operation<T0, T0>, ModuloImpl<T0, T0>> ||
-            std::is_same_v<Operation<T0, T0>, DivideFloatingImpl<T0, T0>> ||
-            std::is_same_v<Operation<T0, T0>, DivideIntegralImpl<T0, T0>>;
-
+    using Op = Operation<typename LeftDataType::FieldType, typename RightDataType::FieldType>;
+    using OpTraits = OperationTraits<Operation>;
     /// Appropriate result type for binary operator on numeric types. "Date" can also mean
     /// DateTime, but if both operands are Dates, their type must be the same (e.g. Date - DateTime is invalid).
     using ResultDataType = Switch<
             /// Decimal cases
-            Case<!allow_decimal &&
+            Case<!OpTraits::allow_decimal &&
                          (IsDataTypeDecimal<LeftDataType> || IsDataTypeDecimal<RightDataType>),
                  InvalidType>,
             Case<IsDataTypeDecimal<LeftDataType> && IsDataTypeDecimal<RightDataType> &&
@@ -621,11 +604,7 @@ template <typename LeftDataType, typename RightDataType,
 struct ConstOrVectorAdapter {
     static constexpr bool result_is_decimal =
             IsDataTypeDecimal<LeftDataType> || IsDataTypeDecimal<RightDataType>;
-    static constexpr bool is_division =
-            std::is_same_v<Operation<UInt8, UInt8>, DivideFloatingImpl<UInt8, UInt8>> ||
-            std::is_same_v<Operation<UInt8, UInt8>, DivideIntegralImpl<UInt8, UInt8>>;
-    static constexpr bool is_multiply =
-            std::is_same_v<Operation<UInt8, UInt8>, MultiplyImpl<UInt8, UInt8>>;
+    using OpTraits = OperationTraits<Operation>;
 
     using ResultDataType =
             typename BinaryOperationTraits<Operation, LeftDataType, RightDataType>::ResultDataType;
@@ -659,10 +638,12 @@ struct ConstOrVectorAdapter {
 
 private:
     static auto get_decimal_infos(const LeftDataType& type_left, const RightDataType& type_right) {
-        ResultDataType type = decimal_result_type(type_left, type_right, is_multiply, is_division);
-        typename ResultDataType::FieldType scale_a = type.scale_factor_for(type_left, is_multiply);
+        ResultDataType type = decimal_result_type(type_left, type_right, OpTraits::is_multiply,
+                                                  OpTraits::is_division);
+        typename ResultDataType::FieldType scale_a =
+                type.scale_factor_for(type_left, OpTraits::is_multiply);
         typename ResultDataType::FieldType scale_b =
-                type.scale_factor_for(type_right, is_multiply || is_division);
+                type.scale_factor_for(type_right, OpTraits::is_multiply || OpTraits::is_division);
         return std::make_tuple(type, scale_a, scale_b);
     }
 
@@ -749,9 +730,8 @@ class FunctionBinaryArithmetic : public IFunction {
 
     template <typename F>
     static bool cast_type(const IDataType* type, F&& f) {
-        return cast_type_to_either<DataTypeUInt8, DataTypeUInt16, DataTypeUInt32, DataTypeUInt64,
-                                   DataTypeInt8, DataTypeInt16, DataTypeInt32, DataTypeInt64,
-                                   DataTypeInt128, DataTypeFloat32, DataTypeFloat64,
+        return cast_type_to_either<DataTypeUInt8, DataTypeInt8, DataTypeInt16, DataTypeInt32,
+                                   DataTypeInt64, DataTypeInt128, DataTypeFloat32, DataTypeFloat64,
                                    DataTypeDecimal<Decimal32>, DataTypeDecimal<Decimal64>,
                                    DataTypeDecimal<Decimal128>>(type, std::forward<F>(f));
     }
