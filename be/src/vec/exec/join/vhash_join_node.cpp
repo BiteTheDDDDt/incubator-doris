@@ -379,7 +379,6 @@ struct ProcessHashTableProbe {
         int right_col_len = _join_node->_right_table_data_types.size();
 
         auto& mcol = mutable_block.mutable_columns();
-        // use in right join to change visited state after
         // exec the vother join conjunt
         std::vector<bool*> visited_map;
         visited_map.reserve(1.2 * _batch_size);
@@ -394,7 +393,7 @@ struct ProcessHashTableProbe {
 
         int current_offset = 0;
 
-        for (; _probe_index < _probe_rows;) {
+        while (_probe_index < _probe_rows) {
             // ignore null rows
             if constexpr (ignore_null) {
                 if ((*null_map)[_probe_index]) {
@@ -448,7 +447,7 @@ struct ProcessHashTableProbe {
                 _build_block_rows[current_offset] = -1;
                 ++current_offset;
             } else {
-                // other join, no nothing
+                // other join, do nothing
             }
 
             _items_counts[_probe_index++] = (uint32_t)(current_offset - last_offset);
@@ -496,7 +495,6 @@ struct ProcessHashTableProbe {
                     }
 
                     if (join_hit) {
-                        *visited_map[i] |= other_hit;
                         filter_map.push_back(other_hit || !same_to_prev[i] ||
                                              (!column->get_bool(i - 1) && filter_map.back()));
                         // Here to keep only hit join conjunt and other join conjunt is true need to be output.
@@ -509,11 +507,6 @@ struct ProcessHashTableProbe {
                 }
                 output_block->get_by_position(result_column_id).column =
                         std::move(new_filter_column);
-            } else if constexpr (JoinOpType::value == TJoinOp::RIGHT_OUTER_JOIN) {
-                for (int i = 0; i < column->size(); ++i) {
-                    DCHECK(visited_map[i]);
-                    *visited_map[i] |= column->get_bool(i);
-                }
             } else if constexpr (JoinOpType::value == TJoinOp::LEFT_SEMI_JOIN) {
                 auto new_filter_column = ColumnVector<UInt8>::create();
                 auto& filter_map = new_filter_column->get_data();
@@ -555,12 +548,6 @@ struct ProcessHashTableProbe {
 
                 output_block->get_by_position(result_column_id).column =
                         std::move(new_filter_column);
-            } else if constexpr (JoinOpType::value == TJoinOp::RIGHT_SEMI_JOIN ||
-                                 JoinOpType::value == TJoinOp::RIGHT_ANTI_JOIN) {
-                for (int i = 0; i < column->size(); ++i) {
-                    DCHECK(visited_map[i]);
-                    *visited_map[i] |= column->get_bool(i);
-                }
             } else {
                 // inner join do nothing
             }
