@@ -299,6 +299,24 @@ private:
 
     constexpr bool _is_eq() const { return _operator(1, 1); }
 
+    template <bool is_opposite>
+    constexpr bool _enable_opposite(bool input) const {
+        if constexpr (is_opposite) {
+            return !input;
+        } else {
+            return input;
+        }
+    }
+
+    template <bool is_and>
+    constexpr void _bit_operator(bool& lhs, bool rhs) const {
+        if constexpr (is_and) {
+            lhs &= rhs;
+        } else {
+            lhs |= rhs;
+        }
+    }
+
     Status _bitmap_compare(Status status, bool exact_match, rowid_t ordinal_limit,
                            rowid_t& seeked_ordinal, BitmapIndexIterator* iterator,
                            roaring::Roaring* bitmap) const {
@@ -395,6 +413,33 @@ private:
         }
     }
 
+    template <bool is_nullable, bool is_and, typename TArray, typename TValue>
+    void _base_loop_bit2(const uint16_t* sel, uint16_t size, bool* flags,
+                         const uint8_t* __restrict null_map, const TArray* __restrict data_array,
+                         const TValue& value) const {
+        for (uint16_t i = 0; i < size; i++) {
+            if constexpr (is_nullable) {
+                if (_opposite) {
+                    _bit_operator<is_and>(
+                            flags[i], _enable_opposite<true>(!null_map[sel[i]] &&
+                                                             _operator(data_array[sel[i]], value)));
+                } else {
+                }
+                _bit_operator<is_and>(
+                        flags[i], _enable_opposite<false>(!null_map[sel[i]] &&
+                                                          _operator(data_array[sel[i]], value)));
+            } else {
+                if (_opposite) {
+                    _bit_operator<is_and>(
+                            flags[i], _enable_opposite<true>(_operator(data_array[sel[i]], value)));
+                } else {
+                    _bit_operator<is_and>(flags[i], _enable_opposite<false>(
+                                                            _operator(data_array[sel[i]], value)));
+                }
+            }
+        }
+    }
+
     template <bool is_nullable, bool is_and>
     void _base_evaluate_bit(const vectorized::IColumn* column, const uint8_t* null_map,
                             const uint16_t* sel, uint16_t size, bool* flags) const {
@@ -406,8 +451,8 @@ private:
                 auto dict_code = _is_range() ? dict_column_ptr->find_code_by_bound(
                                                        _value, _operator(1, 0), _operator(1, 1))
                                              : dict_column_ptr->find_code(_value);
-                _base_loop_bit<is_nullable, is_and>(sel, size, flags, null_map, data_array,
-                                                    dict_code);
+                _base_loop_bit2<is_nullable, is_and>(sel, size, flags, null_map, data_array,
+                                                     dict_code);
             } else {
                 LOG(FATAL) << "column_dictionary must use StringValue predicate.";
             }
@@ -417,8 +462,8 @@ private:
                             ->get_data()
                             .data();
 
-            _base_loop_bit<is_nullable, is_and>(sel, size, flags, null_map, data_array,
-                                                _value_real);
+            _base_loop_bit2<is_nullable, is_and>(sel, size, flags, null_map, data_array,
+                                                 _value_real);
         }
     }
 
