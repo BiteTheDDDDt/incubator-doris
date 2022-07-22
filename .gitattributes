@@ -14,4 +14,4 @@
 *.thrift text eol=lf
 *.proto text eol=lf
 *.conf text eol=lf
-*.sql text working-tree-encoding=UTF-16LE eol=CRLF
+*.sql text working-tree-encoding=UTF-8 eol=lf
