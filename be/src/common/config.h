@@ -250,7 +250,7 @@ CONF_Bool(enable_low_cardinality_optimize, "true");
 // whether disable automatic compaction task
 CONF_mBool(disable_auto_compaction, "false");
 // whether enable vectorized compaction
-CONF_Bool(enable_vectorized_compaction, "true");
+CONF_Bool(enable_vectorized_compaction, "false");
 // whether enable vectorized schema change, material-view or rollup task will fail if this config open.
 CONF_Bool(enable_vectorized_alter_table, "false");
 
