@@ -33,96 +33,96 @@ template <PrimitiveType>
 struct CollectionValueSubTypeTrait;
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_NULL> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_NULL> {
     using CppType = int8_t; // slot size : 1
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_BOOLEAN> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_BOOLEAN> {
     using CppType = bool;
     using AnyValType = BooleanVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_TINYINT> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_TINYINT> {
     using CppType = int8_t;
     using AnyValType = TinyIntVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_SMALLINT> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_SMALLINT> {
     using CppType = int16_t;
     using AnyValType = SmallIntVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_INT> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_INT> {
     using CppType = int32_t;
     using AnyValType = IntVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_BIGINT> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_BIGINT> {
     using CppType = int64_t;
     using AnyValType = BigIntVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_LARGEINT> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_LARGEINT> {
     using CppType = __int128_t;
     using AnyValType = LargeIntVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_FLOAT> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_FLOAT> {
     using CppType = float;
     using AnyValType = FloatVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_DOUBLE> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_DOUBLE> {
     using CppType = double;
     using AnyValType = DoubleVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_CHAR> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_CHAR> {
     using CppType = StringValue;
     using AnyValType = StringVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_VARCHAR> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_VARCHAR> {
     using CppType = StringValue;
     using AnyValType = StringVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_STRING> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_STRING> {
     using CppType = StringValue;
     using AnyValType = StringVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_DATE> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_DATE> {
     using CppType = uint24_t;
     using AnyValType = DateTimeVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_DATETIME> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_DATETIME> {
     using CppType = uint64_t;
     using AnyValType = DateTimeVal;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_DECIMALV2> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_DECIMALV2> {
     using CppType = decimal12_t;
     using AnyValType = DecimalV2Val;
 };
 
 template <>
-struct CollectionValueSubTypeTrait<TYPE_ARRAY> {
+struct CollectionValueSubTypeTrait<PrimitiveType::TYPE_ARRAY> {
     using CppType = CollectionValue;
     using AnyValType = CollectionVal;
 };
@@ -196,17 +196,20 @@ struct ArrayIteratorFunctionsForString : public GenericArrayIteratorFunctions<ty
 };
 
 template <>
-struct ArrayIteratorFunctions<TYPE_CHAR> : public ArrayIteratorFunctionsForString<TYPE_CHAR> {};
+struct ArrayIteratorFunctions<PrimitiveType::TYPE_CHAR>
+        : public ArrayIteratorFunctionsForString<PrimitiveType::TYPE_CHAR> {};
 template <>
-struct ArrayIteratorFunctions<TYPE_VARCHAR> : public ArrayIteratorFunctionsForString<TYPE_VARCHAR> {
-};
+struct ArrayIteratorFunctions<PrimitiveType::TYPE_VARCHAR>
+        : public ArrayIteratorFunctionsForString<PrimitiveType::TYPE_VARCHAR> {};
 template <>
-struct ArrayIteratorFunctions<TYPE_STRING> : public ArrayIteratorFunctionsForString<TYPE_STRING> {};
+struct ArrayIteratorFunctions<PrimitiveType::TYPE_STRING>
+        : public ArrayIteratorFunctionsForString<PrimitiveType::TYPE_STRING> {};
 
 template <>
-struct ArrayIteratorFunctions<TYPE_DATE> : public GenericArrayIteratorFunctions<TYPE_DATE> {
-    using GenericArrayIteratorFunctions<TYPE_DATE>::CppType;
-    using GenericArrayIteratorFunctions<TYPE_DATE>::AnyValType;
+struct ArrayIteratorFunctions<PrimitiveType::TYPE_DATE>
+        : public GenericArrayIteratorFunctions<PrimitiveType::TYPE_DATE> {
+    using GenericArrayIteratorFunctions<PrimitiveType::TYPE_DATE>::CppType;
+    using GenericArrayIteratorFunctions<PrimitiveType::TYPE_DATE>::AnyValType;
 
     static void shallow_set(void* item, const AnyVal* value) {
         const auto* src = static_cast<const AnyValType*>(value);
@@ -228,9 +231,10 @@ struct ArrayIteratorFunctions<TYPE_DATE> : public GenericArrayIteratorFunctions<
     }
 };
 template <>
-struct ArrayIteratorFunctions<TYPE_DATETIME> : public GenericArrayIteratorFunctions<TYPE_DATETIME> {
-    using GenericArrayIteratorFunctions<TYPE_DATETIME>::CppType;
-    using GenericArrayIteratorFunctions<TYPE_DATETIME>::AnyValType;
+struct ArrayIteratorFunctions<PrimitiveType::TYPE_DATETIME>
+        : public GenericArrayIteratorFunctions<PrimitiveType::TYPE_DATETIME> {
+    using GenericArrayIteratorFunctions<PrimitiveType::TYPE_DATETIME>::CppType;
+    using GenericArrayIteratorFunctions<PrimitiveType::TYPE_DATETIME>::AnyValType;
 
     static void shallow_set(void* item, const AnyVal* value) {
         const auto* src = static_cast<const AnyValType*>(value);
@@ -253,10 +257,10 @@ struct ArrayIteratorFunctions<TYPE_DATETIME> : public GenericArrayIteratorFuncti
 };
 
 template <>
-struct ArrayIteratorFunctions<TYPE_DECIMALV2>
-        : public GenericArrayIteratorFunctions<TYPE_DECIMALV2> {
-    using GenericArrayIteratorFunctions<TYPE_DECIMALV2>::CppType;
-    using GenericArrayIteratorFunctions<TYPE_DECIMALV2>::AnyValType;
+struct ArrayIteratorFunctions<PrimitiveType::TYPE_DECIMALV2>
+        : public GenericArrayIteratorFunctions<PrimitiveType::TYPE_DECIMALV2> {
+    using GenericArrayIteratorFunctions<PrimitiveType::TYPE_DECIMALV2>::CppType;
+    using GenericArrayIteratorFunctions<PrimitiveType::TYPE_DECIMALV2>::AnyValType;
 
     static void shallow_set(void* item, const AnyVal* value) {
         const auto* src = static_cast<const AnyValType*>(value);
@@ -279,9 +283,10 @@ struct ArrayIteratorFunctions<TYPE_DECIMALV2>
 };
 
 template <>
-struct ArrayIteratorFunctions<TYPE_ARRAY> : public GenericArrayIteratorFunctions<TYPE_ARRAY> {
-    using GenericArrayIteratorFunctions<TYPE_ARRAY>::CppType;
-    using GenericArrayIteratorFunctions<TYPE_ARRAY>::AnyValType;
+struct ArrayIteratorFunctions<PrimitiveType::TYPE_ARRAY>
+        : public GenericArrayIteratorFunctions<PrimitiveType::TYPE_ARRAY> {
+    using GenericArrayIteratorFunctions<PrimitiveType::TYPE_ARRAY>::CppType;
+    using GenericArrayIteratorFunctions<PrimitiveType::TYPE_ARRAY>::AnyValType;
 
     static void shallow_set(void* item, const AnyVal* value) {
         *static_cast<CppType*>(item) =
@@ -312,51 +317,66 @@ ArrayIterator CollectionValue::iterator(PrimitiveType child_type) {
 
 ArrayIterator CollectionValue::internal_iterator(PrimitiveType child_type) const {
     switch (child_type) {
-    case TYPE_BOOLEAN:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_BOOLEAN>*>(nullptr));
-    case TYPE_TINYINT:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_TINYINT>*>(nullptr));
-    case TYPE_SMALLINT:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_SMALLINT>*>(nullptr));
-    case TYPE_INT:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_INT>*>(nullptr));
-    case TYPE_BIGINT:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_BIGINT>*>(nullptr));
-    case TYPE_LARGEINT:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_LARGEINT>*>(nullptr));
-    case TYPE_FLOAT:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_FLOAT>*>(nullptr));
-    case TYPE_DOUBLE:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_DOUBLE>*>(nullptr));
-    case TYPE_CHAR:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_CHAR>*>(nullptr));
-    case TYPE_VARCHAR:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_VARCHAR>*>(nullptr));
-    case TYPE_STRING:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_STRING>*>(nullptr));
-    case TYPE_DATE:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_DATE>*>(nullptr));
-    case TYPE_DATETIME:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_DATETIME>*>(nullptr));
-    case TYPE_ARRAY:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_ARRAY>*>(nullptr));
-    case TYPE_DECIMALV2:
-        return ArrayIterator(const_cast<CollectionValue*>(this),
-                             static_cast<ArrayIteratorFunctions<TYPE_DECIMALV2>*>(nullptr));
+    case PrimitiveType::TYPE_BOOLEAN:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_BOOLEAN>*>(nullptr));
+    case PrimitiveType::TYPE_TINYINT:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_TINYINT>*>(nullptr));
+    case PrimitiveType::TYPE_SMALLINT:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_SMALLINT>*>(nullptr));
+    case PrimitiveType::TYPE_INT:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_INT>*>(nullptr));
+    case PrimitiveType::TYPE_BIGINT:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_BIGINT>*>(nullptr));
+    case PrimitiveType::TYPE_LARGEINT:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_LARGEINT>*>(nullptr));
+    case PrimitiveType::TYPE_FLOAT:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_FLOAT>*>(nullptr));
+    case PrimitiveType::TYPE_DOUBLE:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_DOUBLE>*>(nullptr));
+    case PrimitiveType::TYPE_CHAR:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_CHAR>*>(nullptr));
+    case PrimitiveType::TYPE_VARCHAR:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_VARCHAR>*>(nullptr));
+    case PrimitiveType::TYPE_STRING:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_STRING>*>(nullptr));
+    case PrimitiveType::TYPE_DATE:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_DATE>*>(nullptr));
+    case PrimitiveType::TYPE_DATETIME:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_DATETIME>*>(nullptr));
+    case PrimitiveType::TYPE_ARRAY:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_ARRAY>*>(nullptr));
+    case PrimitiveType::TYPE_DECIMALV2:
+        return ArrayIterator(
+                const_cast<CollectionValue*>(this),
+                static_cast<ArrayIteratorFunctions<PrimitiveType::TYPE_DECIMALV2>*>(nullptr));
     default:
         DCHECK(false) << "Invalid child type: " << child_type;
         __builtin_unreachable();
@@ -369,29 +389,29 @@ const ArrayIterator CollectionValue::iterator(PrimitiveType child_type) const {
 
 Status type_check(PrimitiveType type) {
     switch (type) {
-    case TYPE_NULL:
+    case PrimitiveType::TYPE_NULL:
 
-    case TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_BOOLEAN:
 
-    case TYPE_TINYINT:
-    case TYPE_SMALLINT:
-    case TYPE_INT:
-    case TYPE_BIGINT:
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_TINYINT:
+    case PrimitiveType::TYPE_SMALLINT:
+    case PrimitiveType::TYPE_INT:
+    case PrimitiveType::TYPE_BIGINT:
+    case PrimitiveType::TYPE_LARGEINT:
 
-    case TYPE_FLOAT:
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_FLOAT:
+    case PrimitiveType::TYPE_DOUBLE:
 
-    case TYPE_CHAR:
-    case TYPE_VARCHAR:
-    case TYPE_STRING:
+    case PrimitiveType::TYPE_CHAR:
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_STRING:
 
-    case TYPE_DATE:
-    case TYPE_DATETIME:
+    case PrimitiveType::TYPE_DATE:
+    case PrimitiveType::TYPE_DATETIME:
 
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
 
-    case TYPE_ARRAY:
+    case PrimitiveType::TYPE_ARRAY:
         break;
     default:
         return Status::InvalidArgument("Type not implemented: {}", type);

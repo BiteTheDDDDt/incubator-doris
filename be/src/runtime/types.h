@@ -66,11 +66,11 @@ struct TypeDescriptor {
     // Used for complex types only.
     bool contains_null = true;
 
-    TypeDescriptor() : type(INVALID_TYPE), len(-1), precision(-1), scale(-1) {}
+    TypeDescriptor() : type(PrimitiveType::INVALID_TYPE), len(-1), precision(-1), scale(-1) {}
 
     // explicit TypeDescriptor(PrimitiveType type) :
     TypeDescriptor(PrimitiveType type) : type(type), len(-1), precision(-1), scale(-1) {
-        if (type == TYPE_DECIMALV2) {
+        if (type == PrimitiveType::TYPE_DECIMALV2) {
             precision = 27;
             scale = 9;
         }
@@ -80,7 +80,7 @@ struct TypeDescriptor {
         DCHECK_GE(len, 1);
         DCHECK_LE(len, MAX_CHAR_LENGTH);
         TypeDescriptor ret;
-        ret.type = TYPE_CHAR;
+        ret.type = PrimitiveType::TYPE_CHAR;
         ret.len = len;
         return ret;
     }
@@ -89,21 +89,21 @@ struct TypeDescriptor {
         DCHECK_GE(len, 1);
         DCHECK_LE(len, MAX_VARCHAR_LENGTH);
         TypeDescriptor ret;
-        ret.type = TYPE_VARCHAR;
+        ret.type = PrimitiveType::TYPE_VARCHAR;
         ret.len = len;
         return ret;
     }
 
     static TypeDescriptor create_string_type() {
         TypeDescriptor ret;
-        ret.type = TYPE_STRING;
+        ret.type = PrimitiveType::TYPE_STRING;
         ret.len = config::string_type_length_soft_limit_bytes;
         return ret;
     }
 
     static TypeDescriptor create_hll_type() {
         TypeDescriptor ret;
-        ret.type = TYPE_HLL;
+        ret.type = PrimitiveType::TYPE_HLL;
         ret.len = HLL_COLUMN_DEFAULT_LEN;
         return ret;
     }
@@ -114,7 +114,7 @@ struct TypeDescriptor {
         DCHECK_GE(precision, 0);
         DCHECK_LE(scale, precision);
         TypeDescriptor ret;
-        ret.type = TYPE_DECIMALV2;
+        ret.type = PrimitiveType::TYPE_DECIMALV2;
         ret.precision = precision;
         ret.scale = scale;
         return ret;
@@ -141,10 +141,10 @@ struct TypeDescriptor {
         if (children != o.children) {
             return false;
         }
-        if (type == TYPE_CHAR) {
+        if (type == PrimitiveType::TYPE_CHAR) {
             return len == o.len;
         }
-        if (type == TYPE_DECIMALV2) {
+        if (type == PrimitiveType::TYPE_DECIMALV2) {
             return precision == o.precision && scale == o.scale;
         }
         return true;
@@ -161,29 +161,36 @@ struct TypeDescriptor {
     void to_protobuf(PTypeDesc* ptype) const;
 
     bool is_string_type() const {
-        return type == TYPE_VARCHAR || type == TYPE_CHAR || type == TYPE_HLL ||
-               type == TYPE_OBJECT || type == TYPE_QUANTILE_STATE || type == TYPE_STRING;
+        return type == PrimitiveType::TYPE_VARCHAR || type == PrimitiveType::TYPE_CHAR ||
+               type == PrimitiveType::TYPE_HLL || type == PrimitiveType::TYPE_OBJECT ||
+               type == PrimitiveType::TYPE_QUANTILE_STATE || type == PrimitiveType::TYPE_STRING;
     }
 
-    bool is_date_type() const { return type == TYPE_DATE || type == TYPE_DATETIME; }
+    bool is_date_type() const {
+        return type == PrimitiveType::TYPE_DATE || type == PrimitiveType::TYPE_DATETIME;
+    }
 
-    bool is_date_v2_type() const { return type == TYPE_DATEV2; }
-    bool is_datetime_v2_type() const { return type == TYPE_DATETIMEV2; }
+    bool is_date_v2_type() const { return type == PrimitiveType::TYPE_DATEV2; }
+    bool is_datetime_v2_type() const { return type == PrimitiveType::TYPE_DATETIMEV2; }
 
-    bool is_decimal_type() const { return (type == TYPE_DECIMALV2); }
+    bool is_decimal_type() const { return (type == PrimitiveType::TYPE_DECIMALV2); }
 
-    bool is_datetime_type() const { return type == TYPE_DATETIME; }
+    bool is_datetime_type() const { return type == PrimitiveType::TYPE_DATETIME; }
 
     bool is_var_len_string_type() const {
-        return type == TYPE_VARCHAR || type == TYPE_HLL || type == TYPE_CHAR ||
-               type == TYPE_OBJECT || type == TYPE_QUANTILE_STATE || type == TYPE_STRING;
+        return type == PrimitiveType::TYPE_VARCHAR || type == PrimitiveType::TYPE_HLL ||
+               type == PrimitiveType::TYPE_CHAR || type == PrimitiveType::TYPE_OBJECT ||
+               type == PrimitiveType::TYPE_QUANTILE_STATE || type == PrimitiveType::TYPE_STRING;
     }
 
     bool is_complex_type() const {
-        return type == TYPE_STRUCT || type == TYPE_ARRAY || type == TYPE_MAP;
+        return type == PrimitiveType::TYPE_STRUCT || type == PrimitiveType::TYPE_ARRAY ||
+               type == PrimitiveType::TYPE_MAP;
     }
 
-    bool is_collection_type() const { return type == TYPE_ARRAY || type == TYPE_MAP; }
+    bool is_collection_type() const {
+        return type == PrimitiveType::TYPE_ARRAY || type == PrimitiveType::TYPE_MAP;
+    }
 
     /// Returns the byte size of this type.  Returns 0 for variable length types.
     int get_byte_size() const { return ::doris::get_byte_size(type); }

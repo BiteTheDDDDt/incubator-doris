@@ -56,68 +56,68 @@ Status allocate_any_val(RuntimeState* state, MemPool* pool, const TypeDescriptor
 
 AnyVal* create_any_val(ObjectPool* pool, const TypeDescriptor& type) {
     switch (type.type) {
-    case TYPE_NULL:
+    case PrimitiveType::TYPE_NULL:
         return pool->add(new AnyVal);
 
-    case TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_BOOLEAN:
         return pool->add(new BooleanVal);
 
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_TINYINT:
         return pool->add(new TinyIntVal);
 
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         return pool->add(new SmallIntVal);
 
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         return pool->add(new IntVal);
 
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         return pool->add(new BigIntVal);
 
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_LARGEINT:
         return pool->add(new LargeIntVal);
 
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         return pool->add(new FloatVal);
 
-    case TYPE_TIME:
-    case TYPE_TIMEV2:
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_TIME:
+    case PrimitiveType::TYPE_TIMEV2:
+    case PrimitiveType::TYPE_DOUBLE:
         return pool->add(new DoubleVal);
 
-    case TYPE_CHAR:
-    case TYPE_HLL:
-    case TYPE_VARCHAR:
-    case TYPE_OBJECT:
-    case TYPE_QUANTILE_STATE:
-    case TYPE_STRING:
+    case PrimitiveType::TYPE_CHAR:
+    case PrimitiveType::TYPE_HLL:
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_OBJECT:
+    case PrimitiveType::TYPE_QUANTILE_STATE:
+    case PrimitiveType::TYPE_STRING:
         return pool->add(new StringVal);
 
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
         return pool->add(new DecimalV2Val);
 
-    case TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL32:
         return pool->add(new IntVal);
 
-    case TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL64:
         return pool->add(new BigIntVal);
 
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL128:
         return pool->add(new LargeIntVal);
 
-    case TYPE_DATE:
+    case PrimitiveType::TYPE_DATE:
         return pool->add(new DateTimeVal);
 
-    case TYPE_DATEV2:
+    case PrimitiveType::TYPE_DATEV2:
         return pool->add(new DateV2Val);
 
-    case TYPE_DATETIMEV2:
+    case PrimitiveType::TYPE_DATETIMEV2:
         return pool->add(new DateTimeV2Val);
 
-    case TYPE_DATETIME:
+    case PrimitiveType::TYPE_DATETIME:
         return pool->add(new DateTimeVal);
 
-    case TYPE_ARRAY:
+    case PrimitiveType::TYPE_ARRAY:
         return pool->add(new CollectionVal);
 
     default:
@@ -129,92 +129,92 @@ AnyVal* create_any_val(ObjectPool* pool, const TypeDescriptor& type) {
 FunctionContext::TypeDesc AnyValUtil::column_type_to_type_desc(const TypeDescriptor& type) {
     FunctionContext::TypeDesc out;
     switch (type.type) {
-    case TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_BOOLEAN:
         out.type = FunctionContext::TYPE_BOOLEAN;
         break;
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_TINYINT:
         out.type = FunctionContext::TYPE_TINYINT;
         break;
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         out.type = FunctionContext::TYPE_SMALLINT;
         break;
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         out.type = FunctionContext::TYPE_INT;
         break;
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         out.type = FunctionContext::TYPE_BIGINT;
         break;
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_LARGEINT:
         out.type = FunctionContext::TYPE_LARGEINT;
         break;
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         out.type = FunctionContext::TYPE_FLOAT;
         break;
-    case TYPE_TIME:
-    case TYPE_TIMEV2:
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_TIME:
+    case PrimitiveType::TYPE_TIMEV2:
+    case PrimitiveType::TYPE_DOUBLE:
         out.type = FunctionContext::TYPE_DOUBLE;
         break;
-    case TYPE_DATE:
+    case PrimitiveType::TYPE_DATE:
         out.type = FunctionContext::TYPE_DATE;
         break;
-    case TYPE_DATETIME:
+    case PrimitiveType::TYPE_DATETIME:
         out.type = FunctionContext::TYPE_DATETIME;
         break;
-    case TYPE_DATEV2:
+    case PrimitiveType::TYPE_DATEV2:
         out.type = FunctionContext::TYPE_DATEV2;
         break;
-    case TYPE_DATETIMEV2:
+    case PrimitiveType::TYPE_DATETIMEV2:
         out.type = FunctionContext::TYPE_DATETIMEV2;
         break;
-    case TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL32:
         out.type = FunctionContext::TYPE_DECIMAL32;
         out.precision = type.precision;
         out.scale = type.scale;
         break;
-    case TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL64:
         out.type = FunctionContext::TYPE_DECIMAL64;
         out.precision = type.precision;
         out.scale = type.scale;
         break;
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL128:
         out.type = FunctionContext::TYPE_DECIMAL128;
         out.precision = type.precision;
         out.scale = type.scale;
         break;
-    case TYPE_VARCHAR:
+    case PrimitiveType::TYPE_VARCHAR:
         out.type = FunctionContext::TYPE_VARCHAR;
         out.len = type.len;
         break;
-    case TYPE_HLL:
+    case PrimitiveType::TYPE_HLL:
         out.type = FunctionContext::TYPE_HLL;
         out.len = type.len;
         break;
-    case TYPE_OBJECT:
+    case PrimitiveType::TYPE_OBJECT:
         out.type = FunctionContext::TYPE_OBJECT;
         // FIXME(cmy): is this fallthrough meaningful?
-    case TYPE_QUANTILE_STATE:
+    case PrimitiveType::TYPE_QUANTILE_STATE:
         out.type = FunctionContext::TYPE_QUANTILE_STATE;
         break;
-    case TYPE_CHAR:
+    case PrimitiveType::TYPE_CHAR:
         out.type = FunctionContext::TYPE_CHAR;
         out.len = type.len;
         break;
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
         out.type = FunctionContext::TYPE_DECIMALV2;
         // out.precision = type.precision;
         // out.scale = type.scale;
         break;
-    case TYPE_NULL:
+    case PrimitiveType::TYPE_NULL:
         out.type = FunctionContext::TYPE_NULL;
         break;
-    case TYPE_ARRAY:
+    case PrimitiveType::TYPE_ARRAY:
         out.type = FunctionContext::TYPE_ARRAY;
         for (const auto& t : type.children) {
             out.children.push_back(column_type_to_type_desc(t));
         }
         break;
-    case TYPE_STRING:
+    case PrimitiveType::TYPE_STRING:
         out.type = FunctionContext::TYPE_STRING;
         out.len = type.len;
         break;

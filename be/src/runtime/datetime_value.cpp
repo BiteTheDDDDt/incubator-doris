@@ -51,16 +51,18 @@ RE2 DateTimeValue::time_zone_offset_format_reg("^[+-]{1}\\d{2}\\:\\d{2}$");
 
 bool DateTimeValue::check_range(uint32_t year, uint32_t month, uint32_t day, uint32_t hour,
                                 uint32_t minute, uint32_t second, uint32_t microsecond,
-                                uint16_t type) {
-    bool time = hour > (type == TIME_TIME ? TIME_MAX_HOUR : 23) || minute > 59 || second > 59 ||
-                microsecond > 999999;
+                                TimeType type) {
+    bool time = hour > (type == TimeType::TIME_TIME ? TIME_MAX_HOUR : 23) || minute > 59 ||
+                second > 59 || microsecond > 999999;
     return time || check_date(year, month, day);
 }
 
 bool DateTimeValue::check_date(uint32_t year, uint32_t month, uint32_t day) {
     if (month != 0 && month <= 12 && day > s_days_in_month[month]) {
         // Feb 29 in leap year is valid.
-        if (!(month == 2 && day == 29 && is_leap(year))) return true;
+        if (!(month == 2 && day == 29 && is_leap(year))) {
+            return true;
+        }
     }
     return year > 9999 || month > 12 || day > 31;
 }
@@ -158,9 +160,9 @@ bool DateTimeValue::from_date_str(const char* date_str, int len) {
     }
     int num_field = field_idx;
     if (num_field <= 3) {
-        _type = TIME_DATE;
+        _type = TimeType::TIME_DATE;
     } else {
-        _type = TIME_DATETIME;
+        _type = TimeType::TIME_DATETIME;
     }
     if (!is_interval_format) {
         year_len = date_len[0];
@@ -181,7 +183,9 @@ bool DateTimeValue::from_date_str(const char* date_str, int len) {
         }
     }
 
-    if (num_field < 3) return false;
+    if (num_field < 3) {
+        return false;
+    }
     return check_range_and_set_time(date_val[0], date_val[1], date_val[2], date_val[3], date_val[4],
                                     date_val[5], date_val[6], _type);
 }
@@ -198,7 +202,7 @@ bool DateTimeValue::from_date_str(const char* date_str, int len) {
 // ((YY_PART_YEAR)##1231235959, 99991231235959] two digits year datetime value 1970 ~ 1999
 // (999991231235959, ~) valid
 int64_t DateTimeValue::standardize_timevalue(int64_t value) {
-    _type = TIME_DATE;
+    _type = TimeType::TIME_DATE;
     if (value <= 0) {
         return 0;
     }
@@ -210,7 +214,7 @@ int64_t DateTimeValue::standardize_timevalue(int64_t value) {
 
         // between 1000-01-01 00:00:00L and 9999-99-99 99:99:99
         // all digits exist.
-        _type = TIME_DATETIME;
+        _type = TimeType::TIME_DATETIME;
         return value;
     }
     // 2000-01-01
@@ -243,7 +247,7 @@ int64_t DateTimeValue::standardize_timevalue(int64_t value) {
     }
 
     // below is with datetime, must have hh:mm:ss
-    _type = TIME_DATETIME;
+    _type = TimeType::TIME_DATETIME;
     // 2000 ~ 2069
     if (value <= (YY_PART_YEAR - 1) * 10000000000L + 1231235959L) {
         return value + 20000000000000L;
@@ -281,17 +285,17 @@ bool DateTimeValue::from_date_int64(int64_t value) {
     return check_range_and_set_time(year, month, day, hour, minute, second, microsecond, _type);
 }
 
-void DateTimeValue::set_zero(int type) {
+void DateTimeValue::set_zero(TimeType type) {
     memset(this, 0, sizeof(*this));
     _type = type;
 }
 
-void DateTimeValue::set_type(int type) {
+void DateTimeValue::set_type(TimeType type) {
     _type = type;
 }
 
 void DateTimeValue::set_max_time(bool neg) {
-    set_zero(TIME_TIME);
+    set_zero(TimeType::TIME_TIME);
     DCHECK(TIME_MAX_HOUR >= std::numeric_limits<uint8_t>::min() &&
            TIME_MAX_HOUR <= std::numeric_limits<uint8_t>::max())
             << "TIME_MAX_HOUR overflow:" << TIME_MAX_HOUR;
@@ -302,7 +306,7 @@ void DateTimeValue::set_max_time(bool neg) {
 }
 
 bool DateTimeValue::from_time_int64(int64_t value) {
-    _type = TIME_TIME;
+    _type = TimeType::TIME_TIME;
     if (value > TIME_MAX_VALUE) {
         // 0001-01-01 00:00:00 to convert to a datetime
         if (value > 10000000000L) {
@@ -404,11 +408,11 @@ char* DateTimeValue::to_time_buffer(char* to) const {
 
 int32_t DateTimeValue::to_buffer(char* buffer) const {
     switch (_type) {
-    case TIME_TIME:
+    case TimeType::TIME_TIME:
         return to_time_buffer(buffer) - buffer;
-    case TIME_DATE:
+    case TimeType::TIME_DATE:
         return to_date_buffer(buffer) - buffer;
-    case TIME_DATETIME:
+    case TimeType::TIME_DATETIME:
         return to_datetime_buffer(buffer) - buffer;
     default:
         break;
@@ -438,11 +442,11 @@ int64_t DateTimeValue::to_time_int64() const {
 
 int64_t DateTimeValue::to_int64() const {
     switch (_type) {
-    case TIME_TIME:
+    case TimeType::TIME_TIME:
         return to_time_int64();
-    case TIME_DATE:
+    case TimeType::TIME_DATE:
         return to_date_int64();
-    case TIME_DATETIME:
+    case TimeType::TIME_DATETIME:
         return to_datetime_int64();
     default:
         return 0;
@@ -493,7 +497,7 @@ bool DateTimeValue::from_date_daynr(uint64_t daynr) {
     _minute = 0;
     _second = 0;
     _microsecond = 0;
-    _type = TIME_DATE;
+    _type = TimeType::TIME_DATE;
     return true;
 }
 
@@ -645,7 +649,7 @@ bool DateTimeValue::to_format_string(const char* format, int len, char* to) cons
         switch (ch = *ptr++) {
         case 'a':
             // Abbreviated weekday name
-            if (_type == TIME_TIME || (_year == 0 && _month == 0)) {
+            if (_type == TimeType::TIME_TIME || (_year == 0 && _month == 0)) {
                 return false;
             }
             to = append_string(s_ab_day_name[weekday()], to);
@@ -791,7 +795,7 @@ bool DateTimeValue::to_format_string(const char* format, int len, char* to) cons
         case 'u':
             // Week (00..53), where Monday is the first day of the week;
             // WEEK() mode 1
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             pos = int_to_str(week(mysql_week_mode(1)), buf);
@@ -800,7 +804,7 @@ bool DateTimeValue::to_format_string(const char* format, int len, char* to) cons
         case 'U':
             // Week (00..53), where Sunday is the first day of the week;
             // WEEK() mode 0
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             pos = int_to_str(week(mysql_week_mode(0)), buf);
@@ -809,7 +813,7 @@ bool DateTimeValue::to_format_string(const char* format, int len, char* to) cons
         case 'v':
             // Week (01..53), where Monday is the first day of the week;
             // WEEK() mode 3; used with %x
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             pos = int_to_str(week(mysql_week_mode(3)), buf);
@@ -818,7 +822,7 @@ bool DateTimeValue::to_format_string(const char* format, int len, char* to) cons
         case 'V':
             // Week (01..53), where Sunday is the first day of the week;
             // WEEK() mode 2; used with %X
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             pos = int_to_str(week(mysql_week_mode(2)), buf);
@@ -826,7 +830,7 @@ bool DateTimeValue::to_format_string(const char* format, int len, char* to) cons
             break;
         case 'w':
             // Day of the week (0=Sunday..6=Saturday)
-            if (_type == TIME_TIME || (_month == 0 && _year == 0)) {
+            if (_type == TimeType::TIME_TIME || (_month == 0 && _year == 0)) {
                 return false;
             }
             pos = int_to_str(calc_weekday(daynr(), true), buf);
@@ -839,7 +843,7 @@ bool DateTimeValue::to_format_string(const char* format, int len, char* to) cons
         case 'x': {
             // Year for the week, where Monday is the first day of the week,
             // numeric, four digits; used with %v
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             uint32_t year = 0;
@@ -851,7 +855,7 @@ bool DateTimeValue::to_format_string(const char* format, int len, char* to) cons
         case 'X': {
             // Year for the week where Sunday is the first day of the week,
             // numeric, four digits; used with %V
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             uint32_t year = 0;
@@ -1395,19 +1399,19 @@ bool DateTimeValue::from_date_format_str(const char* format, int format_len, con
     // Compute timestamp type
     if (frac_part_used) {
         if (date_part_used) {
-            _type = TIME_DATETIME;
+            _type = TimeType::TIME_DATETIME;
         } else {
-            _type = TIME_TIME;
+            _type = TimeType::TIME_TIME;
         }
     } else {
         if (date_part_used) {
             if (time_part_used) {
-                _type = TIME_DATETIME;
+                _type = TimeType::TIME_DATETIME;
             } else {
-                _type = TIME_DATE;
+                _type = TimeType::TIME_DATE;
             }
         } else {
-            _type = TIME_TIME;
+            _type = TimeType::TIME_TIME;
         }
     }
 
@@ -1446,19 +1450,25 @@ bool DateTimeValue::from_date_format_str(const char* format, int format_len, con
     //    so we only neet to set date part
     // 3. if both are true, means all part of date_time be set, no need check_range_and_set_time
     bool already_set_date_part = yearday > 0 || (week_num >= 0 && weekday > 0);
-    if (already_set_date_part && already_set_time_part) return true;
-    if (already_set_date_part)
+    if (already_set_date_part && already_set_time_part) {
+        return true;
+    }
+    if (already_set_date_part) {
         return check_range_and_set_time(_year, _month, _day, hour, minute, second, microsecond,
                                         _type);
-    if (already_set_time_part)
+    }
+    if (already_set_time_part) {
         return check_range_and_set_time(year, month, day, _hour, _minute, _second, _microsecond,
                                         _type);
+    }
 
     return check_range_and_set_time(year, month, day, hour, minute, second, microsecond, _type);
 }
 
 bool DateTimeValue::date_add_interval(const TimeInterval& interval, TimeUnit unit) {
-    if (!is_valid_date()) return false;
+    if (!is_valid_date()) {
+        return false;
+    }
 
     int sign = interval.is_neg ? -1 : 1;
     switch (unit) {
@@ -1503,7 +1513,7 @@ bool DateTimeValue::date_add_interval(const TimeInterval& interval, TimeUnit uni
         if (!get_date_from_daynr(day_nr)) {
             return false;
         }
-        _type = TIME_DATETIME;
+        _type = TimeType::TIME_DATETIME;
         break;
     }
     case DAY:
@@ -1580,7 +1590,7 @@ bool DateTimeValue::from_unixtime(int64_t timestamp, const cctz::time_zone& ctz)
     const auto tp = cctz::convert(t, ctz);
 
     _neg = 0;
-    _type = TIME_DATETIME;
+    _type = TimeType::TIME_DATETIME;
     _year = tp.year();
     _month = tp.month();
     _day = tp.day();

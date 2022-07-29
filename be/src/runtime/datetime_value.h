@@ -116,8 +116,6 @@ struct TimeInterval {
     }
 };
 
-enum TimeType { TIME_TIME = 1, TIME_DATE = 2, TIME_DATETIME = 3 };
-
 // Used to compute week
 const int WEEK_MONDAY_FIRST = 1;
 const int WEEK_YEAR = 2;
@@ -166,7 +164,7 @@ public:
     // Constructor
     DateTimeValue()
             : _neg(0),
-              _type(TIME_DATETIME),
+              _type(TimeType::TIME_DATETIME),
               _hour(0),
               _minute(0),
               _second(0),
@@ -183,7 +181,7 @@ public:
     // Converted from Olap Date or Datetime
     bool from_olap_datetime(uint64_t datetime) {
         _neg = 0;
-        _type = TIME_DATETIME;
+        _type = TimeType::TIME_DATETIME;
         uint64_t date = datetime / 1000000;
         uint64_t time = datetime % 1000000;
 
@@ -210,7 +208,7 @@ public:
 
     bool from_olap_date(uint64_t date) {
         _neg = 0;
-        _type = TIME_DATE;
+        _type = TimeType::TIME_DATE;
 
         auto [year, month, day, hour, minute, second, microsecond] =
                 std::tuple {0, 0, 0, 0, 0, 0, 0};
@@ -277,7 +275,7 @@ public:
 
     // Return true if range or date is invalid
     static bool check_range(uint32_t year, uint32_t month, uint32_t day, uint32_t hour,
-                            uint32_t minute, uint32_t second, uint32_t microsecond, uint16_t type);
+                            uint32_t minute, uint32_t second, uint32_t microsecond, TimeType type);
 
     static bool check_date(uint32_t year, uint32_t month, uint32_t day);
 
@@ -351,7 +349,7 @@ public:
 
     bool check_range_and_set_time(uint32_t year, uint32_t month, uint32_t day, uint32_t hour,
                                   uint32_t minute, uint32_t second, uint32_t microsecond,
-                                  uint16_t type) {
+                                  TimeType type) {
         if (check_range(year, month, day, hour, minute, second, microsecond, type)) {
             return false;
         }
@@ -388,17 +386,17 @@ public:
         _minute = 0;
         _second = 0;
         _microsecond = 0;
-        _type = TIME_DATE;
+        _type = TimeType::TIME_DATE;
     }
 
     void cast_to_time() {
         _year = 0;
         _month = 0;
         _day = 0;
-        _type = TIME_TIME;
+        _type = TimeType::TIME_TIME;
     }
 
-    void to_datetime() { _type = TIME_DATETIME; }
+    void to_datetime() { _type = TimeType::TIME_DATETIME; }
 
     // Weekday, from 0(Mon) to 6(Sun)
     uint8_t weekday() const { return calc_weekday(daynr(), false); }
@@ -487,17 +485,17 @@ public:
 
     DateTimeValue& operator++() {
         switch (_type) {
-        case TIME_DATE: {
+        case TimeType::TIME_DATE: {
             TimeInterval interval(DAY, 1, false);
             date_add_interval(interval, DAY);
             break;
         }
-        case TIME_DATETIME: {
+        case TimeType::TIME_DATETIME: {
             TimeInterval interval(SECOND, 1, false);
             date_add_interval(interval, SECOND);
             break;
         }
-        case TIME_TIME: {
+        case TimeType::TIME_TIME: {
             TimeInterval interval(SECOND, 1, false);
             date_add_interval(interval, SECOND);
             break;
@@ -508,13 +506,13 @@ public:
 
     void to_datetime_val(doris_udf::DateTimeVal* tv) const {
         tv->packed_time = to_int64_datetime_packed();
-        tv->type = _type;
+        tv->type = int(_type);
     }
 
     static DateTimeValue from_datetime_val(const doris_udf::DateTimeVal& tv) {
         DateTimeValue value;
         value.from_packed_time(tv.packed_time);
-        if (tv.type == TIME_DATE) {
+        if (TimeType(tv.type) == TimeType::TIME_DATE) {
             value.cast_to_date();
         }
         return value;
@@ -534,12 +532,13 @@ public:
     }
 
     static DateTimeValue datetime_min_value() {
-        static DateTimeValue _s_min_datetime_value(0, TIME_DATETIME, 0, 0, 0, 0, 0, 1, 1);
+        static DateTimeValue _s_min_datetime_value(0, TimeType::TIME_DATETIME, 0, 0, 0, 0, 0, 1, 1);
         return _s_min_datetime_value;
     }
 
     static DateTimeValue datetime_max_value() {
-        static DateTimeValue _s_max_datetime_value(0, TIME_DATETIME, 23, 59, 59, 0, 9999, 12, 31);
+        static DateTimeValue _s_max_datetime_value(0, TimeType::TIME_DATETIME, 23, 59, 59, 0, 9999,
+                                                   12, 31);
         return _s_max_datetime_value;
     }
 
@@ -556,9 +555,9 @@ public:
         return time_diff;
     }
 
-    void set_type(int type);
+    void set_type(TimeType type);
 
-    int type() const { return _type; }
+    TimeType type() const { return _type; }
 
     bool is_valid_date() const {
         return !check_range(_year, _month, _day, _hour, _minute, _second, _microsecond, _type) &&
@@ -568,12 +567,12 @@ public:
     template <typename T>
     void convert_from_date_v2(doris::vectorized::DateV2Value<T>* dt) {
         if constexpr (doris::vectorized::DateV2Value<T>::is_datetime) {
-            this->_type = TIME_DATETIME;
+            this->_type = TimeType::TIME_DATETIME;
             this->_hour = dt->hour();
             this->_minute = dt->minute();
             this->_second = dt->second();
         } else {
-            this->_type = TIME_DATE;
+            this->_type = TimeType::TIME_DATE;
             this->_hour = 0;
             this->_minute = 0;
             this->_second = 0;
@@ -611,7 +610,7 @@ private:
         _minute = (hms >> 6) % (1 << 6);
         _hour = (hms >> 12);
         _neg = 0;
-        _type = TIME_DATETIME;
+        _type = TimeType::TIME_DATETIME;
     }
 
     int64_t make_packed_time(int64_t time, int64_t second_part) const {
@@ -653,7 +652,7 @@ private:
     bool get_date_from_daynr(uint64_t);
 
     // Helper to set max, min, zero
-    void set_zero(int type);
+    void set_zero(TimeType type);
     void set_max_time(bool neg);
 
     bool from_date_format_str(const char* format, int format_len, const char* value, int value_len,
@@ -662,8 +661,8 @@ private:
     // NOTICE: it's dangerous if you want to modify the memory structure of datetime
     // which will cause problem in serialization/deserialization of RowBatch.
     // 1 bits for neg. 3 bits for type. 12bit for hour
-    uint16_t _neg : 1;  // Used for time value.
-    uint16_t _type : 3; // Which type of this value.
+    uint16_t _neg : 1;                        // Used for time value.
+    TimeType _type = TimeType::TIME_DATETIME; // Which type of this value.
     uint16_t _hour : 12;
     uint8_t _minute;
     uint8_t _second;
@@ -673,7 +672,7 @@ private:
     // TODO(zc): used for nothing
     uint64_t _microsecond;
 
-    DateTimeValue(uint8_t neg, uint8_t type, uint8_t hour, uint8_t minute, uint8_t second,
+    DateTimeValue(uint8_t neg, TimeType type, uint8_t hour, uint8_t minute, uint8_t second,
                   uint32_t microsecond, uint16_t year, uint8_t month, uint8_t day)
             : _neg(neg),
               _type(type),

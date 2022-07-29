@@ -102,42 +102,42 @@ struct ExprValue {
     // Sets the value for type to '0' and returns a pointer to the data
     void* set_to_zero(const TypeDescriptor& type) {
         switch (type.type) {
-        case TYPE_NULL:
+        case PrimitiveType::TYPE_NULL:
             return nullptr;
 
-        case TYPE_BOOLEAN:
+        case PrimitiveType::TYPE_BOOLEAN:
             bool_val = false;
             return &bool_val;
 
-        case TYPE_TINYINT:
+        case PrimitiveType::TYPE_TINYINT:
             tinyint_val = 0;
             return &tinyint_val;
 
-        case TYPE_SMALLINT:
+        case PrimitiveType::TYPE_SMALLINT:
             smallint_val = 0;
             return &smallint_val;
 
-        case TYPE_INT:
+        case PrimitiveType::TYPE_INT:
             int_val = 0;
             return &int_val;
 
-        case TYPE_BIGINT:
+        case PrimitiveType::TYPE_BIGINT:
             bigint_val = 0;
             return &bigint_val;
 
-        case TYPE_LARGEINT:
+        case PrimitiveType::TYPE_LARGEINT:
             large_int_val = 0;
             return &large_int_val;
 
-        case TYPE_FLOAT:
+        case PrimitiveType::TYPE_FLOAT:
             float_val = 0;
             return &float_val;
 
-        case TYPE_DOUBLE:
+        case PrimitiveType::TYPE_DOUBLE:
             double_val = 0;
             return &double_val;
 
-        case TYPE_DECIMALV2:
+        case PrimitiveType::TYPE_DECIMALV2:
             decimalv2_val.set_to_zero();
             return &decimalv2_val;
 
@@ -150,42 +150,42 @@ struct ExprValue {
     // Sets the value for type to min and returns a pointer to the data
     void* set_to_min(const TypeDescriptor& type) {
         switch (type.type) {
-        case TYPE_NULL:
+        case PrimitiveType::TYPE_NULL:
             return nullptr;
 
-        case TYPE_BOOLEAN:
+        case PrimitiveType::TYPE_BOOLEAN:
             bool_val = false;
             return &bool_val;
 
-        case TYPE_TINYINT:
+        case PrimitiveType::TYPE_TINYINT:
             tinyint_val = std::numeric_limits<int8_t>::min();
             return &tinyint_val;
 
-        case TYPE_SMALLINT:
+        case PrimitiveType::TYPE_SMALLINT:
             smallint_val = std::numeric_limits<int16_t>::min();
             return &smallint_val;
 
-        case TYPE_INT:
+        case PrimitiveType::TYPE_INT:
             int_val = std::numeric_limits<int32_t>::min();
             return &int_val;
 
-        case TYPE_BIGINT:
+        case PrimitiveType::TYPE_BIGINT:
             bigint_val = std::numeric_limits<int64_t>::min();
             return &bigint_val;
 
-        case TYPE_LARGEINT:
+        case PrimitiveType::TYPE_LARGEINT:
             large_int_val = std::numeric_limits<int128_t>::min();
             return &large_int_val;
 
-        case TYPE_FLOAT:
+        case PrimitiveType::TYPE_FLOAT:
             float_val = std::numeric_limits<float>::lowest();
             return &float_val;
 
-        case TYPE_DOUBLE:
+        case PrimitiveType::TYPE_DOUBLE:
             double_val = std::numeric_limits<double>::lowest();
             return &double_val;
 
-        case TYPE_DECIMALV2:
+        case PrimitiveType::TYPE_DECIMALV2:
             decimalv2_val = DecimalV2Value::get_min_decimal();
             return &decimalv2_val;
 
@@ -198,42 +198,42 @@ struct ExprValue {
     // Sets the value for type to max and returns a pointer to the data
     void* set_to_max(const TypeDescriptor& type) {
         switch (type.type) {
-        case TYPE_NULL:
+        case PrimitiveType::TYPE_NULL:
             return nullptr;
 
-        case TYPE_BOOLEAN:
+        case PrimitiveType::TYPE_BOOLEAN:
             bool_val = true;
             return &bool_val;
 
-        case TYPE_TINYINT:
+        case PrimitiveType::TYPE_TINYINT:
             tinyint_val = std::numeric_limits<int8_t>::max();
             return &tinyint_val;
 
-        case TYPE_SMALLINT:
+        case PrimitiveType::TYPE_SMALLINT:
             smallint_val = std::numeric_limits<int16_t>::max();
             return &smallint_val;
 
-        case TYPE_INT:
+        case PrimitiveType::TYPE_INT:
             int_val = std::numeric_limits<int32_t>::max();
             return &int_val;
 
-        case TYPE_BIGINT:
+        case PrimitiveType::TYPE_BIGINT:
             bigint_val = std::numeric_limits<int64_t>::max();
             return &bigint_val;
 
-        case TYPE_LARGEINT:
+        case PrimitiveType::TYPE_LARGEINT:
             large_int_val = std::numeric_limits<int128_t>::max();
             return &large_int_val;
 
-        case TYPE_FLOAT:
+        case PrimitiveType::TYPE_FLOAT:
             float_val = std::numeric_limits<float>::max();
             return &float_val;
 
-        case TYPE_DOUBLE:
+        case PrimitiveType::TYPE_DOUBLE:
             double_val = std::numeric_limits<double>::max();
             return &double_val;
 
-        case TYPE_DECIMALV2:
+        case PrimitiveType::TYPE_DECIMALV2:
             decimalv2_val = DecimalV2Value::get_max_decimal();
             return &decimalv2_val;
 

@@ -24,12 +24,12 @@ namespace doris {
 
 SchemaScanner::ColumnDesc SchemaCollationsScanner::_s_cols_columns[] = {
         //   name,       type,          size
-        {"COLLATION_NAME", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"CHARACTER_SET_NAME", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"ID", TYPE_BIGINT, sizeof(int64_t), false},
-        {"IS_DEFAULT", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"IS_COMPILED", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"SORTLEN", TYPE_BIGINT, sizeof(int64_t), false},
+        {"COLLATION_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"CHARACTER_SET_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"ID", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), false},
+        {"IS_DEFAULT", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"IS_COMPILED", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"SORTLEN", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), false},
 };
 
 SchemaCollationsScanner::CollationStruct SchemaCollationsScanner::_s_collations[] = {

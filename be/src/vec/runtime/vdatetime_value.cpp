@@ -46,8 +46,9 @@ uint8_t mysql_week_mode(uint32_t mode) {
 }
 
 bool VecDateTimeValue::check_range(uint32_t year, uint32_t month, uint32_t day, uint32_t hour,
-                                   uint32_t minute, uint32_t second, uint16_t type) {
-    bool time = hour > (type == TIME_TIME ? TIME_MAX_HOUR : 23) || minute > 59 || second > 59;
+                                   uint32_t minute, uint32_t second, TimeType type) {
+    bool time =
+            hour > (type == TimeType::TIME_TIME ? TIME_MAX_HOUR : 23) || minute > 59 || second > 59;
     return time || check_date(year, month, day);
 }
 
@@ -152,9 +153,9 @@ bool VecDateTimeValue::from_date_str(const char* date_str, int len) {
     }
     int num_field = field_idx;
     if (num_field <= 3) {
-        _type = TIME_DATE;
+        _type = TimeType::TIME_DATE;
     } else {
-        _type = TIME_DATETIME;
+        _type = TimeType::TIME_DATETIME;
     }
     if (!is_interval_format) {
         year_len = date_len[0];
@@ -189,7 +190,7 @@ bool VecDateTimeValue::from_date_str(const char* date_str, int len) {
 // ((YY_PART_YEAR)##1231235959, 99991231235959] two digits year datetime value 1970 ~ 1999
 // (999991231235959, ~) valid
 int64_t VecDateTimeValue::standardize_timevalue(int64_t value) {
-    _type = TIME_DATE;
+    _type = TimeType::TIME_DATE;
     if (value <= 0) {
         return 0;
     }
@@ -201,7 +202,7 @@ int64_t VecDateTimeValue::standardize_timevalue(int64_t value) {
 
         // between 1000-01-01 00:00:00L and 9999-99-99 99:99:99
         // all digits exist.
-        _type = TIME_DATETIME;
+        _type = TimeType::TIME_DATETIME;
         return value;
     }
     // 2000-01-01
@@ -234,7 +235,7 @@ int64_t VecDateTimeValue::standardize_timevalue(int64_t value) {
     }
 
     // below is with datetime, must have hh:mm:ss
-    _type = TIME_DATETIME;
+    _type = TimeType::TIME_DATETIME;
     // 2000 ~ 2069
     if (value <= (YY_PART_YEAR - 1) * 10000000000L + 1231235959L) {
         return value + 20000000000000L;
@@ -271,17 +272,17 @@ bool VecDateTimeValue::from_date_int64(int64_t value) {
     return check_range_and_set_time(year, month, day, hour, minute, second, _type);
 }
 
-void VecDateTimeValue::set_zero(int type) {
+void VecDateTimeValue::set_zero(TimeType type) {
     memset(this, 0, sizeof(*this));
     _type = type;
 }
 
-void VecDateTimeValue::set_type(int type) {
+void VecDateTimeValue::set_type(TimeType type) {
     _type = type;
 }
 
 void VecDateTimeValue::set_max_time(bool neg) {
-    set_zero(TIME_TIME);
+    set_zero(TimeType::TIME_TIME);
     _hour = static_cast<uint8_t>(TIME_MAX_HOUR);
     _minute = TIME_MAX_MINUTE;
     _second = TIME_MAX_SECOND;
@@ -289,7 +290,7 @@ void VecDateTimeValue::set_max_time(bool neg) {
 }
 
 bool VecDateTimeValue::from_time_int64(int64_t value) {
-    _type = TIME_TIME;
+    _type = TimeType::TIME_TIME;
     if (value > TIME_MAX_VALUE) {
         // 0001-01-01 00:00:00 to convert to a datetime
         if (value > 10000000000L) {
@@ -379,11 +380,11 @@ char* VecDateTimeValue::to_time_buffer(char* to) const {
 
 int32_t VecDateTimeValue::to_buffer(char* buffer) const {
     switch (_type) {
-    case TIME_TIME:
+    case TimeType::TIME_TIME:
         return to_time_buffer(buffer) - buffer;
-    case TIME_DATE:
+    case TimeType::TIME_DATE:
         return to_date_buffer(buffer) - buffer;
-    case TIME_DATETIME:
+    case TimeType::TIME_DATETIME:
         return to_datetime_buffer(buffer) - buffer;
     default:
         break;
@@ -413,11 +414,11 @@ int64_t VecDateTimeValue::to_time_int64() const {
 
 int64_t VecDateTimeValue::to_int64() const {
     switch (_type) {
-    case TIME_TIME:
+    case TimeType::TIME_TIME:
         return to_time_int64();
-    case TIME_DATE:
+    case TimeType::TIME_DATE:
         return to_date_int64();
-    case TIME_DATETIME:
+    case TimeType::TIME_DATETIME:
         return to_datetime_int64();
     default:
         return 0;
@@ -467,7 +468,7 @@ bool VecDateTimeValue::from_date_daynr(uint64_t daynr) {
     _hour = 0;
     _minute = 0;
     _second = 0;
-    _type = TIME_DATE;
+    _type = TimeType::TIME_DATE;
     return true;
 }
 
@@ -580,7 +581,7 @@ int VecDateTimeValue::compute_format_len(const char* format, int len) {
 
 bool VecDateTimeValue::to_format_string(const char* format, int len, char* to) const {
     char buf[64];
-    char* pos = NULL;
+    char* pos = nullptr;
     const char* ptr = format;
     const char* end = format + len;
     char ch = '\0';
@@ -595,7 +596,7 @@ bool VecDateTimeValue::to_format_string(const char* format, int len, char* to) c
         switch (ch = *ptr++) {
         case 'a':
             // Abbreviated weekday name
-            if (_type == TIME_TIME || (_year == 0 && _month == 0)) {
+            if (_type == TimeType::TIME_TIME || (_year == 0 && _month == 0)) {
                 return false;
             }
             to = append_string(s_ab_day_name[weekday()], to);
@@ -741,7 +742,7 @@ bool VecDateTimeValue::to_format_string(const char* format, int len, char* to) c
         case 'u':
             // Week (00..53), where Monday is the first day of the week;
             // WEEK() mode 1
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             pos = int_to_str(week(mysql_week_mode(1)), buf);
@@ -750,7 +751,7 @@ bool VecDateTimeValue::to_format_string(const char* format, int len, char* to) c
         case 'U':
             // Week (00..53), where Sunday is the first day of the week;
             // WEEK() mode 0
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             pos = int_to_str(week(mysql_week_mode(0)), buf);
@@ -759,7 +760,7 @@ bool VecDateTimeValue::to_format_string(const char* format, int len, char* to) c
         case 'v':
             // Week (01..53), where Monday is the first day of the week;
             // WEEK() mode 3; used with %x
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             pos = int_to_str(week(mysql_week_mode(3)), buf);
@@ -768,7 +769,7 @@ bool VecDateTimeValue::to_format_string(const char* format, int len, char* to) c
         case 'V':
             // Week (01..53), where Sunday is the first day of the week;
             // WEEK() mode 2; used with %X
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             pos = int_to_str(week(mysql_week_mode(2)), buf);
@@ -776,7 +777,7 @@ bool VecDateTimeValue::to_format_string(const char* format, int len, char* to) c
             break;
         case 'w':
             // Day of the week (0=Sunday..6=Saturday)
-            if (_type == TIME_TIME || (_month == 0 && _year == 0)) {
+            if (_type == TimeType::TIME_TIME || (_month == 0 && _year == 0)) {
                 return false;
             }
             pos = int_to_str(doris::calc_weekday(daynr(), true), buf);
@@ -789,7 +790,7 @@ bool VecDateTimeValue::to_format_string(const char* format, int len, char* to) c
         case 'x': {
             // Year for the week, where Monday is the first day of the week,
             // numeric, four digits; used with %v
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             uint32_t year = 0;
@@ -801,7 +802,7 @@ bool VecDateTimeValue::to_format_string(const char* format, int len, char* to) c
         case 'X': {
             // Year for the week where Sunday is the first day of the week,
             // numeric, four digits; used with %V
-            if (_type == TIME_TIME) {
+            if (_type == TimeType::TIME_TIME) {
                 return false;
             }
             uint32_t year = 0;
@@ -1036,7 +1037,7 @@ static int find_in_lib(const char* lib[], const char* str, const char* end) {
     int pos = 0;
     int find_count = 0;
     int find_pos = 0;
-    for (; lib[pos] != NULL; ++pos) {
+    for (; lib[pos] != nullptr; ++pos) {
         const char* i = str;
         const char* j = lib[pos];
         while (i < end && *j) {
@@ -1106,7 +1107,7 @@ bool VecDateTimeValue::from_date_format_str(const char* format, int format_len, 
         }
         // Check switch
         if (*ptr == '%' && ptr + 1 < end) {
-            const char* tmp = NULL;
+            const char* tmp = nullptr;
             int64_t int_value = 0;
             ptr++;
             switch (*ptr++) {
@@ -1396,19 +1397,19 @@ bool VecDateTimeValue::from_date_format_str(const char* format, int format_len, 
     // Compute timestamp type
     if (frac_part_used) {
         if (date_part_used) {
-            _type = TIME_DATETIME;
+            _type = TimeType::TIME_DATETIME;
         } else {
-            _type = TIME_TIME;
+            _type = TimeType::TIME_TIME;
         }
     } else {
         if (date_part_used) {
             if (time_part_used) {
-                _type = TIME_DATETIME;
+                _type = TimeType::TIME_DATETIME;
             } else {
-                _type = TIME_DATE;
+                _type = TimeType::TIME_DATE;
             }
         } else {
-            _type = TIME_TIME;
+            _type = TimeType::TIME_TIME;
         }
     }
 
@@ -1494,7 +1495,7 @@ bool VecDateTimeValue::date_add_interval(const TimeInterval& interval) {
         if (!get_date_from_daynr(day_nr)) {
             return false;
         }
-        _type = TIME_DATETIME;
+        _type = TimeType::TIME_DATETIME;
     } else if constexpr ((unit == DAY) || (unit == WEEK)) {
         // This only change day information, not change second information
         int64_t day_nr = daynr() + interval.day * sign;
@@ -1561,7 +1562,7 @@ bool VecDateTimeValue::from_unixtime(int64_t timestamp, const cctz::time_zone& c
     const auto tp = cctz::convert(t, ctz);
 
     _neg = 0;
-    _type = TIME_DATETIME;
+    _type = TimeType::TIME_DATETIME;
     _year = tp.year();
     _month = tp.month();
     _day = tp.day();
@@ -1574,7 +1575,7 @@ bool VecDateTimeValue::from_unixtime(int64_t timestamp, const cctz::time_zone& c
 
 const char* VecDateTimeValue::month_name() const {
     if (_month < 1 || _month > 12) {
-        return NULL;
+        return nullptr;
     }
     return s_month_name[_month];
 }
@@ -1582,14 +1583,14 @@ const char* VecDateTimeValue::month_name() const {
 const char* VecDateTimeValue::day_name() const {
     int day = weekday();
     if (day < 0 || day >= 7) {
-        return NULL;
+        return nullptr;
     }
     return s_day_name[day];
 }
 
 VecDateTimeValue VecDateTimeValue::local_time() {
     VecDateTimeValue value;
-    value.from_unixtime(time(NULL), TimezoneUtils::default_time_zone);
+    value.from_unixtime(time(nullptr), TimezoneUtils::default_time_zone);
     return value;
 }
 
@@ -1843,7 +1844,7 @@ bool DateV2Value<T>::from_date_format_str(const char* format, int format_len, co
         }
         // Check switch
         if (*ptr == '%' && ptr + 1 < end) {
-            const char* tmp = NULL;
+            const char* tmp = nullptr;
             int64_t int_value = 0;
             ptr++;
             switch (*ptr++) {

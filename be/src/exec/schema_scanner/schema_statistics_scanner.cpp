@@ -24,21 +24,21 @@ namespace doris {
 
 SchemaScanner::ColumnDesc SchemaStatisticsScanner::_s_cols_statistics[] = {
         //   name,       type,          size,                     is_null
-        {"TABLE_CATALOG", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"TABLE_SCHEMA", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"TABLE_NAME", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"NON_UNIQUE", TYPE_BIGINT, sizeof(int64_t), false},
-        {"INDEX_SCHEMA", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"INDEX_NAME", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"SEQ_IN_INDEX", TYPE_BIGINT, sizeof(int64_t), false},
-        {"COLUMN_NAME", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"COLLATION", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"CARDINALITY", TYPE_BIGINT, sizeof(int64_t), true},
-        {"SUB_PART", TYPE_BIGINT, sizeof(int64_t), true},
-        {"PACKED", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"NULLABLE", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"INDEX_TYPE", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"COMMENT", TYPE_VARCHAR, sizeof(StringValue), true},
+        {"TABLE_CATALOG", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"TABLE_SCHEMA", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"TABLE_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"NON_UNIQUE", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), false},
+        {"INDEX_SCHEMA", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"INDEX_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"SEQ_IN_INDEX", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), false},
+        {"COLUMN_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"COLLATION", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"CARDINALITY", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"SUB_PART", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"PACKED", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"NULLABLE", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"INDEX_TYPE", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"COMMENT", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
 };
 
 SchemaStatisticsScanner::SchemaStatisticsScanner()

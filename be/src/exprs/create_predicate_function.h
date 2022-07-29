@@ -68,48 +68,48 @@ typename Traits::BasePtr create_predicate_function(PrimitiveType type) {
     using Creator = PredicateFunctionCreator<Traits>;
 
     switch (type) {
-    case TYPE_BOOLEAN:
-        return Creator::template create<TYPE_BOOLEAN>();
-    case TYPE_TINYINT:
-        return Creator::template create<TYPE_TINYINT>();
-    case TYPE_SMALLINT:
-        return Creator::template create<TYPE_SMALLINT>();
-    case TYPE_INT:
-        return Creator::template create<TYPE_INT>();
-    case TYPE_BIGINT:
-        return Creator::template create<TYPE_BIGINT>();
-    case TYPE_LARGEINT:
-        return Creator::template create<TYPE_LARGEINT>();
+    case PrimitiveType::TYPE_BOOLEAN:
+        return Creator::template create<PrimitiveType::TYPE_BOOLEAN>();
+    case PrimitiveType::TYPE_TINYINT:
+        return Creator::template create<PrimitiveType::TYPE_TINYINT>();
+    case PrimitiveType::TYPE_SMALLINT:
+        return Creator::template create<PrimitiveType::TYPE_SMALLINT>();
+    case PrimitiveType::TYPE_INT:
+        return Creator::template create<PrimitiveType::TYPE_INT>();
+    case PrimitiveType::TYPE_BIGINT:
+        return Creator::template create<PrimitiveType::TYPE_BIGINT>();
+    case PrimitiveType::TYPE_LARGEINT:
+        return Creator::template create<PrimitiveType::TYPE_LARGEINT>();
 
-    case TYPE_FLOAT:
-        return Creator::template create<TYPE_FLOAT>();
-    case TYPE_DOUBLE:
-        return Creator::template create<TYPE_DOUBLE>();
+    case PrimitiveType::TYPE_FLOAT:
+        return Creator::template create<PrimitiveType::TYPE_FLOAT>();
+    case PrimitiveType::TYPE_DOUBLE:
+        return Creator::template create<PrimitiveType::TYPE_DOUBLE>();
 
-    case TYPE_DECIMALV2:
-        return Creator::template create<TYPE_DECIMALV2>();
+    case PrimitiveType::TYPE_DECIMALV2:
+        return Creator::template create<PrimitiveType::TYPE_DECIMALV2>();
 
-    case TYPE_DATE:
-        return Creator::template create<TYPE_DATE>();
-    case TYPE_DATETIME:
-        return Creator::template create<TYPE_DATETIME>();
-    case TYPE_DATEV2:
-        return Creator::template create<TYPE_DATEV2>();
-    case TYPE_DATETIMEV2:
-        return Creator::template create<TYPE_DATETIMEV2>();
+    case PrimitiveType::TYPE_DATE:
+        return Creator::template create<PrimitiveType::TYPE_DATE>();
+    case PrimitiveType::TYPE_DATETIME:
+        return Creator::template create<PrimitiveType::TYPE_DATETIME>();
+    case PrimitiveType::TYPE_DATEV2:
+        return Creator::template create<PrimitiveType::TYPE_DATEV2>();
+    case PrimitiveType::TYPE_DATETIMEV2:
+        return Creator::template create<PrimitiveType::TYPE_DATETIMEV2>();
 
-    case TYPE_CHAR:
-        return Creator::template create<TYPE_CHAR>();
-    case TYPE_VARCHAR:
-        return Creator::template create<TYPE_VARCHAR>();
-    case TYPE_STRING:
-        return Creator::template create<TYPE_STRING>();
-    case TYPE_DECIMAL32:
-        return Creator::template create<TYPE_DECIMAL32>();
-    case TYPE_DECIMAL64:
-        return Creator::template create<TYPE_DECIMAL64>();
-    case TYPE_DECIMAL128:
-        return Creator::template create<TYPE_DECIMAL128>();
+    case PrimitiveType::TYPE_CHAR:
+        return Creator::template create<PrimitiveType::TYPE_CHAR>();
+    case PrimitiveType::TYPE_VARCHAR:
+        return Creator::template create<PrimitiveType::TYPE_VARCHAR>();
+    case PrimitiveType::TYPE_STRING:
+        return Creator::template create<PrimitiveType::TYPE_STRING>();
+    case PrimitiveType::TYPE_DECIMAL32:
+        return Creator::template create<PrimitiveType::TYPE_DECIMAL32>();
+    case PrimitiveType::TYPE_DECIMAL64:
+        return Creator::template create<PrimitiveType::TYPE_DECIMAL64>();
+    case PrimitiveType::TYPE_DECIMAL128:
+        return Creator::template create<PrimitiveType::TYPE_DECIMAL128>();
 
     default:
         DCHECK(false) << "Invalid type.";

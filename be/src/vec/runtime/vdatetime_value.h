@@ -36,6 +36,8 @@
 namespace doris {
 class DateTimeValue;
 
+enum class TimeType { TIME_TIME = 1, TIME_DATE = 2, TIME_DATETIME = 3 };
+
 namespace vectorized {
 
 enum TimeUnit {
@@ -119,8 +121,6 @@ struct TimeInterval {
         }
     }
 };
-
-enum TimeType { TIME_TIME = 1, TIME_DATE = 2, TIME_DATETIME = 3 };
 
 // Used to compute week
 const int WEEK_MONDAY_FIRST = 1;
@@ -221,7 +221,7 @@ public:
     // Constructor
     VecDateTimeValue()
             : _neg(0),
-              _type(TIME_DATETIME),
+              _type(TimeType::TIME_DATETIME),
               _second(0),
               _minute(0),
               _hour(0),
@@ -260,7 +260,7 @@ public:
     // Converted from Olap Date or Datetime
     bool from_olap_datetime(uint64_t datetime) {
         _neg = 0;
-        _type = TIME_DATETIME;
+        _type = TimeType::TIME_DATETIME;
         uint64_t date = datetime / 1000000;
         uint64_t time = datetime % 1000000;
 
@@ -285,7 +285,7 @@ public:
 
     bool from_olap_date(uint64_t date) {
         _neg = 0;
-        _type = TIME_DATE;
+        _type = TimeType::TIME_DATE;
 
         auto [year, month, day, hour, minute, second] = std::tuple {0, 0, 0, 0, 0, 0};
 
@@ -301,7 +301,7 @@ public:
     //note(wb) not check in this method
     void inline set_olap_date(uint64_t olap_date_val) {
         _neg = 0;
-        _type = TIME_DATE;
+        _type = TimeType::TIME_DATE;
 
         _day = olap_date_val & 0x1f;
         _month = (olap_date_val >> 5) & 0x0f;
@@ -366,7 +366,7 @@ public:
 
     // Return true if range or date is invalid
     static bool check_range(uint32_t year, uint32_t month, uint32_t day, uint32_t hour,
-                            uint32_t minute, uint32_t second, uint16_t type);
+                            uint32_t minute, uint32_t second, TimeType type);
 
     static bool check_date(uint32_t year, uint32_t month, uint32_t day);
 
@@ -375,7 +375,7 @@ public:
     int64_t to_int64() const;
 
     bool check_range_and_set_time(uint32_t year, uint32_t month, uint32_t day, uint32_t hour,
-                                  uint32_t minute, uint32_t second, uint16_t type) {
+                                  uint32_t minute, uint32_t second, TimeType type) {
         if (check_range(year, month, day, hour, minute, second, type)) {
             return false;
         }
@@ -405,17 +405,17 @@ public:
         _hour = 0;
         _minute = 0;
         _second = 0;
-        _type = TIME_DATE;
+        _type = TimeType::TIME_DATE;
     }
 
     void cast_to_time() {
         _year = 0;
         _month = 0;
         _day = 0;
-        _type = TIME_TIME;
+        _type = TimeType::TIME_TIME;
     }
 
-    void to_datetime() { _type = TIME_DATETIME; }
+    void to_datetime() { _type = TimeType::TIME_DATETIME; }
 
     // Weekday, from 0(Mon) to 6(Sun)
     uint8_t weekday() const { return doris::calc_weekday(daynr(), false); }
@@ -525,17 +525,17 @@ public:
 
     VecDateTimeValue& operator++() {
         switch (_type) {
-        case TIME_DATE: {
+        case TimeType::TIME_DATE: {
             TimeInterval interval(DAY, 1, false);
             date_add_interval<DAY>(interval);
             break;
         }
-        case TIME_DATETIME: {
+        case TimeType::TIME_DATETIME: {
             TimeInterval interval(SECOND, 1, false);
             date_add_interval<SECOND>(interval);
             break;
         }
-        case TIME_TIME: {
+        case TimeType::TIME_TIME: {
             TimeInterval interval(SECOND, 1, false);
             date_add_interval<SECOND>(interval);
             break;
@@ -546,16 +546,16 @@ public:
 
     void to_datetime_val(doris_udf::DateTimeVal* tv) const {
         tv->packed_time = to_int64_datetime_packed();
-        tv->type = _type;
+        tv->type = int(_type);
     }
 
     uint32_t to_date_v2() const {
-        CHECK(_type == TIME_DATE);
+        CHECK(_type == TimeType::TIME_DATE);
         return (year() << 9 | month() << 5 | day());
     };
 
     uint64_t to_datetime_v2() const {
-        CHECK(_type == TIME_DATETIME);
+        CHECK(_type == TimeType::TIME_DATETIME);
         return (uint64_t)(((uint64_t)year() << 46) | ((uint64_t)month() << 42) |
                           ((uint64_t)day() << 37) | ((uint64_t)hour() << 32) |
                           ((uint64_t)minute() << 26) | ((uint64_t)second() << 20));
@@ -564,7 +564,7 @@ public:
     static VecDateTimeValue from_datetime_val(const doris_udf::DateTimeVal& tv) {
         VecDateTimeValue value;
         value.from_packed_time(tv.packed_time);
-        if (tv.type == TIME_DATE) {
+        if (tv.type == int(TimeType::TIME_DATE)) {
             value.cast_to_date();
         }
         return value;
@@ -584,12 +584,13 @@ public:
     }
 
     static VecDateTimeValue datetime_min_value() {
-        static VecDateTimeValue _s_min_datetime_value(0, TIME_DATETIME, 0, 0, 0, 0, 1, 1);
+        static VecDateTimeValue _s_min_datetime_value(0, TimeType::TIME_DATETIME, 0, 0, 0, 0, 1, 1);
         return _s_min_datetime_value;
     }
 
     static VecDateTimeValue datetime_max_value() {
-        static VecDateTimeValue _s_max_datetime_value(0, TIME_DATETIME, 23, 59, 59, 9999, 12, 31);
+        static VecDateTimeValue _s_max_datetime_value(0, TimeType::TIME_DATETIME, 23, 59, 59, 9999,
+                                                      12, 31);
         return _s_max_datetime_value;
     }
 
@@ -609,9 +610,9 @@ public:
         return time_diff;
     }
 
-    void set_type(int type);
+    void set_type(TimeType type);
 
-    int type() const { return _type; }
+    TimeType type() const { return _type; }
 
     bool is_valid_date() const {
         return !check_range(_year, _month, _day, _hour, _minute, _second, _type) && _month > 0 &&
@@ -640,7 +641,7 @@ private:
         _minute = (hms >> 6) % (1 << 6);
         _hour = (hms >> 12);
         _neg = 0;
-        _type = TIME_DATETIME;
+        _type = TimeType::TIME_DATETIME;
     }
 
     int64_t make_packed_time(int64_t time, int64_t second_part) const {
@@ -680,15 +681,15 @@ private:
     bool get_date_from_daynr(uint64_t);
 
     // Helper to set max, min, zero
-    void set_zero(int type);
+    void set_zero(TimeType type);
     void set_max_time(bool neg);
 
     bool from_date_format_str(const char* format, int format_len, const char* value, int value_len,
                               const char** sub_val_end);
 
     // 1 bits for neg. 3 bits for type. 12bit for second
-    uint16_t _neg : 1;  // Used for time value.
-    uint16_t _type : 3; // Which type of this value.
+    uint16_t _neg : 1;                        // Used for time value.
+    TimeType _type = TimeType::TIME_DATETIME; // Which type of this value.
     uint16_t _second : 12;
     uint8_t _minute;
     uint8_t _hour;
@@ -696,7 +697,7 @@ private:
     uint8_t _month;
     uint16_t _year;
 
-    VecDateTimeValue(uint8_t neg, uint8_t type, uint8_t hour, uint8_t minute, uint8_t second,
+    VecDateTimeValue(uint8_t neg, TimeType type, uint8_t hour, uint8_t minute, uint8_t second,
                      uint16_t year, uint8_t month, uint8_t day)
             : _neg(neg),
               _type(type),

@@ -25,44 +25,44 @@ namespace doris {
 
 SchemaScanner::ColumnDesc SchemaFilesScanner::_s_tbls_columns[] = {
         //   name,       type,          size,     is_null
-        {"FILE_ID", TYPE_BIGINT, sizeof(int64_t), true},
-        {"FILE_NAME", TYPE_STRING, sizeof(StringValue), true},
-        {"FILE_TYPE", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"TABLESPACE_NAME", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"TABLE_CATALOG", TYPE_CHAR, sizeof(StringValue), false},
-        {"TABLE_SCHEMA", TYPE_STRING, sizeof(StringValue), true},
-        {"TABLE_NAME", TYPE_STRING, sizeof(StringValue), true},
-        {"LOGFILE_GROUP_NAME", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"LOGFILE_GROUP_NUMBER", TYPE_BIGINT, sizeof(int64_t), true},
-        {"ENGINE", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"FULLTEXT_KEYS", TYPE_STRING, sizeof(StringValue), true},
-        {"DELETED_ROWS", TYPE_STRING, sizeof(StringValue), true},
-        {"UPDATE_COUNT", TYPE_STRING, sizeof(StringValue), true},
-        {"FREE_EXTENTS", TYPE_BIGINT, sizeof(int64_t), true},
-        {"TOTAL_EXTENTS", TYPE_BIGINT, sizeof(int64_t), true},
-        {"EXTENT_SIZE", TYPE_BIGINT, sizeof(int64_t), true},
-        {"INITIAL_SIZE", TYPE_BIGINT, sizeof(int64_t), true},
-        {"MAXIMUM_SIZE", TYPE_BIGINT, sizeof(int64_t), true},
-        {"AUTOEXTEND_SIZE", TYPE_BIGINT, sizeof(int64_t), true},
-        {"CREATION_TIME", TYPE_STRING, sizeof(StringValue), true},
-        {"LAST_UPDATE_TIME", TYPE_STRING, sizeof(StringValue), true},
-        {"LAST_ACCESS_TIME", TYPE_STRING, sizeof(StringValue), true},
-        {"RECOVER_TIME", TYPE_STRING, sizeof(StringValue), true},
-        {"TRANSACTION_COUNTER", TYPE_STRING, sizeof(StringValue), true},
-        {"VERSION", TYPE_BIGINT, sizeof(int64_t), true},
-        {"ROW_FORMAT", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"TABLE_ROWS", TYPE_STRING, sizeof(StringValue), true},
-        {"AVG_ROW_LENGTH", TYPE_STRING, sizeof(StringValue), true},
-        {"DATA_LENGTH", TYPE_STRING, sizeof(StringValue), true},
-        {"MAX_DATA_LENGTH", TYPE_STRING, sizeof(StringValue), true},
-        {"INDEX_LENGTH", TYPE_STRING, sizeof(StringValue), true},
-        {"DATA_FREE", TYPE_BIGINT, sizeof(int64_t), true},
-        {"CREATE_TIME", TYPE_STRING, sizeof(StringValue), true},
-        {"UPDATE_TIME", TYPE_STRING, sizeof(StringValue), true},
-        {"CHECK_TIME", TYPE_STRING, sizeof(StringValue), true},
-        {"CHECKSUM", TYPE_STRING, sizeof(StringValue), true},
-        {"STATUS", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"EXTRA", TYPE_VARCHAR, sizeof(StringValue), true},
+        {"FILE_ID", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"FILE_NAME", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"FILE_TYPE", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"TABLESPACE_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"TABLE_CATALOG", PrimitiveType::TYPE_CHAR, sizeof(StringValue), false},
+        {"TABLE_SCHEMA", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"TABLE_NAME", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"LOGFILE_GROUP_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"LOGFILE_GROUP_NUMBER", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"ENGINE", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"FULLTEXT_KEYS", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"DELETED_ROWS", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"UPDATE_COUNT", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"FREE_EXTENTS", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"TOTAL_EXTENTS", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"EXTENT_SIZE", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"INITIAL_SIZE", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"MAXIMUM_SIZE", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"AUTOEXTEND_SIZE", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"CREATION_TIME", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"LAST_UPDATE_TIME", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"LAST_ACCESS_TIME", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"RECOVER_TIME", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"TRANSACTION_COUNTER", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"VERSION", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"ROW_FORMAT", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"TABLE_ROWS", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"AVG_ROW_LENGTH", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"DATA_LENGTH", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"MAX_DATA_LENGTH", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"INDEX_LENGTH", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"DATA_FREE", PrimitiveType::TYPE_BIGINT, sizeof(int64_t), true},
+        {"CREATE_TIME", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"UPDATE_TIME", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"CHECK_TIME", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"CHECKSUM", PrimitiveType::TYPE_STRING, sizeof(StringValue), true},
+        {"STATUS", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"EXTRA", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
 };
 
 SchemaFilesScanner::SchemaFilesScanner()
@@ -78,21 +78,21 @@ Status SchemaFilesScanner::start(RuntimeState* state) {
         return Status::InternalError("used before initialized.");
     }
     TGetDbsParams db_params;
-    if (NULL != _param->db) {
+    if (nullptr != _param->db) {
         db_params.__set_pattern(*(_param->db));
     }
-    if (NULL != _param->current_user_ident) {
+    if (nullptr != _param->current_user_ident) {
         db_params.__set_current_user_ident(*(_param->current_user_ident));
     } else {
-        if (NULL != _param->user) {
+        if (nullptr != _param->user) {
             db_params.__set_user(*(_param->user));
         }
-        if (NULL != _param->user_ip) {
+        if (nullptr != _param->user_ip) {
             db_params.__set_user_ip(*(_param->user_ip));
         }
     }
 
-    if (NULL != _param->ip && 0 != _param->port) {
+    if (nullptr != _param->ip && 0 != _param->port) {
         RETURN_IF_ERROR(
                 SchemaHelper::get_db_names(*(_param->ip), _param->port, db_params, &_db_result));
     } else {

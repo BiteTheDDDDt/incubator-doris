@@ -59,73 +59,73 @@ DataTypePtr DataTypeFactory::create_data_type(const TabletColumn& col_desc, bool
 DataTypePtr DataTypeFactory::create_data_type(const TypeDescriptor& col_desc, bool is_nullable) {
     DataTypePtr nested = nullptr;
     switch (col_desc.type) {
-    case TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_BOOLEAN:
         nested = std::make_shared<vectorized::DataTypeUInt8>();
         break;
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_TINYINT:
         nested = std::make_shared<vectorized::DataTypeInt8>();
         break;
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         nested = std::make_shared<vectorized::DataTypeInt16>();
         break;
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         nested = std::make_shared<vectorized::DataTypeInt32>();
         break;
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         nested = std::make_shared<vectorized::DataTypeFloat32>();
         break;
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         nested = std::make_shared<vectorized::DataTypeInt64>();
         break;
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_LARGEINT:
         nested = std::make_shared<vectorized::DataTypeInt128>();
         break;
-    case TYPE_DATE:
+    case PrimitiveType::TYPE_DATE:
         nested = std::make_shared<vectorized::DataTypeDate>();
         break;
-    case TYPE_DATEV2:
+    case PrimitiveType::TYPE_DATEV2:
         nested = std::make_shared<vectorized::DataTypeDateV2>();
         break;
-    case TYPE_DATETIMEV2:
+    case PrimitiveType::TYPE_DATETIMEV2:
         nested = std::make_shared<vectorized::DataTypeDateTimeV2>(col_desc.scale);
         break;
-    case TYPE_DATETIME:
+    case PrimitiveType::TYPE_DATETIME:
         nested = std::make_shared<vectorized::DataTypeDateTime>();
         break;
-    case TYPE_TIME:
-    case TYPE_TIMEV2:
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_TIME:
+    case PrimitiveType::TYPE_TIMEV2:
+    case PrimitiveType::TYPE_DOUBLE:
         nested = std::make_shared<vectorized::DataTypeFloat64>();
         break;
-    case TYPE_STRING:
-    case TYPE_CHAR:
-    case TYPE_VARCHAR:
+    case PrimitiveType::TYPE_STRING:
+    case PrimitiveType::TYPE_CHAR:
+    case PrimitiveType::TYPE_VARCHAR:
         nested = std::make_shared<vectorized::DataTypeString>();
         break;
-    case TYPE_HLL:
+    case PrimitiveType::TYPE_HLL:
         nested = std::make_shared<vectorized::DataTypeHLL>();
         break;
-    case TYPE_OBJECT:
+    case PrimitiveType::TYPE_OBJECT:
         nested = std::make_shared<vectorized::DataTypeBitMap>();
         break;
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
         nested = std::make_shared<vectorized::DataTypeDecimal<vectorized::Decimal128>>(27, 9);
         break;
-    case TYPE_DECIMAL32:
-    case TYPE_DECIMAL64:
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL128:
         nested = vectorized::create_decimal(col_desc.precision, col_desc.scale);
         break;
     // Just Mock A NULL Type in Vec Exec Engine
-    case TYPE_NULL:
+    case PrimitiveType::TYPE_NULL:
         nested = std::make_shared<vectorized::DataTypeUInt8>();
         break;
-    case TYPE_ARRAY:
+    case PrimitiveType::TYPE_ARRAY:
         DCHECK(col_desc.children.size() == 1);
         nested = std::make_shared<vectorized::DataTypeArray>(
                 create_data_type(col_desc.children[0], col_desc.contains_null));
         break;
-    case INVALID_TYPE:
+    case PrimitiveType::INVALID_TYPE:
     default:
         DCHECK(false) << "invalid PrimitiveType:" << (int)col_desc.type;
         break;

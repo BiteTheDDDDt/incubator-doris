@@ -25,16 +25,16 @@ namespace doris {
 
 SchemaScanner::ColumnDesc SchemaViewsScanner::_s_tbls_columns[] = {
         //   name,       type,          size,     is_null
-        {"TABLE_CATALOG", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"TABLE_SCHEMA", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"TABLE_NAME", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"VIEW_DEFINITION", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"CHECK_OPTION", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"IS_UPDATABLE", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"DEFINER", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"SECURITY_TYPE", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"CHARACTER_SET_CLIENT", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"COLLATION_CONNECTION", TYPE_VARCHAR, sizeof(StringValue), true},
+        {"TABLE_CATALOG", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"TABLE_SCHEMA", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"TABLE_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"VIEW_DEFINITION", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"CHECK_OPTION", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"IS_UPDATABLE", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"DEFINER", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"SECURITY_TYPE", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"CHARACTER_SET_CLIENT", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"COLLATION_CONNECTION", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
 };
 
 SchemaViewsScanner::SchemaViewsScanner()

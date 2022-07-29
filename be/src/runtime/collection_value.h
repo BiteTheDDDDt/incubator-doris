@@ -48,13 +48,13 @@ inline constexpr std::enable_if_t<std::is_base_of_v<ArrayIteratorFunctionsBase, 
         IsTypeFixedWidth = true;
 
 template <>
-inline constexpr bool IsTypeFixedWidth<ArrayIteratorFunctions<TYPE_CHAR>> = false;
+inline constexpr bool IsTypeFixedWidth<ArrayIteratorFunctions<PrimitiveType::TYPE_CHAR>> = false;
 template <>
-inline constexpr bool IsTypeFixedWidth<ArrayIteratorFunctions<TYPE_VARCHAR>> = false;
+inline constexpr bool IsTypeFixedWidth<ArrayIteratorFunctions<PrimitiveType::TYPE_VARCHAR>> = false;
 template <>
-inline constexpr bool IsTypeFixedWidth<ArrayIteratorFunctions<TYPE_STRING>> = false;
+inline constexpr bool IsTypeFixedWidth<ArrayIteratorFunctions<PrimitiveType::TYPE_STRING>> = false;
 template <>
-inline constexpr bool IsTypeFixedWidth<ArrayIteratorFunctions<TYPE_ARRAY>> = false;
+inline constexpr bool IsTypeFixedWidth<ArrayIteratorFunctions<PrimitiveType::TYPE_ARRAY>> = false;
 
 /**
  * The format of array-typed slot.

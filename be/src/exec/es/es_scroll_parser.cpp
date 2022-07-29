@@ -385,9 +385,9 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             continue;
         }
         switch (type) {
-        case TYPE_CHAR:
-        case TYPE_VARCHAR:
-        case TYPE_STRING: {
+        case PrimitiveType::TYPE_CHAR:
+        case PrimitiveType::TYPE_VARCHAR:
+        case PrimitiveType::TYPE_STRING: {
             // sometimes elasticsearch user post some not-string value to Elasticsearch Index.
             // because of reading value from _source, we can not process all json type and then just transfer the value to original string representation
             // this may be a tricky, but we can workaround this issue
@@ -421,7 +421,7 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             break;
         }
 
-        case TYPE_TINYINT: {
+        case PrimitiveType::TYPE_TINYINT: {
             Status status = get_int_value<int8_t>(col, type, slot, pure_doc_value);
             if (!status.ok()) {
                 return status;
@@ -429,7 +429,7 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             break;
         }
 
-        case TYPE_SMALLINT: {
+        case PrimitiveType::TYPE_SMALLINT: {
             Status status = get_int_value<int16_t>(col, type, slot, pure_doc_value);
             if (!status.ok()) {
                 return status;
@@ -437,7 +437,7 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             break;
         }
 
-        case TYPE_INT: {
+        case PrimitiveType::TYPE_INT: {
             Status status = get_int_value<int32_t>(col, type, slot, pure_doc_value);
             if (!status.ok()) {
                 return status;
@@ -445,7 +445,7 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             break;
         }
 
-        case TYPE_BIGINT: {
+        case PrimitiveType::TYPE_BIGINT: {
             Status status = get_int_value<int64_t>(col, type, slot, pure_doc_value);
             if (!status.ok()) {
                 return status;
@@ -453,7 +453,7 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             break;
         }
 
-        case TYPE_LARGEINT: {
+        case PrimitiveType::TYPE_LARGEINT: {
             Status status = get_int_value<__int128>(col, type, slot, pure_doc_value);
             if (!status.ok()) {
                 return status;
@@ -461,7 +461,7 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             break;
         }
 
-        case TYPE_DOUBLE: {
+        case PrimitiveType::TYPE_DOUBLE: {
             Status status = get_float_value<double>(col, type, slot, pure_doc_value);
             if (!status.ok()) {
                 return status;
@@ -469,7 +469,7 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             break;
         }
 
-        case TYPE_FLOAT: {
+        case PrimitiveType::TYPE_FLOAT: {
             Status status = get_float_value<float>(col, type, slot, pure_doc_value);
             if (!status.ok()) {
                 return status;
@@ -477,7 +477,7 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             break;
         }
 
-        case TYPE_BOOLEAN: {
+        case PrimitiveType::TYPE_BOOLEAN: {
             if (col.IsBool()) {
                 *reinterpret_cast<int8_t*>(slot) = col.GetBool();
                 break;
@@ -507,7 +507,7 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             *reinterpret_cast<int8_t*>(slot) = b;
             break;
         }
-        case TYPE_DECIMALV2: {
+        case PrimitiveType::TYPE_DECIMALV2: {
             DecimalV2Value data;
 
             if (col.IsDouble()) {
@@ -534,8 +534,8 @@ Status ScrollParser::fill_tuple(const TupleDescriptor* tuple_desc, Tuple* tuple,
             break;
         }
 
-        case TYPE_DATE:
-        case TYPE_DATETIME: {
+        case PrimitiveType::TYPE_DATE:
+        case PrimitiveType::TYPE_DATETIME: {
             // this would happend just only when `enable_docvalue_scan = false`, and field has timestamp format date from _source
             if (col.IsNumber()) {
                 // ES process date/datetime field would use millisecond timestamp for index or docvalue
@@ -636,9 +636,9 @@ Status ScrollParser::fill_columns(const TupleDescriptor* tuple_desc,
             return Status::RuntimeError(details);
         }
         switch (type) {
-        case TYPE_CHAR:
-        case TYPE_VARCHAR:
-        case TYPE_STRING: {
+        case PrimitiveType::TYPE_CHAR:
+        case PrimitiveType::TYPE_VARCHAR:
+        case PrimitiveType::TYPE_STRING: {
             // sometimes elasticsearch user post some not-string value to Elasticsearch Index.
             // because of reading value from _source, we can not process all json type and then just transfer the value to original string representation
             // this may be a tricky, but we can workaround this issue
@@ -662,44 +662,44 @@ Status ScrollParser::fill_columns(const TupleDescriptor* tuple_desc,
             break;
         }
 
-        case TYPE_TINYINT: {
+        case PrimitiveType::TYPE_TINYINT: {
             insert_int_value<int8_t>(col, type, col_ptr, pure_doc_value, slot_desc->is_nullable());
             break;
         }
 
-        case TYPE_SMALLINT: {
+        case PrimitiveType::TYPE_SMALLINT: {
             insert_int_value<int16_t>(col, type, col_ptr, pure_doc_value, slot_desc->is_nullable());
             break;
         }
 
-        case TYPE_INT: {
+        case PrimitiveType::TYPE_INT: {
             insert_int_value<int32>(col, type, col_ptr, pure_doc_value, slot_desc->is_nullable());
             break;
         }
 
-        case TYPE_BIGINT: {
+        case PrimitiveType::TYPE_BIGINT: {
             insert_int_value<int64_t>(col, type, col_ptr, pure_doc_value, slot_desc->is_nullable());
             break;
         }
 
-        case TYPE_LARGEINT: {
+        case PrimitiveType::TYPE_LARGEINT: {
             insert_int_value<__int128>(col, type, col_ptr, pure_doc_value,
                                        slot_desc->is_nullable());
             break;
         }
 
-        case TYPE_DOUBLE: {
+        case PrimitiveType::TYPE_DOUBLE: {
             insert_float_value<double>(col, type, col_ptr, pure_doc_value,
                                        slot_desc->is_nullable());
             break;
         }
 
-        case TYPE_FLOAT: {
+        case PrimitiveType::TYPE_FLOAT: {
             insert_float_value<float>(col, type, col_ptr, pure_doc_value, slot_desc->is_nullable());
             break;
         }
 
-        case TYPE_BOOLEAN: {
+        case PrimitiveType::TYPE_BOOLEAN: {
             if (col.IsBool()) {
                 int8_t val = col.GetBool();
                 col_ptr->insert_data(const_cast<const char*>(reinterpret_cast<char*>(&val)), 0);
@@ -733,7 +733,7 @@ Status ScrollParser::fill_columns(const TupleDescriptor* tuple_desc,
             col_ptr->insert_data(const_cast<const char*>(reinterpret_cast<char*>(&b)), 0);
             break;
         }
-        case TYPE_DECIMALV2: {
+        case PrimitiveType::TYPE_DECIMALV2: {
             DecimalV2Value data;
 
             if (col.IsDouble()) {
@@ -760,8 +760,8 @@ Status ScrollParser::fill_columns(const TupleDescriptor* tuple_desc,
             break;
         }
 
-        case TYPE_DATE:
-        case TYPE_DATETIME: {
+        case PrimitiveType::TYPE_DATE:
+        case PrimitiveType::TYPE_DATETIME: {
             // this would happend just only when `enable_docvalue_scan = false`, and field has timestamp format date from _source
             if (col.IsNumber()) {
                 // ES process date/datetime field would use millisecond timestamp for index or docvalue
@@ -807,7 +807,7 @@ Status ScrollParser::fill_date_slot_with_strval(void* slot, const rapidjson::Val
     if (!ts_slot->from_date_str(val.c_str(), val_size)) {
         RETURN_ERROR_IF_CAST_FORMAT_ERROR(col, type);
     }
-    if (type == TYPE_DATE) {
+    if (type == PrimitiveType::TYPE_DATE) {
         ts_slot->cast_to_date();
     } else {
         ts_slot->to_datetime();
@@ -820,10 +820,10 @@ Status ScrollParser::fill_date_slot_with_timestamp(void* slot, const rapidjson::
     if (!reinterpret_cast<DateTimeValue*>(slot)->from_unixtime(col.GetInt64() / 1000, "+08:00")) {
         RETURN_ERROR_IF_CAST_FORMAT_ERROR(col, type);
     }
-    if (type == TYPE_DATE) {
+    if (type == PrimitiveType::TYPE_DATE) {
         reinterpret_cast<DateTimeValue*>(slot)->cast_to_date();
     } else {
-        reinterpret_cast<DateTimeValue*>(slot)->set_type(TIME_DATETIME);
+        reinterpret_cast<DateTimeValue*>(slot)->set_type(TimeType::TIME_DATETIME);
     }
     return Status::OK();
 }
@@ -836,7 +836,7 @@ Status ScrollParser::fill_date_col_with_strval(vectorized::IColumn* col_ptr,
     if (!dt_val.from_date_str(val.c_str(), val_size)) {
         RETURN_ERROR_IF_CAST_FORMAT_ERROR(col, type);
     }
-    if (type == TYPE_DATE) {
+    if (type == PrimitiveType::TYPE_DATE) {
         dt_val.cast_to_date();
     } else {
         dt_val.to_datetime();
@@ -854,10 +854,10 @@ Status ScrollParser::fill_date_col_with_timestamp(vectorized::IColumn* col_ptr,
     if (!dt_val.from_unixtime(col.GetInt64() / 1000, "+08:00")) {
         RETURN_ERROR_IF_CAST_FORMAT_ERROR(col, type);
     }
-    if (type == TYPE_DATE) {
+    if (type == PrimitiveType::TYPE_DATE) {
         reinterpret_cast<vectorized::VecDateTimeValue*>(&dt_val)->cast_to_date();
     } else {
-        reinterpret_cast<vectorized::VecDateTimeValue*>(&dt_val)->set_type(TIME_DATETIME);
+        reinterpret_cast<vectorized::VecDateTimeValue*>(&dt_val)->set_type(TimeType::TIME_DATETIME);
     }
 
     auto date_packed_int = binary_cast<doris::vectorized::VecDateTimeValue, int64_t>(

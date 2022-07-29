@@ -107,31 +107,31 @@ private:
     static bool _is_type_valid(const ConstArrayIterator<Encoding> iterator,
                                const PrimitiveType type) {
         switch (type) {
-        case TYPE_NULL:
+        case PrimitiveType::TYPE_NULL:
             return iterator->IsNull();
-        case TYPE_BOOLEAN:
+        case PrimitiveType::TYPE_BOOLEAN:
             return iterator->IsBool();
-        case TYPE_TINYINT:
-        case TYPE_SMALLINT:
-        case TYPE_INT:
-        case TYPE_BIGINT:
-        case TYPE_FLOAT:
-        case TYPE_DOUBLE:
+        case PrimitiveType::TYPE_TINYINT:
+        case PrimitiveType::TYPE_SMALLINT:
+        case PrimitiveType::TYPE_INT:
+        case PrimitiveType::TYPE_BIGINT:
+        case PrimitiveType::TYPE_FLOAT:
+        case PrimitiveType::TYPE_DOUBLE:
             return iterator->IsNumber();
-        case TYPE_LARGEINT:
+        case PrimitiveType::TYPE_LARGEINT:
             return iterator->IsNumber() || iterator->IsString();
-        case TYPE_DATE:
-        case TYPE_DATETIME:
-        case TYPE_CHAR:
-        case TYPE_VARCHAR:
-        case TYPE_HLL:
-        case TYPE_STRING:
+        case PrimitiveType::TYPE_DATE:
+        case PrimitiveType::TYPE_DATETIME:
+        case PrimitiveType::TYPE_CHAR:
+        case PrimitiveType::TYPE_VARCHAR:
+        case PrimitiveType::TYPE_HLL:
+        case PrimitiveType::TYPE_STRING:
             return iterator->IsString();
-        case TYPE_OBJECT:
+        case PrimitiveType::TYPE_OBJECT:
             return iterator->IsObject();
-        case TYPE_ARRAY:
+        case PrimitiveType::TYPE_ARRAY:
             return iterator->IsArray();
-        case TYPE_DECIMALV2:
+        case PrimitiveType::TYPE_DECIMALV2:
             return iterator->IsNumber() || iterator->IsString();
         default:
             return false;
@@ -143,32 +143,32 @@ private:
                          const ConstArrayIterator<Encoding> iterator,
                          const TypeDescriptor& type_desc) {
         switch (type_desc.type) {
-        case TYPE_ARRAY:
+        case PrimitiveType::TYPE_ARRAY:
             *val = reinterpret_cast<AnyVal*>(context->allocate(sizeof(CollectionVal)));
             new (*val) CollectionVal();
             return _parse<Encoding>(*reinterpret_cast<CollectionVal*>(*val), context,
                                     iterator->GetArray(), type_desc);
-        case TYPE_BOOLEAN:
+        case PrimitiveType::TYPE_BOOLEAN:
             *val = reinterpret_cast<AnyVal*>(context->allocate(sizeof(BooleanVal)));
             new (*val) BooleanVal(iterator->GetBool());
             break;
-        case TYPE_TINYINT:
+        case PrimitiveType::TYPE_TINYINT:
             *val = reinterpret_cast<AnyVal*>(context->allocate(sizeof(TinyIntVal)));
             new (*val) TinyIntVal(iterator->GetInt());
             break;
-        case TYPE_SMALLINT:
+        case PrimitiveType::TYPE_SMALLINT:
             *val = reinterpret_cast<AnyVal*>(context->allocate(sizeof(SmallIntVal)));
             new (*val) SmallIntVal(iterator->GetInt());
             break;
-        case TYPE_INT:
+        case PrimitiveType::TYPE_INT:
             *val = reinterpret_cast<AnyVal*>(context->allocate(sizeof(IntVal)));
             new (*val) IntVal(iterator->GetInt());
             break;
-        case TYPE_BIGINT:
+        case PrimitiveType::TYPE_BIGINT:
             *val = reinterpret_cast<AnyVal*>(context->allocate(sizeof(BigIntVal)));
             new (*val) BigIntVal(iterator->GetInt64());
             break;
-        case TYPE_LARGEINT: {
+        case PrimitiveType::TYPE_LARGEINT: {
             __int128 value = 0;
             if (iterator->IsNumber()) {
                 value = iterator->GetUint64();
@@ -182,17 +182,17 @@ private:
             new (*val) LargeIntVal(value);
             break;
         }
-        case TYPE_FLOAT:
+        case PrimitiveType::TYPE_FLOAT:
             *val = reinterpret_cast<AnyVal*>(context->allocate(sizeof(FloatVal)));
             new (*val) FloatVal(iterator->GetFloat());
             break;
-        case TYPE_DOUBLE:
+        case PrimitiveType::TYPE_DOUBLE:
             *val = reinterpret_cast<AnyVal*>(context->allocate(sizeof(DoubleVal)));
             new (*val) DoubleVal(iterator->GetDouble());
             break;
-        case TYPE_CHAR:
-        case TYPE_VARCHAR:
-        case TYPE_STRING: {
+        case PrimitiveType::TYPE_CHAR:
+        case PrimitiveType::TYPE_VARCHAR:
+        case PrimitiveType::TYPE_STRING: {
             *val = reinterpret_cast<AnyVal*>(context->allocate(sizeof(StringVal)));
             new (*val) StringVal(context->allocate(iterator->GetStringLength()),
                                  iterator->GetStringLength());
@@ -200,8 +200,8 @@ private:
             memory_copy(string_val->ptr, iterator->GetString(), iterator->GetStringLength());
             break;
         }
-        case TYPE_DATE:
-        case TYPE_DATETIME: {
+        case PrimitiveType::TYPE_DATE:
+        case PrimitiveType::TYPE_DATETIME: {
             DateTimeValue value;
             value.from_date_str(iterator->GetString(), iterator->GetStringLength());
             *val = reinterpret_cast<AnyVal*>(context->allocate(sizeof(DateTimeVal)));
@@ -209,7 +209,7 @@ private:
             value.to_datetime_val(static_cast<DateTimeVal*>(*val));
             break;
         }
-        case TYPE_DECIMALV2: {
+        case PrimitiveType::TYPE_DECIMALV2: {
             *val = reinterpret_cast<AnyVal*>(context->aligned_allocate(16, sizeof(DecimalV2Val)));
             new (*val) DecimalV2Val();
 
@@ -230,7 +230,7 @@ private:
         }
         default:
             return Status::RuntimeError("Failed to parse json to type ({}).",
-                                        std::to_string(type_desc.type));
+                                        type_to_string(type_desc.type));
         }
         return Status::OK();
     }

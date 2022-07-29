@@ -38,8 +38,8 @@ void ArrayFunctions::init() {}
         return ret;                                                                 \
     }
 
-ARRAY_FUNCTION(IntVal, TYPE_INT);
-ARRAY_FUNCTION(StringVal, TYPE_VARCHAR);
+ARRAY_FUNCTION(IntVal, PrimitiveType::TYPE_INT);
+ARRAY_FUNCTION(StringVal, PrimitiveType::TYPE_VARCHAR);
 
 doris_udf::AnyVal array_fake_function(FunctionContext* context) {
     return doris_udf::AnyVal(true);

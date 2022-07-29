@@ -25,11 +25,11 @@ namespace doris {
 
 SchemaScanner::ColumnDesc SchemaSchemaPrivilegesScanner::_s_tbls_columns[] = {
         //   name,       type,          size,     is_null
-        {"GRANTEE", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"TABLE_CATALOG", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"TABLE_SCHEMA", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"PRIVILEGE_TYPE", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"IS_GRANTABLE", TYPE_VARCHAR, sizeof(StringValue), true},
+        {"GRANTEE", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"TABLE_CATALOG", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"TABLE_SCHEMA", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"PRIVILEGE_TYPE", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"IS_GRANTABLE", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
 };
 
 SchemaSchemaPrivilegesScanner::SchemaSchemaPrivilegesScanner()

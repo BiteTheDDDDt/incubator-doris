@@ -25,11 +25,11 @@ namespace doris {
 
 SchemaScanner::ColumnDesc SchemaSchemataScanner::_s_columns[] = {
         //   name,       type,          size
-        {"CATALOG_NAME", TYPE_VARCHAR, sizeof(StringValue), true},
-        {"SCHEMA_NAME", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"DEFAULT_CHARACTER_SET_NAME", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"DEFAULT_COLLATION_NAME", TYPE_VARCHAR, sizeof(StringValue), false},
-        {"SQL_PATH", TYPE_VARCHAR, sizeof(StringValue), true},
+        {"CATALOG_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
+        {"SCHEMA_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"DEFAULT_CHARACTER_SET_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"DEFAULT_COLLATION_NAME", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), false},
+        {"SQL_PATH", PrimitiveType::TYPE_VARCHAR, sizeof(StringValue), true},
 };
 
 SchemaSchemataScanner::SchemaSchemataScanner()

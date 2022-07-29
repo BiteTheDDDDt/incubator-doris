@@ -127,65 +127,65 @@ inline bool RawValue::lt(const void* v1, const void* v2, const TypeDescriptor& t
     const StringValue* string_value2;
 
     switch (type.type) {
-    case TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_BOOLEAN:
         return *reinterpret_cast<const bool*>(v1) < *reinterpret_cast<const bool*>(v2);
 
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_TINYINT:
         return *reinterpret_cast<const int8_t*>(v1) < *reinterpret_cast<const int8_t*>(v2);
 
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         return *reinterpret_cast<const int16_t*>(v1) < *reinterpret_cast<const int16_t*>(v2);
 
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         return *reinterpret_cast<const int32_t*>(v1) < *reinterpret_cast<const int32_t*>(v2);
 
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         return *reinterpret_cast<const int64_t*>(v1) < *reinterpret_cast<const int64_t*>(v2);
 
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         return *reinterpret_cast<const float*>(v1) < *reinterpret_cast<const float*>(v2);
 
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_DOUBLE:
         return *reinterpret_cast<const double*>(v1) < *reinterpret_cast<const double*>(v2);
 
-    case TYPE_CHAR:
-    case TYPE_VARCHAR:
-    case TYPE_HLL:
-    case TYPE_STRING:
+    case PrimitiveType::TYPE_CHAR:
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_HLL:
+    case PrimitiveType::TYPE_STRING:
         string_value1 = reinterpret_cast<const StringValue*>(v1);
         string_value2 = reinterpret_cast<const StringValue*>(v2);
         return string_value1->lt(*string_value2);
 
-    case TYPE_DATE:
-    case TYPE_DATETIME:
+    case PrimitiveType::TYPE_DATE:
+    case PrimitiveType::TYPE_DATETIME:
         return *reinterpret_cast<const DateTimeValue*>(v1) <
                *reinterpret_cast<const DateTimeValue*>(v2);
 
-    case TYPE_DATEV2:
+    case PrimitiveType::TYPE_DATEV2:
         return *reinterpret_cast<
                        const vectorized::DateV2Value<doris::vectorized::DateV2ValueType>*>(v1) <
                *reinterpret_cast<
                        const vectorized::DateV2Value<doris::vectorized::DateV2ValueType>*>(v2);
 
-    case TYPE_DATETIMEV2:
+    case PrimitiveType::TYPE_DATETIMEV2:
         return *reinterpret_cast<
                        const vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>*>(v1) <
                *reinterpret_cast<
                        const vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>*>(v2);
 
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
         return reinterpret_cast<const PackedInt128*>(v1)->value <
                reinterpret_cast<const PackedInt128*>(v2)->value;
 
-    case TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL32:
         return *reinterpret_cast<const int32_t*>(v1) < *reinterpret_cast<const int32_t*>(v2);
-    case TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL64:
         return *reinterpret_cast<const int64_t*>(v1) < *reinterpret_cast<const int64_t*>(v2);
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL128:
         return reinterpret_cast<const PackedInt128*>(v1)->value <
                reinterpret_cast<const PackedInt128*>(v2)->value;
 
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_LARGEINT:
         return reinterpret_cast<const PackedInt128*>(v1)->value <
                reinterpret_cast<const PackedInt128*>(v2)->value;
 
@@ -199,66 +199,66 @@ inline bool RawValue::eq(const void* v1, const void* v2, const TypeDescriptor& t
     const StringValue* string_value2;
 
     switch (type.type) {
-    case TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_BOOLEAN:
         return *reinterpret_cast<const bool*>(v1) == *reinterpret_cast<const bool*>(v2);
 
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_TINYINT:
         return *reinterpret_cast<const int8_t*>(v1) == *reinterpret_cast<const int8_t*>(v2);
 
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         return *reinterpret_cast<const int16_t*>(v1) == *reinterpret_cast<const int16_t*>(v2);
 
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         return *reinterpret_cast<const int32_t*>(v1) == *reinterpret_cast<const int32_t*>(v2);
 
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         return *reinterpret_cast<const int64_t*>(v1) == *reinterpret_cast<const int64_t*>(v2);
 
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         return *reinterpret_cast<const float*>(v1) == *reinterpret_cast<const float*>(v2);
 
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_DOUBLE:
         return *reinterpret_cast<const double*>(v1) == *reinterpret_cast<const double*>(v2);
 
-    case TYPE_CHAR:
-    case TYPE_VARCHAR:
-    case TYPE_HLL:
-    case TYPE_STRING:
+    case PrimitiveType::TYPE_CHAR:
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_HLL:
+    case PrimitiveType::TYPE_STRING:
         string_value1 = reinterpret_cast<const StringValue*>(v1);
         string_value2 = reinterpret_cast<const StringValue*>(v2);
         return string_value1->eq(*string_value2);
 
-    case TYPE_DATE:
-    case TYPE_DATETIME:
+    case PrimitiveType::TYPE_DATE:
+    case PrimitiveType::TYPE_DATETIME:
         return *reinterpret_cast<const DateTimeValue*>(v1) ==
                *reinterpret_cast<const DateTimeValue*>(v2);
 
-    case TYPE_DATEV2:
+    case PrimitiveType::TYPE_DATEV2:
         return *reinterpret_cast<
                        const vectorized::DateV2Value<doris::vectorized::DateV2ValueType>*>(v1) ==
                *reinterpret_cast<
                        const vectorized::DateV2Value<doris::vectorized::DateV2ValueType>*>(v2);
 
-    case TYPE_DATETIMEV2:
+    case PrimitiveType::TYPE_DATETIMEV2:
         return *reinterpret_cast<
                        const vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>*>(
                        v1) ==
                *reinterpret_cast<
                        const vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>*>(v2);
 
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
         return reinterpret_cast<const PackedInt128*>(v1)->value ==
                reinterpret_cast<const PackedInt128*>(v2)->value;
 
-    case TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL32:
         return *reinterpret_cast<const int32_t*>(v1) == *reinterpret_cast<const int32_t*>(v2);
-    case TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL64:
         return *reinterpret_cast<const int64_t*>(v1) == *reinterpret_cast<const int64_t*>(v2);
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL128:
         return reinterpret_cast<const PackedInt128*>(v1)->value ==
                reinterpret_cast<const PackedInt128*>(v2)->value;
 
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_LARGEINT:
         return reinterpret_cast<const PackedInt128*>(v1)->value ==
                reinterpret_cast<const PackedInt128*>(v2)->value;
 
@@ -280,57 +280,57 @@ inline uint32_t RawValue::get_hash_value(const void* v, const PrimitiveType& typ
     }
 
     switch (type) {
-    case TYPE_VARCHAR:
-    case TYPE_CHAR:
-    case TYPE_HLL:
-    case TYPE_STRING: {
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_CHAR:
+    case PrimitiveType::TYPE_HLL:
+    case PrimitiveType::TYPE_STRING: {
         const StringValue* string_value = reinterpret_cast<const StringValue*>(v);
         return HashUtil::hash(string_value->ptr, string_value->len, seed);
     }
 
-    case TYPE_BOOLEAN: {
+    case PrimitiveType::TYPE_BOOLEAN: {
         uint32_t value = *reinterpret_cast<const bool*>(v) + 0x9e3779b9;
         return seed ^ (value + (seed << 6) + (seed >> 2));
     }
 
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_TINYINT:
         return HashUtil::hash(v, 1, seed);
 
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         return HashUtil::hash(v, 2, seed);
 
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         return HashUtil::hash(v, 4, seed);
 
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         return HashUtil::hash(v, 8, seed);
 
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         return HashUtil::hash(v, 4, seed);
 
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_DOUBLE:
         return HashUtil::hash(v, 8, seed);
 
-    case TYPE_DATE:
-    case TYPE_DATETIME:
+    case PrimitiveType::TYPE_DATE:
+    case PrimitiveType::TYPE_DATETIME:
         return HashUtil::hash(v, 16, seed);
 
-    case TYPE_DATEV2:
+    case PrimitiveType::TYPE_DATEV2:
         return HashUtil::hash(v, 4, seed);
 
-    case TYPE_DATETIMEV2:
+    case PrimitiveType::TYPE_DATETIMEV2:
         return HashUtil::hash(v, 8, seed);
 
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
         return HashUtil::hash(v, 16, seed);
-    case TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL32:
         return HashUtil::hash(v, 4, seed);
-    case TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL64:
         return HashUtil::hash(v, 8, seed);
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL128:
         return HashUtil::hash(v, 16, seed);
 
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_LARGEINT:
         return HashUtil::hash(v, 16, seed);
 
     default:
@@ -348,58 +348,58 @@ inline uint32_t RawValue::get_hash_value_fvn(const void* v, const PrimitiveType&
     }
 
     switch (type) {
-    case TYPE_VARCHAR:
-    case TYPE_CHAR:
-    case TYPE_HLL:
-    case TYPE_OBJECT:
-    case TYPE_STRING: {
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_CHAR:
+    case PrimitiveType::TYPE_HLL:
+    case PrimitiveType::TYPE_OBJECT:
+    case PrimitiveType::TYPE_STRING: {
         const StringValue* string_value = reinterpret_cast<const StringValue*>(v);
         return HashUtil::fnv_hash(string_value->ptr, string_value->len, seed);
     }
 
-    case TYPE_BOOLEAN: {
+    case PrimitiveType::TYPE_BOOLEAN: {
         uint32_t value = *reinterpret_cast<const bool*>(v) + 0x9e3779b9;
         return seed ^ (value + (seed << 6) + (seed >> 2));
     }
 
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_TINYINT:
         return HashUtil::fnv_hash(v, 1, seed);
 
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         return HashUtil::fnv_hash(v, 2, seed);
 
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         return HashUtil::fnv_hash(v, 4, seed);
 
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         return HashUtil::fnv_hash(v, 8, seed);
 
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         return HashUtil::fnv_hash(v, 4, seed);
 
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_DOUBLE:
         return HashUtil::fnv_hash(v, 8, seed);
 
-    case TYPE_DATE:
-    case TYPE_DATETIME:
+    case PrimitiveType::TYPE_DATE:
+    case PrimitiveType::TYPE_DATETIME:
         return HashUtil::fnv_hash(v, 16, seed);
 
-    case TYPE_DATEV2:
+    case PrimitiveType::TYPE_DATEV2:
         return HashUtil::fnv_hash(v, 4, seed);
 
-    case TYPE_DATETIMEV2:
+    case PrimitiveType::TYPE_DATETIMEV2:
         return HashUtil::fnv_hash(v, 8, seed);
 
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
         return HashUtil::fnv_hash(v, 16, seed);
-    case TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL32:
         return HashUtil::fnv_hash(v, 4, seed);
-    case TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL64:
         return HashUtil::fnv_hash(v, 8, seed);
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL128:
         return HashUtil::fnv_hash(v, 16, seed);
 
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_LARGEINT:
         return HashUtil::fnv_hash(v, 16, seed);
 
     default:
@@ -418,13 +418,13 @@ inline uint32_t RawValue::zlib_crc32(const void* v, const TypeDescriptor& type, 
     }
 
     switch (type.type) {
-    case TYPE_VARCHAR:
-    case TYPE_HLL:
-    case TYPE_STRING: {
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_HLL:
+    case PrimitiveType::TYPE_STRING: {
         const StringValue* string_value = reinterpret_cast<const StringValue*>(v);
         return HashUtil::zlib_crc_hash(string_value->ptr, string_value->len, seed);
     }
-    case TYPE_CHAR: {
+    case PrimitiveType::TYPE_CHAR: {
         // TODO(zc): ugly, use actual value to compute hash value
         const StringValue* string_value = reinterpret_cast<const StringValue*>(v);
         int len = 0;
@@ -436,29 +436,29 @@ inline uint32_t RawValue::zlib_crc32(const void* v, const TypeDescriptor& type, 
         }
         return HashUtil::zlib_crc_hash(string_value->ptr, len, seed);
     }
-    case TYPE_BOOLEAN:
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_TINYINT:
         return HashUtil::zlib_crc_hash(v, 1, seed);
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         return HashUtil::zlib_crc_hash(v, 2, seed);
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         return HashUtil::zlib_crc_hash(v, 4, seed);
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         return HashUtil::zlib_crc_hash(v, 8, seed);
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_LARGEINT:
         return HashUtil::zlib_crc_hash(v, 16, seed);
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         return HashUtil::zlib_crc_hash(v, 4, seed);
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_DOUBLE:
         return HashUtil::zlib_crc_hash(v, 8, seed);
-    case TYPE_DATE:
-    case TYPE_DATETIME: {
+    case PrimitiveType::TYPE_DATE:
+    case PrimitiveType::TYPE_DATETIME: {
         const DateTimeValue* date_val = (const DateTimeValue*)v;
         char buf[64];
         int len = date_val->to_buffer(buf);
         return HashUtil::zlib_crc_hash(buf, len, seed);
     }
-    case TYPE_DATEV2: {
+    case PrimitiveType::TYPE_DATEV2: {
         const vectorized::DateV2Value<doris::vectorized::DateV2ValueType>* date_v2_val =
                 (const vectorized::DateV2Value<doris::vectorized::DateV2ValueType>*)v;
         char buf[64];
@@ -466,7 +466,7 @@ inline uint32_t RawValue::zlib_crc32(const void* v, const TypeDescriptor& type, 
         return HashUtil::zlib_crc_hash(buf, len, seed);
     }
 
-    case TYPE_DATETIMEV2: {
+    case PrimitiveType::TYPE_DATETIMEV2: {
         const vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>* date_v2_val =
                 (const vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>*)v;
         char buf[64];
@@ -474,7 +474,7 @@ inline uint32_t RawValue::zlib_crc32(const void* v, const TypeDescriptor& type, 
         return HashUtil::zlib_crc_hash(buf, len, seed);
     }
 
-    case TYPE_DECIMALV2: {
+    case PrimitiveType::TYPE_DECIMALV2: {
         const DecimalV2Value* dec_val = (const DecimalV2Value*)v;
         int64_t int_val = dec_val->int_value();
         int32_t frac_val = dec_val->frac_value();
@@ -482,11 +482,11 @@ inline uint32_t RawValue::zlib_crc32(const void* v, const TypeDescriptor& type, 
         return HashUtil::zlib_crc_hash(&frac_val, sizeof(frac_val), seed);
     }
 
-    case TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL32:
         return HashUtil::zlib_crc_hash(v, 4, seed);
-    case TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL64:
         return HashUtil::zlib_crc_hash(v, 8, seed);
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL128:
         return HashUtil::zlib_crc_hash(v, 16, seed);
     default:
         DCHECK(false) << "invalid type: " << type;
@@ -505,44 +505,44 @@ inline uint32_t RawValue::zlib_crc32(const void* v, size_t len, const TypeDescri
     }
 
     switch (type.type) {
-    case TYPE_VARCHAR:
-    case TYPE_HLL:
-    case TYPE_STRING:
-    case TYPE_CHAR: {
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_HLL:
+    case PrimitiveType::TYPE_STRING:
+    case PrimitiveType::TYPE_CHAR: {
         return HashUtil::zlib_crc_hash(v, len, seed);
     }
 
-    case TYPE_BOOLEAN:
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_TINYINT:
         return HashUtil::zlib_crc_hash(v, 1, seed);
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         return HashUtil::zlib_crc_hash(v, 2, seed);
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         return HashUtil::zlib_crc_hash(v, 4, seed);
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         return HashUtil::zlib_crc_hash(v, 8, seed);
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_LARGEINT:
         return HashUtil::zlib_crc_hash(v, 16, seed);
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         return HashUtil::zlib_crc_hash(v, 4, seed);
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_DOUBLE:
         return HashUtil::zlib_crc_hash(v, 8, seed);
-    case TYPE_DATE:
-    case TYPE_DATETIME: {
+    case PrimitiveType::TYPE_DATE:
+    case PrimitiveType::TYPE_DATETIME: {
         auto* date_val = (const vectorized::VecDateTimeValue*)v;
         char buf[64];
         int len = date_val->to_buffer(buf);
         return HashUtil::zlib_crc_hash(buf, len, seed);
     }
 
-    case TYPE_DATEV2: {
+    case PrimitiveType::TYPE_DATEV2: {
         auto* date_v2_val = (const vectorized::DateV2Value<doris::vectorized::DateV2ValueType>*)v;
         char buf[64];
         int date_v2_len = date_v2_val->to_buffer(buf);
         return HashUtil::zlib_crc_hash(buf, date_v2_len, seed);
     }
 
-    case TYPE_DATETIMEV2: {
+    case PrimitiveType::TYPE_DATETIMEV2: {
         auto* date_v2_val =
                 (const vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>*)v;
         char buf[64];
@@ -550,18 +550,18 @@ inline uint32_t RawValue::zlib_crc32(const void* v, size_t len, const TypeDescri
         return HashUtil::zlib_crc_hash(buf, date_v2_len, seed);
     }
 
-    case TYPE_DECIMALV2: {
+    case PrimitiveType::TYPE_DECIMALV2: {
         const DecimalV2Value* dec_val = (const DecimalV2Value*)v;
         int64_t int_val = dec_val->int_value();
         int32_t frac_val = dec_val->frac_value();
         seed = HashUtil::zlib_crc_hash(&int_val, sizeof(int_val), seed);
         return HashUtil::zlib_crc_hash(&frac_val, sizeof(frac_val), seed);
     }
-    case TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL32:
         return HashUtil::zlib_crc_hash(v, 4, seed);
-    case TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL64:
         return HashUtil::zlib_crc_hash(v, 8, seed);
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL128:
         return HashUtil::zlib_crc_hash(v, 16, seed);
     default:
         DCHECK(false) << "invalid type: " << type;

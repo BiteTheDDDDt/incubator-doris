@@ -135,28 +135,28 @@ Status DppWriter::append_one_row(TupleRow* row) {
             }
         }
         switch (_output_expr_ctxs[i]->root()->type().type) {
-        case TYPE_TINYINT:
+        case PrimitiveType::TYPE_TINYINT:
             append_to_buf(item, 1);
             break;
-        case TYPE_SMALLINT:
+        case PrimitiveType::TYPE_SMALLINT:
             append_to_buf(item, 2);
             break;
-        case TYPE_INT:
+        case PrimitiveType::TYPE_INT:
             append_to_buf(item, 4);
             break;
-        case TYPE_BIGINT:
+        case PrimitiveType::TYPE_BIGINT:
             append_to_buf(item, 8);
             break;
-        case TYPE_LARGEINT:
+        case PrimitiveType::TYPE_LARGEINT:
             append_to_buf(item, 16);
             break;
-        case TYPE_FLOAT:
+        case PrimitiveType::TYPE_FLOAT:
             append_to_buf(item, 4);
             break;
-        case TYPE_DOUBLE:
+        case PrimitiveType::TYPE_DOUBLE:
             append_to_buf(item, 8);
             break;
-        case TYPE_DATE: {
+        case PrimitiveType::TYPE_DATE: {
             const DateTimeValue* time_val = (const DateTimeValue*)(item);
             uint64_t val = time_val->to_olap_date();
             uint8_t char_val = val & 0xff;
@@ -169,15 +169,15 @@ Status DppWriter::append_one_row(TupleRow* row) {
             append_to_buf(&char_val, 1);
             break;
         }
-        case TYPE_DATETIME: {
+        case PrimitiveType::TYPE_DATETIME: {
             const DateTimeValue* time_val = (const DateTimeValue*)(item);
             uint64_t val = time_val->to_olap_datetime();
             append_to_buf(&val, 8);
             break;
         }
-        case TYPE_VARCHAR: {
-        case TYPE_HLL:
-        case TYPE_STRING:
+        case PrimitiveType::TYPE_VARCHAR: {
+        case PrimitiveType::TYPE_HLL:
+        case PrimitiveType::TYPE_STRING:
             const StringValue* str_val = (const StringValue*)(item);
             if (UNLIKELY(str_val->ptr == nullptr && str_val->len != 0)) {
                 return Status::InternalError("String value ptr is null");
@@ -196,7 +196,7 @@ Status DppWriter::append_one_row(TupleRow* row) {
             append_to_buf(str_val->ptr, len);
             break;
         }
-        case TYPE_CHAR: {
+        case PrimitiveType::TYPE_CHAR: {
             const StringValue* str_val = (const StringValue*)(item);
             if (UNLIKELY(str_val->ptr == nullptr || str_val->len == 0)) {
                 return Status::InternalError("String value ptr is null");
@@ -204,7 +204,7 @@ Status DppWriter::append_one_row(TupleRow* row) {
             append_to_buf(str_val->ptr, str_val->len);
             break;
         }
-        case TYPE_DECIMALV2: {
+        case PrimitiveType::TYPE_DECIMALV2: {
             const DecimalV2Value decimal_val(reinterpret_cast<const PackedInt128*>(item)->value);
             int64_t int_val = decimal_val.int_value();
             int32_t frac_val = decimal_val.frac_value();

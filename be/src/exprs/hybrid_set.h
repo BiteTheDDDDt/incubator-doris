@@ -123,9 +123,9 @@ public:
                  typename phmap::flat_hash_set<_iT>::iterator end)
                 : _begin(begin), _end(end) {}
         ~Iterator() override = default;
-        virtual bool has_next() const override { return !(_begin == _end); }
-        virtual const void* get_value() override { return _begin.operator->(); }
-        virtual void next() override { ++_begin; }
+        bool has_next() const override { return !(_begin == _end); }
+        const void* get_value() override { return _begin.operator->(); }
+        void next() override { ++_begin; }
 
     private:
         typename phmap::flat_hash_set<_iT>::iterator _begin;
@@ -155,7 +155,7 @@ public:
         while (it->has_next()) {
             TExprNode node;
             const void* v = it->get_value();
-            create_texpr_literal_node<TYPE_STRING>(v, &node);
+            create_texpr_literal_node<PrimitiveType::TYPE_STRING>(v, &node);
             vexpr_list->push_back(pool->add(new doris::vectorized::VLiteral(node)));
             it->next();
         }
@@ -201,13 +201,13 @@ public:
                  phmap::flat_hash_set<std::string>::iterator end)
                 : _begin(begin), _end(end) {}
         ~Iterator() override = default;
-        virtual bool has_next() const override { return !(_begin == _end); }
-        virtual const void* get_value() override {
+        bool has_next() const override { return !(_begin == _end); }
+        const void* get_value() override {
             _value.ptr = const_cast<char*>(_begin->data());
             _value.len = _begin->length();
             return &_value;
         }
-        virtual void next() override { ++_begin; }
+        void next() override { ++_begin; }
 
     private:
         typename phmap::flat_hash_set<std::string>::iterator _begin;

@@ -33,7 +33,7 @@ class DateTimeValue;
 class DecimalV2Value;
 struct StringValue;
 
-enum PrimitiveType {
+enum class PrimitiveType {
     INVALID_TYPE = 0,
     TYPE_NULL,     /* 1 */
     TYPE_BOOLEAN,  /* 2 */
@@ -97,114 +97,114 @@ template <PrimitiveType type>
 struct PrimitiveTypeTraits;
 
 template <>
-struct PrimitiveTypeTraits<TYPE_BOOLEAN> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_BOOLEAN> {
     using CppType = bool;
     using ColumnType = vectorized::ColumnUInt8;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_TINYINT> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_TINYINT> {
     using CppType = int8_t;
     using ColumnType = vectorized::ColumnInt8;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_SMALLINT> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_SMALLINT> {
     using CppType = int16_t;
     using ColumnType = vectorized::ColumnInt16;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_INT> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_INT> {
     using CppType = int32_t;
     using ColumnType = vectorized::ColumnInt32;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_BIGINT> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_BIGINT> {
     using CppType = int64_t;
     using ColumnType = vectorized::ColumnInt64;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_FLOAT> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_FLOAT> {
     using CppType = float;
     using ColumnType = vectorized::ColumnFloat32;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_TIME> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_TIME> {
     using CppType = double;
     using ColumnType = vectorized::ColumnFloat64;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_TIMEV2> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_TIMEV2> {
     using CppType = double;
     using ColumnType = vectorized::ColumnFloat64;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_DOUBLE> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_DOUBLE> {
     using CppType = double;
     using ColumnType = vectorized::ColumnFloat64;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_DATE> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_DATE> {
     using CppType = doris::DateTimeValue;
     using ColumnType = vectorized::ColumnVector<vectorized::DateTime>;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_DATETIME> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_DATETIME> {
     using CppType = doris::DateTimeValue;
     using ColumnType = vectorized::ColumnVector<vectorized::DateTime>;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_DATETIMEV2> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_DATETIMEV2> {
     using CppType = doris::vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>;
     using ColumnType = vectorized::ColumnVector<vectorized::DateTimeV2>;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_DATEV2> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_DATEV2> {
     using CppType = doris::vectorized::DateV2Value<doris::vectorized::DateV2ValueType>;
     using ColumnType = vectorized::ColumnVector<vectorized::DateV2>;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_DECIMALV2> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_DECIMALV2> {
     using CppType = DecimalV2Value;
     using ColumnType = vectorized::ColumnDecimal<vectorized::Decimal128>;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_DECIMAL32> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_DECIMAL32> {
     using CppType = int32_t;
     using ColumnType = vectorized::ColumnDecimal<vectorized::Decimal32>;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_DECIMAL64> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_DECIMAL64> {
     using CppType = int64_t;
     using ColumnType = vectorized::ColumnDecimal<vectorized::Decimal64>;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_DECIMAL128> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_DECIMAL128> {
     using CppType = __int128_t;
     using ColumnType = vectorized::ColumnDecimal<vectorized::Decimal128>;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_LARGEINT> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_LARGEINT> {
     using CppType = __int128_t;
     using ColumnType = vectorized::ColumnInt128;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_CHAR> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_CHAR> {
     using CppType = StringValue;
     using ColumnType = vectorized::ColumnString;
 };
 template <>
-struct PrimitiveTypeTraits<TYPE_VARCHAR> {
-    using CppType = StringValue;
-    using ColumnType = vectorized::ColumnString;
-};
-
-template <>
-struct PrimitiveTypeTraits<TYPE_STRING> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_VARCHAR> {
     using CppType = StringValue;
     using ColumnType = vectorized::ColumnString;
 };
 
 template <>
-struct PrimitiveTypeTraits<TYPE_HLL> {
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_STRING> {
+    using CppType = StringValue;
+    using ColumnType = vectorized::ColumnString;
+};
+
+template <>
+struct PrimitiveTypeTraits<PrimitiveType::TYPE_HLL> {
     using CppType = StringValue;
     using ColumnType = vectorized::ColumnString;
 };
@@ -216,27 +216,27 @@ struct PredicatePrimitiveTypeTraits {
 };
 
 template <>
-struct PredicatePrimitiveTypeTraits<TYPE_DECIMALV2> {
+struct PredicatePrimitiveTypeTraits<PrimitiveType::TYPE_DECIMALV2> {
     using PredicateFieldType = decimal12_t;
 };
 
 template <>
-struct PredicatePrimitiveTypeTraits<TYPE_DATE> {
+struct PredicatePrimitiveTypeTraits<PrimitiveType::TYPE_DATE> {
     using PredicateFieldType = uint24_t;
 };
 
 template <>
-struct PredicatePrimitiveTypeTraits<TYPE_DATETIME> {
+struct PredicatePrimitiveTypeTraits<PrimitiveType::TYPE_DATETIME> {
     using PredicateFieldType = uint64_t;
 };
 
 template <>
-struct PredicatePrimitiveTypeTraits<TYPE_DATEV2> {
+struct PredicatePrimitiveTypeTraits<PrimitiveType::TYPE_DATEV2> {
     using PredicateFieldType = uint32_t;
 };
 
 template <>
-struct PredicatePrimitiveTypeTraits<TYPE_DATETIMEV2> {
+struct PredicatePrimitiveTypeTraits<PrimitiveType::TYPE_DATETIMEV2> {
     using PredicateFieldType = uint64_t;
 };
 
@@ -247,12 +247,12 @@ struct VecPrimitiveTypeTraits {
 };
 
 template <>
-struct VecPrimitiveTypeTraits<TYPE_DATE> {
+struct VecPrimitiveTypeTraits<PrimitiveType::TYPE_DATE> {
     using CppType = vectorized::VecDateTimeValue;
 };
 
 template <>
-struct VecPrimitiveTypeTraits<TYPE_DATETIME> {
+struct VecPrimitiveTypeTraits<PrimitiveType::TYPE_DATETIME> {
     using CppType = vectorized::VecDateTimeValue;
 };
 

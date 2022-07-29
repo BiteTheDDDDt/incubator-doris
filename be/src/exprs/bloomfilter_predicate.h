@@ -287,42 +287,42 @@ struct BloomFilterTypeTraits {
 };
 
 template <class BloomFilterAdaptor>
-struct BloomFilterTypeTraits<TYPE_DATE, BloomFilterAdaptor> {
+struct BloomFilterTypeTraits<PrimitiveType::TYPE_DATE, BloomFilterAdaptor> {
     using FindOp = DateFindOp<BloomFilterAdaptor>;
 };
 
 template <class BloomFilterAdaptor>
-struct BloomFilterTypeTraits<TYPE_DATEV2, BloomFilterAdaptor> {
+struct BloomFilterTypeTraits<PrimitiveType::TYPE_DATEV2, BloomFilterAdaptor> {
     using FindOp = DateV2FindOp<BloomFilterAdaptor>;
 };
 
 template <class BloomFilterAdaptor>
-struct BloomFilterTypeTraits<TYPE_DATETIMEV2, BloomFilterAdaptor> {
+struct BloomFilterTypeTraits<PrimitiveType::TYPE_DATETIMEV2, BloomFilterAdaptor> {
     using FindOp = DateTimeV2FindOp<BloomFilterAdaptor>;
 };
 
 template <class BloomFilterAdaptor>
-struct BloomFilterTypeTraits<TYPE_DATETIME, BloomFilterAdaptor> {
+struct BloomFilterTypeTraits<PrimitiveType::TYPE_DATETIME, BloomFilterAdaptor> {
     using FindOp = DateTimeFindOp<BloomFilterAdaptor>;
 };
 
 template <class BloomFilterAdaptor>
-struct BloomFilterTypeTraits<TYPE_DECIMALV2, BloomFilterAdaptor> {
+struct BloomFilterTypeTraits<PrimitiveType::TYPE_DECIMALV2, BloomFilterAdaptor> {
     using FindOp = DecimalV2FindOp<BloomFilterAdaptor>;
 };
 
 template <class BloomFilterAdaptor>
-struct BloomFilterTypeTraits<TYPE_CHAR, BloomFilterAdaptor> {
+struct BloomFilterTypeTraits<PrimitiveType::TYPE_CHAR, BloomFilterAdaptor> {
     using FindOp = FixedStringFindOp<BloomFilterAdaptor>;
 };
 
 template <class BloomFilterAdaptor>
-struct BloomFilterTypeTraits<TYPE_VARCHAR, BloomFilterAdaptor> {
+struct BloomFilterTypeTraits<PrimitiveType::TYPE_VARCHAR, BloomFilterAdaptor> {
     using FindOp = StringFindOp<BloomFilterAdaptor>;
 };
 
 template <class BloomFilterAdaptor>
-struct BloomFilterTypeTraits<TYPE_STRING, BloomFilterAdaptor> {
+struct BloomFilterTypeTraits<PrimitiveType::TYPE_STRING, BloomFilterAdaptor> {
     using FindOp = StringFindOp<BloomFilterAdaptor>;
 };
 
@@ -361,7 +361,7 @@ public:
     virtual ~BloomFilterPredicate();
     BloomFilterPredicate(const TExprNode& node);
     BloomFilterPredicate(const BloomFilterPredicate& other);
-    virtual Expr* clone(ObjectPool* pool) const override {
+    Expr* clone(ObjectPool* pool) const override {
         return pool->add(new BloomFilterPredicate(*this));
     }
     using Predicate::prepare;
@@ -369,14 +369,14 @@ public:
 
     std::shared_ptr<IBloomFilterFuncBase> get_bloom_filter_func() { return _filter; }
 
-    virtual BooleanVal get_boolean_val(ExprContext* context, TupleRow* row) override;
+    BooleanVal get_boolean_val(ExprContext* context, TupleRow* row) override;
 
-    virtual Status open(RuntimeState* state, ExprContext* context,
-                        FunctionContext::FunctionStateScope scope) override;
+    Status open(RuntimeState* state, ExprContext* context,
+                FunctionContext::FunctionStateScope scope) override;
 
 protected:
     friend class Expr;
-    virtual std::string debug_string() const override;
+    std::string debug_string() const override;
 
 private:
     bool _is_prepare;

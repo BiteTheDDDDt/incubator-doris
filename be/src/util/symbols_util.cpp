@@ -124,59 +124,59 @@ static void append_any_val_type(int namespace_id, const TypeDescriptor& type,
     append_seq_id(namespace_id, s);
 
     switch (type.type) {
-    case TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_BOOLEAN:
         append_mangled_token("BooleanVal", s);
         break;
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_TINYINT:
         append_mangled_token("TinyIntVal", s);
         break;
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         append_mangled_token("SmallIntVal", s);
         break;
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         append_mangled_token("IntVal", s);
         break;
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         append_mangled_token("BigIntVal", s);
         break;
-    case TYPE_LARGEINT:
+    case PrimitiveType::TYPE_LARGEINT:
         append_mangled_token("LargeIntVal", s);
         break;
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         append_mangled_token("FloatVal", s);
         break;
-    case TYPE_TIME:
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_TIME:
+    case PrimitiveType::TYPE_DOUBLE:
         append_mangled_token("DoubleVal", s);
         break;
-    case TYPE_VARCHAR:
-    case TYPE_CHAR:
-    case TYPE_HLL:
-    case TYPE_OBJECT:
-    case TYPE_STRING:
-    case TYPE_QUANTILE_STATE:
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_CHAR:
+    case PrimitiveType::TYPE_HLL:
+    case PrimitiveType::TYPE_OBJECT:
+    case PrimitiveType::TYPE_STRING:
+    case PrimitiveType::TYPE_QUANTILE_STATE:
         append_mangled_token("StringVal", s);
         break;
-    case TYPE_DATE:
-    case TYPE_DATETIME:
+    case PrimitiveType::TYPE_DATE:
+    case PrimitiveType::TYPE_DATETIME:
         append_mangled_token("DateTimeVal", s);
         break;
-    case TYPE_DATEV2:
+    case PrimitiveType::TYPE_DATEV2:
         append_mangled_token("DateV2Val", s);
         break;
-    case TYPE_DATETIMEV2:
+    case PrimitiveType::TYPE_DATETIMEV2:
         append_mangled_token("DateTimeV2Val", s);
         break;
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
         append_mangled_token("DecimalV2Val", s);
         break;
-    case TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL32:
         append_mangled_token("Decimal32Val", s);
         break;
-    case TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL64:
         append_mangled_token("Decimal64Val", s);
         break;
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL128:
         append_mangled_token("Decimal128Val", s);
         break;
     default:

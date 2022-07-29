@@ -36,23 +36,23 @@ namespace doris {
 
 template <PrimitiveType primitive_type, class T>
 std::string cast_to_string(T value, int scale) {
-    if constexpr (primitive_type == TYPE_DECIMAL32) {
+    if constexpr (primitive_type == PrimitiveType::TYPE_DECIMAL32) {
         std::stringstream ss;
         vectorized::write_text<int32_t>((int32_t)value, scale, ss);
         return ss.str();
-    } else if constexpr (primitive_type == TYPE_DECIMAL64) {
+    } else if constexpr (primitive_type == PrimitiveType::TYPE_DECIMAL64) {
         std::stringstream ss;
         vectorized::write_text<int64_t>((int64_t)value, scale, ss);
         return ss.str();
-    } else if constexpr (primitive_type == TYPE_DECIMAL128) {
+    } else if constexpr (primitive_type == PrimitiveType::TYPE_DECIMAL128) {
         std::stringstream ss;
         vectorized::write_text<int128_t>((int128_t)value, scale, ss);
         return ss.str();
-    } else if constexpr (primitive_type == TYPE_TINYINT) {
+    } else if constexpr (primitive_type == PrimitiveType::TYPE_TINYINT) {
         return std::to_string(static_cast<int>(value));
-    } else if constexpr (primitive_type == TYPE_LARGEINT) {
+    } else if constexpr (primitive_type == PrimitiveType::TYPE_LARGEINT) {
         return vectorized::int128_to_string(value);
-    } else if constexpr (primitive_type == TYPE_DATETIMEV2) {
+    } else if constexpr (primitive_type == PrimitiveType::TYPE_DATETIMEV2) {
         doris::vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType> datetimev2_val =
                 static_cast<doris::vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>>(
                         value);
@@ -362,16 +362,20 @@ private:
     bool _is_convertible;
 };
 
-using ColumnValueRangeType =
-        std::variant<ColumnValueRange<TYPE_TINYINT>, ColumnValueRange<TYPE_SMALLINT>,
-                     ColumnValueRange<TYPE_INT>, ColumnValueRange<TYPE_BIGINT>,
-                     ColumnValueRange<TYPE_LARGEINT>, ColumnValueRange<TYPE_CHAR>,
-                     ColumnValueRange<TYPE_VARCHAR>, ColumnValueRange<TYPE_STRING>,
-                     ColumnValueRange<TYPE_DATE>, ColumnValueRange<TYPE_DATEV2>,
-                     ColumnValueRange<TYPE_DATETIME>, ColumnValueRange<TYPE_DATETIMEV2>,
-                     ColumnValueRange<TYPE_DECIMALV2>, ColumnValueRange<TYPE_BOOLEAN>,
-                     ColumnValueRange<TYPE_HLL>, ColumnValueRange<TYPE_DECIMAL32>,
-                     ColumnValueRange<TYPE_DECIMAL64>, ColumnValueRange<TYPE_DECIMAL128>>;
+using ColumnValueRangeType = std::variant<
+        ColumnValueRange<PrimitiveType::TYPE_TINYINT>,
+        ColumnValueRange<PrimitiveType::TYPE_SMALLINT>, ColumnValueRange<PrimitiveType::TYPE_INT>,
+        ColumnValueRange<PrimitiveType::TYPE_BIGINT>,
+        ColumnValueRange<PrimitiveType::TYPE_LARGEINT>, ColumnValueRange<PrimitiveType::TYPE_CHAR>,
+        ColumnValueRange<PrimitiveType::TYPE_VARCHAR>, ColumnValueRange<PrimitiveType::TYPE_STRING>,
+        ColumnValueRange<PrimitiveType::TYPE_DATE>, ColumnValueRange<PrimitiveType::TYPE_DATEV2>,
+        ColumnValueRange<PrimitiveType::TYPE_DATETIME>,
+        ColumnValueRange<PrimitiveType::TYPE_DATETIMEV2>,
+        ColumnValueRange<PrimitiveType::TYPE_DECIMALV2>,
+        ColumnValueRange<PrimitiveType::TYPE_BOOLEAN>, ColumnValueRange<PrimitiveType::TYPE_HLL>,
+        ColumnValueRange<PrimitiveType::TYPE_DECIMAL32>,
+        ColumnValueRange<PrimitiveType::TYPE_DECIMAL64>,
+        ColumnValueRange<PrimitiveType::TYPE_DECIMAL128>>;
 
 template <PrimitiveType primitive_type>
 const typename ColumnValueRange<primitive_type>::CppType
@@ -384,7 +388,7 @@ const typename ColumnValueRange<primitive_type>::CppType
 
 template <PrimitiveType primitive_type>
 ColumnValueRange<primitive_type>::ColumnValueRange()
-        : _column_type(INVALID_TYPE), _precision(-1), _scale(-1) {}
+        : _column_type(PrimitiveType::INVALID_TYPE), _precision(-1), _scale(-1) {}
 
 template <PrimitiveType primitive_type>
 ColumnValueRange<primitive_type>::ColumnValueRange(std::string col_name)
@@ -423,7 +427,7 @@ ColumnValueRange<primitive_type>::ColumnValueRange(std::string col_name, int pre
 
 template <PrimitiveType primitive_type>
 Status ColumnValueRange<primitive_type>::add_fixed_value(const CppType& value) {
-    if (INVALID_TYPE == _column_type) {
+    if (PrimitiveType::INVALID_TYPE == _column_type) {
         return Status::InternalError("AddFixedValue failed, Invalid type");
     }
 
@@ -453,7 +457,7 @@ bool ColumnValueRange<primitive_type>::is_scope_value_range() const {
 
 template <PrimitiveType primitive_type>
 bool ColumnValueRange<primitive_type>::is_empty_value_range() const {
-    if (INVALID_TYPE == _column_type) {
+    if (PrimitiveType::INVALID_TYPE == _column_type) {
         return true;
     }
 
@@ -479,7 +483,7 @@ bool ColumnValueRange<primitive_type>::is_range_value_convertible() const {
         return false;
     }
 
-    if (TYPE_NULL == _column_type || TYPE_BOOLEAN == _column_type) {
+    if (PrimitiveType::TYPE_NULL == _column_type || PrimitiveType::TYPE_BOOLEAN == _column_type) {
         return false;
     }
 
@@ -554,7 +558,7 @@ void ColumnValueRange<primitive_type>::convert_to_range_value() {
 
 template <PrimitiveType primitive_type>
 Status ColumnValueRange<primitive_type>::add_range(SQLFilterOp op, CppType value) {
-    if (INVALID_TYPE == _column_type) {
+    if (PrimitiveType::INVALID_TYPE == _column_type) {
         return Status::InternalError("AddRange failed, Invalid type");
     }
 

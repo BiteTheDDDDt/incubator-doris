@@ -236,50 +236,50 @@ public:
     // Returns the byte size of *Val for type t.
     static int any_val_size(const TypeDescriptor& t) {
         switch (t.type) {
-        case TYPE_BOOLEAN:
+        case PrimitiveType::TYPE_BOOLEAN:
             return sizeof(doris_udf::BooleanVal);
 
-        case TYPE_TINYINT:
+        case PrimitiveType::TYPE_TINYINT:
             return sizeof(doris_udf::TinyIntVal);
 
-        case TYPE_SMALLINT:
+        case PrimitiveType::TYPE_SMALLINT:
             return sizeof(doris_udf::SmallIntVal);
 
-        case TYPE_INT:
+        case PrimitiveType::TYPE_INT:
             return sizeof(doris_udf::IntVal);
 
-        case TYPE_BIGINT:
+        case PrimitiveType::TYPE_BIGINT:
             return sizeof(doris_udf::BigIntVal);
 
-        case TYPE_LARGEINT:
+        case PrimitiveType::TYPE_LARGEINT:
             return sizeof(doris_udf::LargeIntVal);
 
-        case TYPE_FLOAT:
+        case PrimitiveType::TYPE_FLOAT:
             return sizeof(doris_udf::FloatVal);
 
-        case TYPE_DOUBLE:
+        case PrimitiveType::TYPE_DOUBLE:
             return sizeof(doris_udf::DoubleVal);
 
-        case TYPE_OBJECT:
-        case TYPE_QUANTILE_STATE:
-        case TYPE_HLL:
-        case TYPE_CHAR:
-        case TYPE_VARCHAR:
-        case TYPE_STRING:
+        case PrimitiveType::TYPE_OBJECT:
+        case PrimitiveType::TYPE_QUANTILE_STATE:
+        case PrimitiveType::TYPE_HLL:
+        case PrimitiveType::TYPE_CHAR:
+        case PrimitiveType::TYPE_VARCHAR:
+        case PrimitiveType::TYPE_STRING:
             return sizeof(doris_udf::StringVal);
 
-        case TYPE_DATEV2:
+        case PrimitiveType::TYPE_DATEV2:
             return sizeof(doris_udf::DateV2Val);
-        case TYPE_DATETIMEV2:
+        case PrimitiveType::TYPE_DATETIMEV2:
             return sizeof(doris_udf::DateTimeV2Val);
-        case TYPE_DATE:
-        case TYPE_DATETIME:
+        case PrimitiveType::TYPE_DATE:
+        case PrimitiveType::TYPE_DATETIME:
             return sizeof(doris_udf::DateTimeVal);
 
-        case TYPE_DECIMALV2:
+        case PrimitiveType::TYPE_DECIMALV2:
             return sizeof(doris_udf::DecimalV2Val);
 
-        case TYPE_ARRAY:
+        case PrimitiveType::TYPE_ARRAY:
             return sizeof(doris_udf::CollectionVal);
 
         default:
@@ -291,39 +291,39 @@ public:
     /// Returns the byte alignment of *Val for type t.
     static int any_val_alignment(const TypeDescriptor& t) {
         switch (t.type) {
-        case TYPE_BOOLEAN:
+        case PrimitiveType::TYPE_BOOLEAN:
             return alignof(BooleanVal);
-        case TYPE_TINYINT:
+        case PrimitiveType::TYPE_TINYINT:
             return alignof(TinyIntVal);
-        case TYPE_SMALLINT:
+        case PrimitiveType::TYPE_SMALLINT:
             return alignof(SmallIntVal);
-        case TYPE_INT:
+        case PrimitiveType::TYPE_INT:
             return alignof(IntVal);
-        case TYPE_BIGINT:
+        case PrimitiveType::TYPE_BIGINT:
             return alignof(BigIntVal);
-        case TYPE_LARGEINT:
+        case PrimitiveType::TYPE_LARGEINT:
             return alignof(LargeIntVal);
-        case TYPE_FLOAT:
+        case PrimitiveType::TYPE_FLOAT:
             return alignof(FloatVal);
-        case TYPE_DOUBLE:
+        case PrimitiveType::TYPE_DOUBLE:
             return alignof(DoubleVal);
-        case TYPE_OBJECT:
-        case TYPE_QUANTILE_STATE:
-        case TYPE_HLL:
-        case TYPE_VARCHAR:
-        case TYPE_CHAR:
-        case TYPE_STRING:
+        case PrimitiveType::TYPE_OBJECT:
+        case PrimitiveType::TYPE_QUANTILE_STATE:
+        case PrimitiveType::TYPE_HLL:
+        case PrimitiveType::TYPE_VARCHAR:
+        case PrimitiveType::TYPE_CHAR:
+        case PrimitiveType::TYPE_STRING:
             return alignof(StringVal);
-        case TYPE_DATETIME:
-        case TYPE_DATE:
+        case PrimitiveType::TYPE_DATETIME:
+        case PrimitiveType::TYPE_DATE:
             return alignof(DateTimeVal);
-        case TYPE_DATEV2:
+        case PrimitiveType::TYPE_DATEV2:
             return alignof(DateV2Val);
-        case TYPE_DATETIMEV2:
+        case PrimitiveType::TYPE_DATETIMEV2:
             return alignof(DateTimeV2Val);
-        case TYPE_DECIMALV2:
+        case PrimitiveType::TYPE_DECIMALV2:
             return alignof(DecimalV2Val);
-        case TYPE_ARRAY:
+        case PrimitiveType::TYPE_ARRAY:
             return alignof(doris_udf::CollectionVal);
         default:
             DCHECK(false) << t;
@@ -375,86 +375,86 @@ public:
 
         dst->is_null = false;
         switch (type.type) {
-        case TYPE_NULL:
+        case PrimitiveType::TYPE_NULL:
             return;
-        case TYPE_BOOLEAN:
+        case PrimitiveType::TYPE_BOOLEAN:
             reinterpret_cast<doris_udf::BooleanVal*>(dst)->val =
                     *reinterpret_cast<const bool*>(slot);
             return;
-        case TYPE_TINYINT:
+        case PrimitiveType::TYPE_TINYINT:
             reinterpret_cast<doris_udf::TinyIntVal*>(dst)->val =
                     *reinterpret_cast<const int8_t*>(slot);
             return;
-        case TYPE_SMALLINT:
+        case PrimitiveType::TYPE_SMALLINT:
             reinterpret_cast<doris_udf::SmallIntVal*>(dst)->val =
                     *reinterpret_cast<const int16_t*>(slot);
             return;
-        case TYPE_INT:
+        case PrimitiveType::TYPE_INT:
             reinterpret_cast<doris_udf::IntVal*>(dst)->val =
                     *reinterpret_cast<const int32_t*>(slot);
             return;
-        case TYPE_BIGINT:
+        case PrimitiveType::TYPE_BIGINT:
             reinterpret_cast<doris_udf::BigIntVal*>(dst)->val =
                     *reinterpret_cast<const int64_t*>(slot);
             return;
-        case TYPE_LARGEINT:
+        case PrimitiveType::TYPE_LARGEINT:
             memcpy(&reinterpret_cast<doris_udf::LargeIntVal*>(dst)->val, slot, sizeof(__int128));
             return;
-        case TYPE_FLOAT:
+        case PrimitiveType::TYPE_FLOAT:
             reinterpret_cast<doris_udf::FloatVal*>(dst)->val =
                     *reinterpret_cast<const float*>(slot);
             return;
-        case TYPE_TIME:
-        case TYPE_TIMEV2:
-        case TYPE_DOUBLE:
+        case PrimitiveType::TYPE_TIME:
+        case PrimitiveType::TYPE_TIMEV2:
+        case PrimitiveType::TYPE_DOUBLE:
             reinterpret_cast<doris_udf::DoubleVal*>(dst)->val =
                     *reinterpret_cast<const double*>(slot);
             return;
-        case TYPE_CHAR:
-        case TYPE_VARCHAR:
-        case TYPE_HLL:
-        case TYPE_OBJECT:
-        case TYPE_QUANTILE_STATE:
-        case TYPE_STRING:
+        case PrimitiveType::TYPE_CHAR:
+        case PrimitiveType::TYPE_VARCHAR:
+        case PrimitiveType::TYPE_HLL:
+        case PrimitiveType::TYPE_OBJECT:
+        case PrimitiveType::TYPE_QUANTILE_STATE:
+        case PrimitiveType::TYPE_STRING:
             reinterpret_cast<const StringValue*>(slot)->to_string_val(
                     reinterpret_cast<doris_udf::StringVal*>(dst));
             return;
-        case TYPE_DECIMALV2:
+        case PrimitiveType::TYPE_DECIMALV2:
             reinterpret_cast<doris_udf::DecimalV2Val*>(dst)->val =
                     reinterpret_cast<const PackedInt128*>(slot)->value;
             return;
-        case TYPE_DECIMAL32:
+        case PrimitiveType::TYPE_DECIMAL32:
             reinterpret_cast<doris_udf::Decimal32Val*>(dst)->val =
                     *reinterpret_cast<const int32_t*>(slot);
             return;
-        case TYPE_DECIMAL64:
+        case PrimitiveType::TYPE_DECIMAL64:
             reinterpret_cast<doris_udf::Decimal64Val*>(dst)->val =
                     *reinterpret_cast<const int64_t*>(slot);
             return;
-        case TYPE_DECIMAL128:
+        case PrimitiveType::TYPE_DECIMAL128:
             memcpy(&reinterpret_cast<doris_udf::Decimal128Val*>(dst)->val, slot, sizeof(__int128));
             return;
 
-        case TYPE_DATE:
+        case PrimitiveType::TYPE_DATE:
             reinterpret_cast<const DateTimeValue*>(slot)->to_datetime_val(
                     reinterpret_cast<doris_udf::DateTimeVal*>(dst));
             return;
-        case TYPE_DATETIME:
+        case PrimitiveType::TYPE_DATETIME:
             reinterpret_cast<const DateTimeValue*>(slot)->to_datetime_val(
                     reinterpret_cast<doris_udf::DateTimeVal*>(dst));
 
-        case TYPE_DATEV2:
+        case PrimitiveType::TYPE_DATEV2:
             reinterpret_cast<
                     const doris::vectorized::DateV2Value<doris::vectorized::DateV2ValueType>*>(slot)
                     ->to_datev2_val(reinterpret_cast<doris_udf::DateV2Val*>(dst));
             return;
-        case TYPE_DATETIMEV2:
+        case PrimitiveType::TYPE_DATETIMEV2:
             reinterpret_cast<
                     const doris::vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>*>(
                     slot)
                     ->to_datev2_val(reinterpret_cast<doris_udf::DateV2Val*>(dst));
             return;
-        case TYPE_ARRAY:
+        case PrimitiveType::TYPE_ARRAY:
             reinterpret_cast<const CollectionValue*>(slot)->to_collection_val(
                     reinterpret_cast<CollectionVal*>(dst));
             return;

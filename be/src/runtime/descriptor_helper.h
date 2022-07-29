@@ -21,6 +21,7 @@
 
 #include "gen_cpp/Descriptors_types.h"
 #include "gen_cpp/Types_types.h"
+#include "runtime/primitive_type.h"
 
 namespace doris {
 
@@ -65,13 +66,13 @@ public:
         return *this;
     }
     TSlotDescriptorBuilder& decimal_type(int precision, int scale) {
-        _slot_desc.slotType = get_common_type(to_thrift(TYPE_DECIMALV2));
+        _slot_desc.slotType = get_common_type(to_thrift(PrimitiveType::TYPE_DECIMALV2));
         _slot_desc.slotType.types[0].scalar_type.__set_precision(precision);
         _slot_desc.slotType.types[0].scalar_type.__set_scale(scale);
         return *this;
     }
     TSlotDescriptorBuilder& string_type(int len) {
-        _slot_desc.slotType = get_common_type(to_thrift(TYPE_VARCHAR));
+        _slot_desc.slotType = get_common_type(to_thrift(PrimitiveType::TYPE_VARCHAR));
         _slot_desc.slotType.types[0].scalar_type.__set_len(len);
         return *this;
     }

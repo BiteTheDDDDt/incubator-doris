@@ -50,40 +50,40 @@ using strings::Substitute;
 
 Status convert_to_arrow_type(const TypeDescriptor& type, std::shared_ptr<arrow::DataType>* result) {
     switch (type.type) {
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_TINYINT:
         *result = arrow::int8();
         break;
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         *result = arrow::int16();
         break;
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         *result = arrow::int32();
         break;
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         *result = arrow::int64();
         break;
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         *result = arrow::float32();
         break;
-    case TYPE_DOUBLE:
+    case PrimitiveType::TYPE_DOUBLE:
         *result = arrow::float64();
         break;
-    case TYPE_TIME:
+    case PrimitiveType::TYPE_TIME:
         *result = arrow::float64();
         break;
-    case TYPE_VARCHAR:
-    case TYPE_CHAR:
-    case TYPE_HLL:
-    case TYPE_LARGEINT:
-    case TYPE_DATE:
-    case TYPE_DATETIME:
-    case TYPE_STRING:
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_CHAR:
+    case PrimitiveType::TYPE_HLL:
+    case PrimitiveType::TYPE_LARGEINT:
+    case PrimitiveType::TYPE_DATE:
+    case PrimitiveType::TYPE_DATETIME:
+    case PrimitiveType::TYPE_STRING:
         *result = arrow::utf8();
         break;
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
         *result = std::make_shared<arrow::Decimal128Type>(27, 9);
         break;
-    case TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_BOOLEAN:
         *result = arrow::boolean();
         break;
     default:
@@ -116,25 +116,25 @@ Status convert_to_arrow_schema(const RowDescriptor& row_desc,
 Status convert_to_doris_type(const arrow::DataType& type, TSlotDescriptorBuilder* builder) {
     switch (type.id()) {
     case arrow::Type::INT8:
-        builder->type(TYPE_TINYINT);
+        builder->type(PrimitiveType::TYPE_TINYINT);
         break;
     case arrow::Type::INT16:
-        builder->type(TYPE_SMALLINT);
+        builder->type(PrimitiveType::TYPE_SMALLINT);
         break;
     case arrow::Type::INT32:
-        builder->type(TYPE_INT);
+        builder->type(PrimitiveType::TYPE_INT);
         break;
     case arrow::Type::INT64:
-        builder->type(TYPE_BIGINT);
+        builder->type(PrimitiveType::TYPE_BIGINT);
         break;
     case arrow::Type::FLOAT:
-        builder->type(TYPE_FLOAT);
+        builder->type(PrimitiveType::TYPE_FLOAT);
         break;
     case arrow::Type::DOUBLE:
-        builder->type(TYPE_DOUBLE);
+        builder->type(PrimitiveType::TYPE_DOUBLE);
         break;
     case arrow::Type::BOOL:
-        builder->type(TYPE_BOOLEAN);
+        builder->type(PrimitiveType::TYPE_BOOLEAN);
         break;
     default:
         return Status::InvalidArgument("Unknown arrow type id({})", type.id());
@@ -215,10 +215,10 @@ public:
             auto cell_ptr = _cur_slot_ref->get_slot(_batch.get_row(i));
             PrimitiveType primitive_type = _cur_slot_ref->type().type;
             switch (primitive_type) {
-            case TYPE_VARCHAR:
-            case TYPE_CHAR:
-            case TYPE_HLL:
-            case TYPE_STRING: {
+            case PrimitiveType::TYPE_VARCHAR:
+            case PrimitiveType::TYPE_CHAR:
+            case PrimitiveType::TYPE_HLL:
+            case PrimitiveType::TYPE_STRING: {
                 const StringValue* string_val = (const StringValue*)(cell_ptr);
                 if (string_val->len == 0) {
                     // 0x01 is a magic num, not useful actually, just for present ""
@@ -229,15 +229,15 @@ public:
                 }
                 break;
             }
-            case TYPE_DATE:
-            case TYPE_DATETIME: {
+            case PrimitiveType::TYPE_DATE:
+            case PrimitiveType::TYPE_DATETIME: {
                 char buf[64];
                 const DateTimeValue* time_val = (const DateTimeValue*)(cell_ptr);
                 int len = time_val->to_buffer(buf);
                 ARROW_RETURN_NOT_OK(builder.Append(buf, len));
                 break;
             }
-            case TYPE_LARGEINT: {
+            case PrimitiveType::TYPE_LARGEINT: {
                 auto string_temp = LargeIntValue::to_string(
                         reinterpret_cast<const PackedInt128*>(cell_ptr)->value);
                 ARROW_RETURN_NOT_OK(builder.Append(string_temp.data(), string_temp.size()));

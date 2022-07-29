@@ -420,7 +420,9 @@ public:
             data[read_count++] = *reinterpret_cast<CppType*>(get_data(ord));
         }
 
-        if (LIKELY(read_count > 0)) dst->insert_many_fix_len_data((const char*)data, read_count);
+        if (LIKELY(read_count > 0)) {
+            dst->insert_many_fix_len_data((const char*)data, read_count);
+        }
 
         *n = read_count;
         return Status::OK();

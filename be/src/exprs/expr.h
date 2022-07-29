@@ -260,7 +260,7 @@ public:
     };
 
     static Expr* copy(ObjectPool* pool, Expr* old_expr);
-    int get_fn_context_index() { return _fn_context_index; }
+    int get_fn_context_index() const { return _fn_context_index; }
 
 protected:
     friend class AggFnEvaluator;
@@ -459,49 +459,50 @@ private:
 template <PrimitiveType T>
 Status create_texpr_literal_node(const void* data, TExprNode* node, int precision = 0,
                                  int scale = 0) {
-    if constexpr (T == TYPE_BOOLEAN) {
+    if constexpr (T == PrimitiveType::TYPE_BOOLEAN) {
         auto origin_value = reinterpret_cast<const bool*>(data);
         TBoolLiteral boolLiteral;
         (*node).__set_node_type(TExprNodeType::BOOL_LITERAL);
         boolLiteral.__set_value(*origin_value);
         (*node).__set_bool_literal(boolLiteral);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_BOOLEAN));
-    } else if constexpr (T == TYPE_TINYINT) {
+    } else if constexpr (T == PrimitiveType::TYPE_TINYINT) {
         auto origin_value = reinterpret_cast<const int8_t*>(data);
         (*node).__set_node_type(TExprNodeType::INT_LITERAL);
         TIntLiteral intLiteral;
         intLiteral.__set_value(*origin_value);
         (*node).__set_int_literal(intLiteral);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_TINYINT));
-    } else if constexpr (T == TYPE_SMALLINT) {
+    } else if constexpr (T == PrimitiveType::TYPE_SMALLINT) {
         auto origin_value = reinterpret_cast<const int16_t*>(data);
         (*node).__set_node_type(TExprNodeType::INT_LITERAL);
         TIntLiteral intLiteral;
         intLiteral.__set_value(*origin_value);
         (*node).__set_int_literal(intLiteral);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_SMALLINT));
-    } else if constexpr (T == TYPE_INT) {
+    } else if constexpr (T == PrimitiveType::TYPE_INT) {
         auto origin_value = reinterpret_cast<const int32_t*>(data);
         (*node).__set_node_type(TExprNodeType::INT_LITERAL);
         TIntLiteral intLiteral;
         intLiteral.__set_value(*origin_value);
         (*node).__set_int_literal(intLiteral);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_INT));
-    } else if constexpr (T == TYPE_BIGINT) {
+    } else if constexpr (T == PrimitiveType::TYPE_BIGINT) {
         auto origin_value = reinterpret_cast<const int64_t*>(data);
         (*node).__set_node_type(TExprNodeType::INT_LITERAL);
         TIntLiteral intLiteral;
         intLiteral.__set_value(*origin_value);
         (*node).__set_int_literal(intLiteral);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_BIGINT));
-    } else if constexpr (T == TYPE_LARGEINT) {
+    } else if constexpr (T == PrimitiveType::TYPE_LARGEINT) {
         auto origin_value = reinterpret_cast<const int128_t*>(data);
         (*node).__set_node_type(TExprNodeType::LARGE_INT_LITERAL);
         TLargeIntLiteral large_int_literal;
         large_int_literal.__set_value(LargeIntValue::to_string(*origin_value));
         (*node).__set_large_int_literal(large_int_literal);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_LARGEINT));
-    } else if constexpr ((T == TYPE_DATE) || (T == TYPE_DATETIME) || (T == TYPE_TIME)) {
+    } else if constexpr ((T == PrimitiveType::TYPE_DATE) || (T == PrimitiveType::TYPE_DATETIME) ||
+                         (T == PrimitiveType::TYPE_TIME)) {
         auto origin_value = reinterpret_cast<const doris::DateTimeValue*>(data);
         TDateLiteral date_literal;
         char convert_buffer[30];
@@ -516,7 +517,7 @@ Status create_texpr_literal_node(const void* data, TExprNode* node, int precisio
         } else if (origin_value->type() == TimeType::TIME_TIME) {
             (*node).__set_type(create_type_desc(PrimitiveType::TYPE_TIME));
         }
-    } else if constexpr (T == TYPE_DATEV2) {
+    } else if constexpr (T == PrimitiveType::TYPE_DATEV2) {
         auto origin_value = reinterpret_cast<
                 const doris::vectorized::DateV2Value<doris::vectorized::DateV2ValueType>*>(data);
         TDateLiteral date_literal;
@@ -526,7 +527,7 @@ Status create_texpr_literal_node(const void* data, TExprNode* node, int precisio
         (*node).__set_date_literal(date_literal);
         (*node).__set_node_type(TExprNodeType::DATE_LITERAL);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_DATEV2));
-    } else if constexpr (T == TYPE_DATETIMEV2) {
+    } else if constexpr (T == PrimitiveType::TYPE_DATETIMEV2) {
         auto origin_value = reinterpret_cast<
                 const doris::vectorized::DateV2Value<doris::vectorized::DateTimeV2ValueType>*>(
                 data);
@@ -537,14 +538,14 @@ Status create_texpr_literal_node(const void* data, TExprNode* node, int precisio
         (*node).__set_date_literal(date_literal);
         (*node).__set_node_type(TExprNodeType::DATE_LITERAL);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_DATETIMEV2));
-    } else if constexpr (T == TYPE_DECIMALV2) {
+    } else if constexpr (T == PrimitiveType::TYPE_DECIMALV2) {
         auto origin_value = reinterpret_cast<const DecimalV2Value*>(data);
         (*node).__set_node_type(TExprNodeType::DECIMAL_LITERAL);
         TDecimalLiteral decimal_literal;
         decimal_literal.__set_value(origin_value->to_string());
         (*node).__set_decimal_literal(decimal_literal);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_DECIMALV2, precision, scale));
-    } else if constexpr (T == TYPE_DECIMAL32) {
+    } else if constexpr (T == PrimitiveType::TYPE_DECIMAL32) {
         auto origin_value = reinterpret_cast<const int32_t*>(data);
         (*node).__set_node_type(TExprNodeType::DECIMAL_LITERAL);
         TDecimalLiteral decimal_literal;
@@ -553,7 +554,7 @@ Status create_texpr_literal_node(const void* data, TExprNode* node, int precisio
         decimal_literal.__set_value(ss.str());
         (*node).__set_decimal_literal(decimal_literal);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_DECIMAL32, precision, scale));
-    } else if constexpr (T == TYPE_DECIMAL64) {
+    } else if constexpr (T == PrimitiveType::TYPE_DECIMAL64) {
         auto origin_value = reinterpret_cast<const int64_t*>(data);
         (*node).__set_node_type(TExprNodeType::DECIMAL_LITERAL);
         TDecimalLiteral decimal_literal;
@@ -562,7 +563,7 @@ Status create_texpr_literal_node(const void* data, TExprNode* node, int precisio
         decimal_literal.__set_value(ss.str());
         (*node).__set_decimal_literal(decimal_literal);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_DECIMAL64, precision, scale));
-    } else if constexpr (T == TYPE_DECIMAL128) {
+    } else if constexpr (T == PrimitiveType::TYPE_DECIMAL128) {
         auto origin_value = reinterpret_cast<const int128_t*>(data);
         (*node).__set_node_type(TExprNodeType::DECIMAL_LITERAL);
         TDecimalLiteral decimal_literal;
@@ -571,21 +572,22 @@ Status create_texpr_literal_node(const void* data, TExprNode* node, int precisio
         decimal_literal.__set_value(ss.str());
         (*node).__set_decimal_literal(decimal_literal);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_DECIMAL128, precision, scale));
-    } else if constexpr (T == TYPE_FLOAT) {
+    } else if constexpr (T == PrimitiveType::TYPE_FLOAT) {
         auto origin_value = reinterpret_cast<const float*>(data);
         (*node).__set_node_type(TExprNodeType::FLOAT_LITERAL);
         TFloatLiteral float_literal;
         float_literal.__set_value(*origin_value);
         (*node).__set_float_literal(float_literal);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_FLOAT));
-    } else if constexpr (T == TYPE_DOUBLE) {
+    } else if constexpr (T == PrimitiveType::TYPE_DOUBLE) {
         auto origin_value = reinterpret_cast<const double*>(data);
         (*node).__set_node_type(TExprNodeType::FLOAT_LITERAL);
         TFloatLiteral float_literal;
         float_literal.__set_value(*origin_value);
         (*node).__set_float_literal(float_literal);
         (*node).__set_type(create_type_desc(PrimitiveType::TYPE_DOUBLE));
-    } else if constexpr ((T == TYPE_STRING) || (T == TYPE_CHAR) || (T == TYPE_VARCHAR)) {
+    } else if constexpr ((T == PrimitiveType::TYPE_STRING) || (T == PrimitiveType::TYPE_CHAR) ||
+                         (T == PrimitiveType::TYPE_VARCHAR)) {
         auto origin_value = reinterpret_cast<const StringValue*>(data);
         (*node).__set_node_type(TExprNodeType::STRING_LITERAL);
         TStringLiteral string_literal;

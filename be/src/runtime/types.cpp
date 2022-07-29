@@ -34,11 +34,14 @@ TypeDescriptor::TypeDescriptor(const std::vector<TTypeNode>& types, int* idx)
         DCHECK(node.__isset.scalar_type);
         const TScalarType scalar_type = node.scalar_type;
         type = thrift_to_type(scalar_type.type);
-        if (type == TYPE_CHAR || type == TYPE_VARCHAR || type == TYPE_HLL) {
+        if (type == PrimitiveType::TYPE_CHAR || type == PrimitiveType::TYPE_VARCHAR ||
+            type == PrimitiveType::TYPE_HLL) {
             DCHECK(scalar_type.__isset.len);
             len = scalar_type.len;
-        } else if (type == TYPE_DECIMALV2 || type == TYPE_DECIMAL32 || type == TYPE_DECIMAL64 ||
-                   type == TYPE_DECIMAL128 || type == TYPE_DATETIMEV2) {
+        } else if (type == PrimitiveType::TYPE_DECIMALV2 || type == PrimitiveType::TYPE_DECIMAL32 ||
+                   type == PrimitiveType::TYPE_DECIMAL64 ||
+                   type == PrimitiveType::TYPE_DECIMAL128 ||
+                   type == PrimitiveType::TYPE_DATETIMEV2) {
             DCHECK(scalar_type.__isset.precision);
             DCHECK(scalar_type.__isset.scale);
             precision = scalar_type.precision;
@@ -49,7 +52,7 @@ TypeDescriptor::TypeDescriptor(const std::vector<TTypeNode>& types, int* idx)
     case TTypeNodeType::ARRAY: {
         DCHECK(!node.__isset.scalar_type);
         DCHECK_LT(*idx, types.size() - 1);
-        type = TYPE_ARRAY;
+        type = PrimitiveType::TYPE_ARRAY;
         if (node.__isset.contains_null) {
             contains_null = node.contains_null;
         }
@@ -90,12 +93,12 @@ void TypeDescriptor::to_thrift(TTypeDesc* thrift_type) const {
     thrift_type->types.push_back(TTypeNode());
     TTypeNode& node = thrift_type->types.back();
     if (is_complex_type()) {
-        if (type == TYPE_ARRAY) {
+        if (type == PrimitiveType::TYPE_ARRAY) {
             node.type = TTypeNodeType::ARRAY;
-        } else if (type == TYPE_MAP) {
+        } else if (type == PrimitiveType::TYPE_MAP) {
             node.type = TTypeNodeType::MAP;
         } else {
-            DCHECK_EQ(type, TYPE_STRUCT);
+            DCHECK_EQ(type, PrimitiveType::TYPE_STRUCT);
             node.type = TTypeNodeType::STRUCT;
             node.__set_struct_fields(std::vector<TStructField>());
             for (auto& field_name : field_names) {
@@ -111,11 +114,14 @@ void TypeDescriptor::to_thrift(TTypeDesc* thrift_type) const {
         node.__set_scalar_type(TScalarType());
         TScalarType& scalar_type = node.scalar_type;
         scalar_type.__set_type(doris::to_thrift(type));
-        if (type == TYPE_CHAR || type == TYPE_VARCHAR || type == TYPE_HLL) {
+        if (type == PrimitiveType::TYPE_CHAR || type == PrimitiveType::TYPE_VARCHAR ||
+            type == PrimitiveType::TYPE_HLL) {
             // DCHECK_NE(len, -1);
             scalar_type.__set_len(len);
-        } else if (type == TYPE_DECIMALV2 || type == TYPE_DECIMAL32 || type == TYPE_DECIMAL64 ||
-                   type == TYPE_DECIMAL128 || type == TYPE_DATETIMEV2) {
+        } else if (type == PrimitiveType::TYPE_DECIMALV2 || type == PrimitiveType::TYPE_DECIMAL32 ||
+                   type == PrimitiveType::TYPE_DECIMAL64 ||
+                   type == PrimitiveType::TYPE_DECIMAL128 ||
+                   type == PrimitiveType::TYPE_DATETIMEV2) {
             DCHECK_NE(precision, -1);
             DCHECK_NE(scale, -1);
             scalar_type.__set_precision(precision);
@@ -125,21 +131,23 @@ void TypeDescriptor::to_thrift(TTypeDesc* thrift_type) const {
 }
 
 void TypeDescriptor::to_protobuf(PTypeDesc* ptype) const {
-    DCHECK(!is_complex_type() || type == TYPE_ARRAY)
+    DCHECK(!is_complex_type() || type == PrimitiveType::TYPE_ARRAY)
             << "Don't support complex type now, type=" << type;
     auto node = ptype->add_types();
     node->set_type(TTypeNodeType::SCALAR);
     auto scalar_type = node->mutable_scalar_type();
     scalar_type->set_type(doris::to_thrift(type));
-    if (type == TYPE_CHAR || type == TYPE_VARCHAR || type == TYPE_HLL) {
+    if (type == PrimitiveType::TYPE_CHAR || type == PrimitiveType::TYPE_VARCHAR ||
+        type == PrimitiveType::TYPE_HLL) {
         scalar_type->set_len(len);
-    } else if (type == TYPE_DECIMALV2 || type == TYPE_DECIMAL32 || type == TYPE_DECIMAL64 ||
-               type == TYPE_DECIMAL128 || type == TYPE_DATETIMEV2) {
+    } else if (type == PrimitiveType::TYPE_DECIMALV2 || type == PrimitiveType::TYPE_DECIMAL32 ||
+               type == PrimitiveType::TYPE_DECIMAL64 || type == PrimitiveType::TYPE_DECIMAL128 ||
+               type == PrimitiveType::TYPE_DATETIMEV2) {
         DCHECK_NE(precision, -1);
         DCHECK_NE(scale, -1);
         scalar_type->set_precision(precision);
         scalar_type->set_scale(scale);
-    } else if (type == TYPE_ARRAY) {
+    } else if (type == PrimitiveType::TYPE_ARRAY) {
         node->set_type(TTypeNodeType::ARRAY);
         for (const TypeDescriptor& child : children) {
             child.to_protobuf(ptype);
@@ -158,11 +166,14 @@ TypeDescriptor::TypeDescriptor(const google::protobuf::RepeatedPtrField<PTypeNod
         DCHECK(node.has_scalar_type());
         const PScalarType& scalar_type = node.scalar_type();
         type = thrift_to_type((TPrimitiveType::type)scalar_type.type());
-        if (type == TYPE_CHAR || type == TYPE_VARCHAR || type == TYPE_HLL) {
+        if (type == PrimitiveType::TYPE_CHAR || type == PrimitiveType::TYPE_VARCHAR ||
+            type == PrimitiveType::TYPE_HLL) {
             DCHECK(scalar_type.has_len());
             len = scalar_type.len();
-        } else if (type == TYPE_DECIMALV2 || type == TYPE_DECIMAL32 || type == TYPE_DECIMAL64 ||
-                   type == TYPE_DECIMAL128 || type == TYPE_DATETIMEV2) {
+        } else if (type == PrimitiveType::TYPE_DECIMALV2 || type == PrimitiveType::TYPE_DECIMAL32 ||
+                   type == PrimitiveType::TYPE_DECIMAL64 ||
+                   type == PrimitiveType::TYPE_DECIMAL128 ||
+                   type == PrimitiveType::TYPE_DATETIMEV2) {
             DCHECK(scalar_type.has_precision());
             DCHECK(scalar_type.has_scale());
             precision = scalar_type.precision();
@@ -171,7 +182,7 @@ TypeDescriptor::TypeDescriptor(const google::protobuf::RepeatedPtrField<PTypeNod
         break;
     }
     case TTypeNodeType::ARRAY: {
-        type = TYPE_ARRAY;
+        type = PrimitiveType::TYPE_ARRAY;
         if (node.has_contains_null()) {
             contains_null = node.contains_null();
         }
@@ -187,22 +198,22 @@ TypeDescriptor::TypeDescriptor(const google::protobuf::RepeatedPtrField<PTypeNod
 std::string TypeDescriptor::debug_string() const {
     std::stringstream ss;
     switch (type) {
-    case TYPE_CHAR:
+    case PrimitiveType::TYPE_CHAR:
         ss << "CHAR(" << len << ")";
         return ss.str();
-    case TYPE_DECIMALV2:
+    case PrimitiveType::TYPE_DECIMALV2:
         ss << "DECIMALV2(" << precision << ", " << scale << ")";
         return ss.str();
-    case TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL32:
         ss << "DECIMAL32(" << precision << ", " << scale << ")";
         return ss.str();
-    case TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL64:
         ss << "DECIMAL64(" << precision << ", " << scale << ")";
         return ss.str();
-    case TYPE_DECIMAL128:
+    case PrimitiveType::TYPE_DECIMAL128:
         ss << "DECIMAL128(" << precision << ", " << scale << ")";
         return ss.str();
-    case TYPE_ARRAY:
+    case PrimitiveType::TYPE_ARRAY:
         ss << "ARRAY(" << type_to_string(children[0].type) << ")";
         return ss.str();
     default:

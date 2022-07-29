@@ -32,32 +32,32 @@ namespace doris {
 
 Literal::Literal(const TExprNode& node) : Expr(node) {
     switch (_type.type) {
-    case TYPE_BOOLEAN:
+    case PrimitiveType::TYPE_BOOLEAN:
         DCHECK_EQ(node.node_type, TExprNodeType::BOOL_LITERAL);
         DCHECK(node.__isset.bool_literal);
         _value.bool_val = node.bool_literal.value;
         break;
-    case TYPE_TINYINT:
+    case PrimitiveType::TYPE_TINYINT:
         DCHECK_EQ(node.node_type, TExprNodeType::INT_LITERAL);
         DCHECK(node.__isset.int_literal);
         _value.tinyint_val = node.int_literal.value;
         break;
-    case TYPE_SMALLINT:
+    case PrimitiveType::TYPE_SMALLINT:
         DCHECK_EQ(node.node_type, TExprNodeType::INT_LITERAL);
         DCHECK(node.__isset.int_literal);
         _value.smallint_val = node.int_literal.value;
         break;
-    case TYPE_INT:
+    case PrimitiveType::TYPE_INT:
         DCHECK_EQ(node.node_type, TExprNodeType::INT_LITERAL);
         DCHECK(node.__isset.int_literal);
         _value.int_val = node.int_literal.value;
         break;
-    case TYPE_BIGINT:
+    case PrimitiveType::TYPE_BIGINT:
         DCHECK_EQ(node.node_type, TExprNodeType::INT_LITERAL);
         DCHECK(node.__isset.int_literal);
         _value.bigint_val = node.int_literal.value;
         break;
-    case TYPE_LARGEINT: {
+    case PrimitiveType::TYPE_LARGEINT: {
         StringParser::ParseResult parse_result = StringParser::PARSE_SUCCESS;
         DCHECK_EQ(node.node_type, TExprNodeType::LARGE_INT_LITERAL);
         _value.large_int_val = StringParser::string_to_int<__int128>(
@@ -68,54 +68,54 @@ Literal::Literal(const TExprNode& node) : Expr(node) {
         }
         break;
     }
-    case TYPE_FLOAT:
+    case PrimitiveType::TYPE_FLOAT:
         DCHECK_EQ(node.node_type, TExprNodeType::FLOAT_LITERAL);
         DCHECK(node.__isset.float_literal);
         _value.float_val = node.float_literal.value;
         break;
-    case TYPE_DOUBLE:
-    case TYPE_TIME:
-    case TYPE_TIMEV2:
+    case PrimitiveType::TYPE_DOUBLE:
+    case PrimitiveType::TYPE_TIME:
+    case PrimitiveType::TYPE_TIMEV2:
         DCHECK_EQ(node.node_type, TExprNodeType::FLOAT_LITERAL);
         DCHECK(node.__isset.float_literal);
         _value.double_val = node.float_literal.value;
         break;
-    case TYPE_DATE:
-    case TYPE_DATETIME:
+    case PrimitiveType::TYPE_DATE:
+    case PrimitiveType::TYPE_DATETIME:
         _value.datetime_val.from_date_str(node.date_literal.value.c_str(),
                                           node.date_literal.value.size());
         break;
-    case TYPE_DATEV2:
+    case PrimitiveType::TYPE_DATEV2:
         _value.datev2_val.from_date_str(node.date_literal.value.c_str(),
                                         node.date_literal.value.size());
         break;
-    case TYPE_DATETIMEV2:
+    case PrimitiveType::TYPE_DATETIMEV2:
         _value.datetimev2_val.from_date_str(node.date_literal.value.c_str(),
                                             node.date_literal.value.size());
         break;
-    case TYPE_CHAR:
-    case TYPE_VARCHAR:
-    case TYPE_STRING:
+    case PrimitiveType::TYPE_CHAR:
+    case PrimitiveType::TYPE_VARCHAR:
+    case PrimitiveType::TYPE_STRING:
         DCHECK_EQ(node.node_type, TExprNodeType::STRING_LITERAL);
         DCHECK(node.__isset.string_literal);
         _value.set_string_val(node.string_literal.value);
         break;
 
-    case TYPE_DECIMALV2: {
+    case PrimitiveType::TYPE_DECIMALV2: {
         DCHECK_EQ(node.node_type, TExprNodeType::DECIMAL_LITERAL);
         DCHECK(node.__isset.decimal_literal);
         _value.decimalv2_val = DecimalV2Value(node.decimal_literal.value);
         break;
     }
-    case TYPE_DECIMAL32:
-    case TYPE_DECIMAL64:
-    case TYPE_DECIMAL128: {
+    case PrimitiveType::TYPE_DECIMAL32:
+    case PrimitiveType::TYPE_DECIMAL64:
+    case PrimitiveType::TYPE_DECIMAL128: {
         DCHECK_EQ(node.node_type, TExprNodeType::DECIMAL_LITERAL);
         DCHECK(node.__isset.decimal_literal);
         _value.set_string_val(node.decimal_literal.value);
         break;
     }
-    case TYPE_ARRAY: {
+    case PrimitiveType::TYPE_ARRAY: {
         DCHECK_EQ(node.node_type, TExprNodeType::ARRAY_LITERAL);
         // init in prepare
         break;
@@ -129,37 +129,37 @@ Literal::Literal(const TExprNode& node) : Expr(node) {
 Literal::~Literal() {}
 
 BooleanVal Literal::get_boolean_val(ExprContext* context, TupleRow* row) {
-    DCHECK_EQ(_type.type, TYPE_BOOLEAN) << _type;
+    DCHECK_EQ(_type.type, PrimitiveType::TYPE_BOOLEAN) << _type;
     return BooleanVal(_value.bool_val);
 }
 
 TinyIntVal Literal::get_tiny_int_val(ExprContext* context, TupleRow* row) {
-    DCHECK_EQ(_type.type, TYPE_TINYINT) << _type;
+    DCHECK_EQ(_type.type, PrimitiveType::TYPE_TINYINT) << _type;
     return TinyIntVal(_value.tinyint_val);
 }
 
 SmallIntVal Literal::get_small_int_val(ExprContext* context, TupleRow* row) {
-    DCHECK_EQ(_type.type, TYPE_SMALLINT) << _type;
+    DCHECK_EQ(_type.type, PrimitiveType::TYPE_SMALLINT) << _type;
     return SmallIntVal(_value.smallint_val);
 }
 
 IntVal Literal::get_int_val(ExprContext* context, TupleRow* row) {
-    DCHECK(_type.type == TYPE_INT) << _type;
+    DCHECK(_type.type == PrimitiveType::TYPE_INT) << _type;
     return IntVal(_value.int_val);
 }
 
 BigIntVal Literal::get_big_int_val(ExprContext* context, TupleRow* row) {
-    DCHECK(_type.type == TYPE_BIGINT) << _type;
+    DCHECK(_type.type == PrimitiveType::TYPE_BIGINT) << _type;
     return BigIntVal(_value.bigint_val);
 }
 
 LargeIntVal Literal::get_large_int_val(ExprContext* context, TupleRow* row) {
-    DCHECK(_type.type == TYPE_LARGEINT) << _type;
+    DCHECK(_type.type == PrimitiveType::TYPE_LARGEINT) << _type;
     return LargeIntVal(_value.large_int_val);
 }
 
 Decimal32Val Literal::get_decimal32_val(ExprContext* context, TupleRow* row) {
-    DCHECK(_type.type == TYPE_DECIMAL32) << _type;
+    DCHECK(_type.type == PrimitiveType::TYPE_DECIMAL32) << _type;
     StringParser::ParseResult result;
     auto decimal32_value = StringParser::string_to_decimal<int32_t>(
             _value.string_val.ptr, _value.string_val.len, _type.precision, _type.scale, &result);
@@ -171,7 +171,7 @@ Decimal32Val Literal::get_decimal32_val(ExprContext* context, TupleRow* row) {
 }
 
 Decimal64Val Literal::get_decimal64_val(ExprContext* context, TupleRow* row) {
-    DCHECK(_type.type == TYPE_DECIMAL64) << _type;
+    DCHECK(_type.type == PrimitiveType::TYPE_DECIMAL64) << _type;
     StringParser::ParseResult result;
     auto decimal_value = StringParser::string_to_decimal<int64_t>(
             _value.string_val.ptr, _value.string_val.len, _type.precision, _type.scale, &result);
@@ -183,7 +183,7 @@ Decimal64Val Literal::get_decimal64_val(ExprContext* context, TupleRow* row) {
 }
 
 Decimal128Val Literal::get_decimal128_val(ExprContext* context, TupleRow* row) {
-    DCHECK(_type.type == TYPE_DECIMAL128) << _type;
+    DCHECK(_type.type == PrimitiveType::TYPE_DECIMAL128) << _type;
     StringParser::ParseResult result;
     auto decimal_value = StringParser::string_to_decimal<int128_t>(
             _value.string_val.ptr, _value.string_val.len, _type.precision, _type.scale, &result);
@@ -195,18 +195,19 @@ Decimal128Val Literal::get_decimal128_val(ExprContext* context, TupleRow* row) {
 }
 
 FloatVal Literal::get_float_val(ExprContext* context, TupleRow* row) {
-    DCHECK_EQ(_type.type, TYPE_FLOAT) << _type;
+    DCHECK_EQ(_type.type, PrimitiveType::TYPE_FLOAT) << _type;
     return FloatVal(_value.float_val);
 }
 
 DoubleVal Literal::get_double_val(ExprContext* context, TupleRow* row) {
-    DCHECK(_type.type == TYPE_DOUBLE || _type.type == TYPE_TIME || _type.type == TYPE_TIMEV2)
+    DCHECK(_type.type == PrimitiveType::TYPE_DOUBLE || _type.type == PrimitiveType::TYPE_TIME ||
+           _type.type == PrimitiveType::TYPE_TIMEV2)
             << _type;
     return DoubleVal(_value.double_val);
 }
 
 DecimalV2Val Literal::get_decimalv2_val(ExprContext* context, TupleRow* row) {
-    DCHECK_EQ(_type.type, TYPE_DECIMALV2) << _type;
+    DCHECK_EQ(_type.type, PrimitiveType::TYPE_DECIMALV2) << _type;
     DecimalV2Val dec_val;
     _value.decimalv2_val.to_decimal_val(&dec_val);
     return dec_val;
@@ -247,7 +248,7 @@ CollectionVal Literal::get_array_val(ExprContext* context, TupleRow*) {
 Status Literal::prepare(RuntimeState* state, const RowDescriptor& row_desc, ExprContext* context) {
     RETURN_IF_ERROR(Expr::prepare(state, row_desc, context));
 
-    if (type().type == TYPE_ARRAY) {
+    if (type().type == PrimitiveType::TYPE_ARRAY) {
         DCHECK_EQ(type().children.size(), 1) << "array children type not 1";
         // init array value
         auto child_type = type().children.at(0).type;
