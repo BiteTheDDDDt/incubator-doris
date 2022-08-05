@@ -400,9 +400,6 @@ public class CreateMaterializedViewStmt extends DdlStmt {
                     mvColumnName = baseColumnName;
                 } else {
                     mvColumnName = mvColumnBuilder(functionName, baseColumnName);
-                    if (!functionChild0.getType().isStringType()) {
-                        functionChild0.uncheckedCastChild(Type.VARCHAR, 0);
-                    }
                     defineExpr = functionChild0;
                 }
                 mvAggregateType = AggregateType.valueOf(functionName.toUpperCase());
