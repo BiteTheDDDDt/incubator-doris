@@ -72,11 +72,9 @@ inline std::ostream& operator<<(std::ostream& os, const OlapTuple& tuple) {
             os << ",";
         }
         if (tuple._nulls[i]) {
-            os << "null(";
-        }
-        os << tuple._values[i];
-        if (tuple._nulls[i]) {
-            os << ")";
+            os << "null";
+        } else {
+            os << tuple._values[i];
         }
     }
     return os;
