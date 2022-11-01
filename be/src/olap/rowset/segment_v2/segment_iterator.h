@@ -65,6 +65,17 @@ public:
     bool is_lazy_materialization_read() const override { return _lazy_materialization_read; }
     uint64_t data_id() const override { return _segment->id(); }
 
+    bool update_profile(RuntimeProfile* profile) override {
+        std::string info;
+
+        for (auto pred : _col_predicates) {
+            info += "\n" + pred->debug_string();
+        }
+        profile->add_info_string("ColumnPredicates", info);
+        
+        return true;
+    }
+
 private:
     Status _init(bool is_vec = false);
 
