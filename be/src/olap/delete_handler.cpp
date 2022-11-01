@@ -319,6 +319,8 @@ void DeleteHandler::get_delete_conditions_after_version(
                 if (del_cond.column_predicate_vec.size() == 1) {
                     auto single_column_block_predicate =
                             new SingleColumnBlockPredicate(del_cond.column_predicate_vec[0]);
+                    LOG(WARNING) << "PXLTEST del "
+                                 << del_cond.column_predicate_vec[0]->debug_string();
                     and_block_column_predicate_ptr->add_column_predicate(
                             single_column_block_predicate);
                     if (col_id_to_del_predicates->count(
@@ -345,6 +347,7 @@ void DeleteHandler::get_delete_conditions_after_version(
                                 }
                                 (*col_id_to_del_predicates)[predicate->column_id()].push_back(
                                         predicate);
+                                LOG(WARNING) << "PXLTEST del " << predicate->debug_string();
                                 or_column_predicate->add_column_predicate(
                                         new SingleColumnBlockPredicate(predicate));
                             });
