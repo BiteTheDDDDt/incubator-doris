@@ -1040,8 +1040,6 @@ uint16_t SegmentIterator::_evaluate_short_circuit_predicate(uint16_t* vec_sel_ro
         auto column_id = predicate->column_id();
         auto& short_cir_column = _current_return_columns[column_id];
         selected_size = predicate->evaluate(*short_cir_column, vec_sel_rowid_idx, selected_size);
-        LOG(WARNING) << "PXLTEST short" << predicate->debug_string()
-                     << " use time: " << tmp_ns * (1e-9) << "s";
     }
     _opts.stats->rows_vec_cond_filtered += original_size - selected_size;
 

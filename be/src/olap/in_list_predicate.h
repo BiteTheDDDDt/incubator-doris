@@ -380,6 +380,8 @@ private:
                 auto& data_array = nested_col_ptr->get_data();
                 nested_col_ptr->find_codes(_values, _value_in_dict_flags);
 
+                LOG(WARNING) << "PXLTEST DICT SIZE " << _value_in_dict_flags.size();
+
                 for (uint16_t i = 0; i < size; i++) {
                     uint16_t idx = sel[i];
                     if constexpr (is_nullable) {
