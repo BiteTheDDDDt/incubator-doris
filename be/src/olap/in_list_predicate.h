@@ -464,6 +464,14 @@ private:
                     nested_col_ptr->find_codes(*_values, value_in_dict_flags);
                 }
 
+                LOG(WARNING) << "rowsetid=" << column->get_rowset_segment_id().first.to_string()
+                             << ", segid=" << column->get_rowset_segment_id().second
+                             << ", dict_info=" << nested_col_ptr->dict_debug_string();
+
+                CHECK(value_in_dict_flags.size() == nested_col_ptr->dict_size())
+                        << "value_in_dict_flags.size()!=nested_col_ptr->dict_size(), "
+                        << value_in_dict_flags.size() << " vs " << nested_col_ptr->dict_size();
+
                 for (uint16_t i = 0; i < size; i++) {
                     uint16_t idx = sel[i];
                     if constexpr (is_nullable) {
