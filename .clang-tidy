@@ -17,7 +17,6 @@ Checks: |
   readability-static-accessed-through-instance,
   readability-redundant-*,
   readability-braces-around-statements,
-  portability-simd-intrinsics,
   performance-type-promotion-in-math-fn,
   performance-faster-string-find,
   performance-inefficient-algorithm,
