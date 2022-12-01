@@ -117,17 +117,14 @@ struct BinaryOperationImplBase {
 
     static void constant_vector(A a, const PaddedPODArray<B>& b, PaddedPODArray<ResultType>& c) {
         size_t size = b.size();
-        for (size_t i = 0; i < size; ++i) {
-            c[i] = Op::template apply<ResultType>(a, b[i]);
-        }
+        for (size_t i = 0; i < size; ++i) c[i] = Op::template apply<ResultType>(a, b[i]);
     }
 
     static void constant_vector(A a, const PaddedPODArray<B>& b, PaddedPODArray<ResultType>& c,
                                 PaddedPODArray<UInt8>& null_map) {
         size_t size = b.size();
-        for (size_t i = 0; i < size; ++i) {
+        for (size_t i = 0; i < size; ++i)
             c[i] = Op::template apply<ResultType>(a, b[i], null_map[i]);
-        }
     }
 
     static ResultType constant_constant(A a, B b) { return Op::template apply<ResultType>(a, b); }

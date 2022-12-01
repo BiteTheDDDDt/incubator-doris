@@ -28,8 +28,7 @@ public:
     ~VCaseExpr() = default;
     virtual Status execute(VExprContext* context, vectorized::Block* block,
                            int* result_column_id) override;
-    virtual Status prepare(RuntimeState* state, const RowDescriptor& desc,
-                           VExprContext* context) override;
+    Status prepare(RuntimeState* state, const RowDescriptor& desc, VExprContext* context) override;
     virtual Status open(RuntimeState* state, VExprContext* context,
                         FunctionContext::FunctionStateScope scope) override;
     virtual void close(RuntimeState* state, VExprContext* context,
