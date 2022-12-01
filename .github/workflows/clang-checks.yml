@@ -18,20 +18,18 @@
 
 ---
 name: BE Code Checks
-on:
-  pull_request_target:
-  push:
+
+on: [push, pull_request_target]
 
 jobs:
   clang-format:
     name: "Clang Formatter"
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout ${{ github.ref }} ( ${{ github.event.pull_request.head.sha }} )
-        if: ${{ github.event_name == 'pull_request_target' }}
+      - name: "Checkout ${{ github.ref }} ( ${{ github.sha }} )"
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
           submodules: recursive
 
       - name: Paths filter
@@ -60,10 +58,17 @@ jobs:
     name: "Clang Tidy"
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
+      - name: Checkout ${{ github.ref }} ( ${{ github.sha }} )
+        if: ${{ github.event_name != 'pull_request_target' }}
         uses: actions/checkout@v3
         with:
-          persist-credentials: false
+          submodules: recursive
+
+      - name: Checkout ${{ github.ref }} ( ${{ github.event.pull_request.head.sha }} )
+        if: ${{ github.event_name == 'pull_request_target' }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
 
       - name: Paths Filter
