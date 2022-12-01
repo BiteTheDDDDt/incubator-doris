@@ -250,9 +250,8 @@ struct DecimalBinaryOperation {
 
         } else {
             if constexpr (OpTraits::is_division && IsDecimalNumber<B>) {
-                for (size_t i = 0; i < size; ++i) {
-                    c[i] = apply_scaled_div(a[i], b[i], null_map[i]);
-                }
+                for (size_t i = 0; i < size; ++i) c[i] = apply_scaled_div(a[i], b[i], null_map[i]);
+
                 return;
             }
         }
