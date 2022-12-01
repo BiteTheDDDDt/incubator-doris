@@ -105,9 +105,7 @@ struct BinaryOperationImplBase {
 
     static void vector_constant(const PaddedPODArray<A>& a, B b, PaddedPODArray<ResultType>& c) {
         size_t size = a.size();
-        for (size_t i = 0; i < size; ++i) {
-            c[i] = Op::template apply<ResultType>(a[i], b);
-        }
+        for (size_t i = 0; i < size; ++i) c[i] = Op::template apply<ResultType>(a[i], b);
     }
 
     static void vector_constant(const PaddedPODArray<A>& a, B b, PaddedPODArray<ResultType>& c,
@@ -603,7 +601,7 @@ struct ConstOrVectorAdapter {
 
 private:
     static ColumnPtr constant_constant(ColumnPtr column_left, ColumnPtr column_right,
-                                       const LeftDataType& type_left,
+                                       const LeftDataType& /*type_left*/,
                                        const RightDataType& type_right, DataTypePtr res_data_type) {
         auto column_left_ptr = check_and_get_column<ColumnConst>(column_left);
         auto column_right_ptr = check_and_get_column<ColumnConst>(column_right);
