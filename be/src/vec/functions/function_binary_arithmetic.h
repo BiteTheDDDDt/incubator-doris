@@ -246,9 +246,8 @@ struct DecimalBinaryOperation {
         size_t size = a.size();
         if constexpr (IsDecimalV2<B> || IsDecimalV2<A>) {
             /// default: use it if no return before
-            for (size_t i = 0; i < size; ++i) {
-                c[i] = apply(a[i], b[i], null_map[i]);
-            }
+            for (size_t i = 0; i < size; ++i) c[i] = apply(a[i], b[i], null_map[i]);
+
         } else {
             if constexpr (OpTraits::is_division && IsDecimalNumber<B>) {
                 for (size_t i = 0; i < size; ++i) {
