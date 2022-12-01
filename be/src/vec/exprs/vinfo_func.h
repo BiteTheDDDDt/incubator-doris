@@ -30,8 +30,8 @@ class TExprNode;
 namespace vectorized {
 class VInfoFunc : public VExpr {
 public:
-    VInfoFunc(const TExprNode& node);
     virtual ~VInfoFunc() {}
+    VInfoFunc(const TExprNode& node);
 
     virtual VExpr* clone(doris::ObjectPool* pool) const override {
         return pool->add(new VInfoFunc(*this));
