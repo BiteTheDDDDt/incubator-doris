@@ -36,11 +36,12 @@ namespace doris {
 class ThriftServer {
 public:
     // An opaque identifier for the current session, which identifies a client connection.
-    typedef std::string SessionKey;
+    using SessionKey = std::string;
 
     // Interface class for receiving session creation / termination events.
     class SessionHandlerIf {
     public:
+        virtual ~SessionHandlerIf() = default;
         // Called when a session is established (when a client connects).
         virtual void session_start(const SessionKey& session_key) = 0;
 
@@ -72,7 +73,7 @@ public:
                  int num_worker_threads = DEFAULT_WORKER_THREADS,
                  ServerType server_type = THREADED);
 
-    ~ThriftServer() {}
+    ~ThriftServer() = default;
 
     int port() const { return _port; }
 
@@ -131,7 +132,7 @@ private:
 
     // Map of active session keys to shared_ptr containing that key; when a key is
     // removed it is automatically freed.
-    typedef std::unordered_map<SessionKey*, std::shared_ptr<SessionKey>> SessionKeySet;
+    using SessionKeySet = std::unordered_map<SessionKey*, std::shared_ptr<SessionKey>>;
     SessionKeySet _session_keys;
 
     // Helper class which monitors starting servers. Needs access to internal members, and

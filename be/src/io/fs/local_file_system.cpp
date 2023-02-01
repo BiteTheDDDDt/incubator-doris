@@ -17,6 +17,8 @@
 
 #include "io/fs/local_file_system.h"
 
+#include <fcntl.h>
+
 #include "io/fs/file_system.h"
 #include "io/fs/local_file_reader.h"
 #include "io/fs/local_file_writer.h"

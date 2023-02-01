@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include "io/cache/block/block_file_cache.h"
+#include <cstdint>
+#include <string>
 
 namespace doris {
 namespace io {
@@ -36,6 +37,7 @@ FileCachePolicy cache_type_from_string(const std::string& type);
 // The dervied class should implement get_cache_path() method
 class CachePathPolicy {
 public:
+    virtual ~CachePathPolicy() = default;
     // path: the path of file which will be cached
     // return value: the cache path of the given file.
     virtual std::string get_cache_path(const std::string& path) const { return ""; }

@@ -17,19 +17,14 @@
 
 #include "olap/task/engine_publish_version_task.h"
 
-#include <util/defer_op.h>
-
 #include <map>
 
-#include "olap/data_dir.h"
-#include "olap/rowset/rowset_meta_manager.h"
-#include "olap/tablet_manager.h"
+#include "olap/storage_engine.h"
+#include "util/defer_op.h"
 
 namespace doris {
 
 using namespace ErrorCode;
-
-using std::map;
 
 EnginePublishVersionTask::EnginePublishVersionTask(TPublishVersionRequest& publish_version_req,
                                                    std::vector<TTabletId>* error_tablet_ids,
@@ -78,7 +73,7 @@ Status EnginePublishVersionTask::finish() {
             continue;
         }
 
-        map<TabletInfo, RowsetSharedPtr> tablet_related_rs;
+        std::map<TabletInfo, RowsetSharedPtr> tablet_related_rs;
         StorageEngine::instance()->txn_manager()->get_txn_related_tablets(
                 transaction_id, partition_id, &tablet_related_rs);
 

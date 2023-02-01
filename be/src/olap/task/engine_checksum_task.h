@@ -15,12 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef DORIS_BE_SRC_OLAP_TASK_ENGINE_CHECKSUM_TASK_H
-#define DORIS_BE_SRC_OLAP_TASK_ENGINE_CHECKSUM_TASK_H
+#pragma once
 
-#include "gen_cpp/AgentService_types.h"
-#include "olap/olap_define.h"
 #include "olap/task/engine_task.h"
+#include "runtime/memory/mem_tracker_limiter.h"
 
 namespace doris {
 
@@ -28,18 +26,17 @@ namespace doris {
 // add "Engine" as task prefix to prevent duplicate name with agent task
 class EngineChecksumTask : public EngineTask {
 public:
-    virtual Status execute();
+     Status execute() override;
 
-public:
+
     EngineChecksumTask(TTabletId tablet_id, TSchemaHash schema_hash, TVersion version,
                        uint32_t* checksum);
 
-    ~EngineChecksumTask() {}
+    ~EngineChecksumTask() override = default;
 
 private:
     Status _compute_checksum();
 
-private:
     TTabletId _tablet_id;
     TSchemaHash _schema_hash;
     TVersion _version;
@@ -48,4 +45,3 @@ private:
 }; // EngineTask
 
 } // namespace doris
-#endif //DORIS_BE_SRC_OLAP_TASK_ENGINE_CHECKSUM_TASK_H

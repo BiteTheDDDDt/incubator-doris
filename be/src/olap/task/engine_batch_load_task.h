@@ -15,8 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef DORIS_BE_SRC_OLAP_TASK_ENGINE_BATCH_LOAD_TASK_H
-#define DORIS_BE_SRC_OLAP_TASK_ENGINE_BATCH_LOAD_TASK_H
+#pragma once
 
 #include <utility>
 #include <vector>
@@ -24,9 +23,8 @@
 #include "common/status.h"
 #include "gen_cpp/AgentService_types.h"
 #include "gen_cpp/MasterService_types.h"
-#include "olap/olap_common.h"
-#include "olap/olap_define.h"
 #include "olap/task/engine_task.h"
+#include "runtime/memory/mem_tracker_limiter.h"
 
 namespace doris {
 
@@ -38,9 +36,9 @@ class StorageEngine;
 class EngineBatchLoadTask : public EngineTask {
 public:
     EngineBatchLoadTask(TPushReq& push_req, std::vector<TTabletInfo>* tablet_infos);
-    virtual ~EngineBatchLoadTask();
+    ~EngineBatchLoadTask() override;
 
-    virtual Status execute();
+    Status execute() override;
 
 private:
     virtual Status _init();
@@ -59,7 +57,7 @@ private:
     // @param [out] tablet_info_vec return tablet last status, which
     //              include version info, row count, data size, etc
     // @return OK if submit delete_data success
-    virtual Status _delete_data(const TPushReq& request, vector<TTabletInfo>* tablet_info_vec);
+    virtual Status _delete_data(const TPushReq& request, std::vector<TTabletInfo>* tablet_info_vec);
 
     Status _get_tmp_file_dir(const std::string& root_path, std::string* local_path);
     Status _push(const TPushReq& request, std::vector<TTabletInfo>* tablet_info_vec);
@@ -73,4 +71,3 @@ private:
     std::shared_ptr<MemTrackerLimiter> _mem_tracker;
 }; // class EngineBatchLoadTask
 } // namespace doris
-#endif // DORIS_BE_SRC_OLAP_TASK_ENGINE_BATCH_LOAD_TASK_H

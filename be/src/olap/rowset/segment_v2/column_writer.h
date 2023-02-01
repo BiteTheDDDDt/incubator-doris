@@ -21,12 +21,10 @@
 
 #include "common/status.h"         // for Status
 #include "gen_cpp/segment_v2.pb.h" // for EncodingTypePB
-#include "olap/inverted_index_parser.h"
 #include "olap/rowset/segment_v2/common.h"
-#include "olap/rowset/segment_v2/page_pointer.h" // for PagePointer
-#include "olap/tablet_schema.h"                  // for TabletColumn
-#include "util/bitmap.h"                         // for BitmapChange
-#include "util/slice.h"                          // for OwnedSlice
+#include "olap/tablet_schema.h" // for TabletColumn
+#include "util/bitmap.h"        // for BitmapChange
+#include "util/slice.h"         // for OwnedSlice
 
 namespace doris {
 
@@ -154,6 +152,7 @@ private:
 
 class FlushPageCallback {
 public:
+    virtual ~FlushPageCallback() = default;
     virtual Status put_extra_info_in_page(DataPageFooterPB* footer) { return Status::OK(); }
 };
 
@@ -244,7 +243,6 @@ private:
 
     Status _write_data_page(Page* page);
 
-private:
     io::FileWriter* _file_writer = nullptr;
     // total size of data page list
     uint64_t _data_size;
@@ -312,7 +310,6 @@ private:
     Status write_null_column(size_t num_rows, bool is_null); // 写入num_rows个null标记
     bool has_empty_items() const { return _item_writer->get_next_rowid() == 0; }
 
-private:
     std::unique_ptr<ScalarColumnWriter> _offset_writer;
     std::unique_ptr<ScalarColumnWriter> _null_writer;
     std::unique_ptr<ColumnWriter> _item_writer;

@@ -15,11 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef DORIS_BE_SRC_OLAP_TASK_ENGINE_PUBLISH_VERSION_TASK_H
-#define DORIS_BE_SRC_OLAP_TASK_ENGINE_PUBLISH_VERSION_TASK_H
+#pragma once
 
 #include "gen_cpp/AgentService_types.h"
-#include "olap/olap_define.h"
+#include "olap/tablet.h"
 #include "olap/task/engine_task.h"
 
 namespace doris {
@@ -31,8 +30,7 @@ public:
                          RowsetSharedPtr rowset, int64_t partition_id, int64_t transaction_id,
                          Version version, const TabletInfo& tablet_info,
                          std::atomic<int64_t>* total_task_num);
-    ~TabletPublishTxnTask() {}
-
+    ~TabletPublishTxnTask() = default;
     void handle();
 
 private:
@@ -53,9 +51,9 @@ public:
     EnginePublishVersionTask(TPublishVersionRequest& publish_version_req,
                              vector<TTabletId>* error_tablet_ids,
                              std::vector<TTabletId>* succ_tablet_ids = nullptr);
-    ~EnginePublishVersionTask() {}
+    ~EnginePublishVersionTask() override = default;
 
-    virtual Status finish() override;
+    Status finish() override;
 
     void add_error_tablet_id(int64_t tablet_id);
     void add_succ_tablet_id(int64_t tablet_id);
@@ -74,5 +72,3 @@ private:
 };
 
 } // namespace doris
-
-#endif // DORIS_BE_SRC_OLAP_TASK_ENGINE_PUBLISH_VERSION_TASK_H

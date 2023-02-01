@@ -20,7 +20,7 @@
 #include <ctime>
 
 #include "olap/snapshot_manager.h"
-#include "olap/tablet_meta_manager.h"
+#include "olap/storage_engine.h"
 
 namespace doris {
 

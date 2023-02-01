@@ -18,8 +18,8 @@
 #pragma once
 
 #include "gen_cpp/AgentService_types.h"
-#include "olap/olap_define.h"
 #include "olap/task/engine_task.h"
+#include "runtime/memory/mem_tracker_limiter.h"
 
 namespace doris {
 
@@ -29,9 +29,8 @@ class EngineAlterTabletTask : public EngineTask {
 public:
     Status execute() override;
 
-public:
     EngineAlterTabletTask(const TAlterTabletReqV2& alter_tablet_request);
-    ~EngineAlterTabletTask() = default;
+    ~EngineAlterTabletTask() override = default;
 
 private:
     const TAlterTabletReqV2& _alter_tablet_req;

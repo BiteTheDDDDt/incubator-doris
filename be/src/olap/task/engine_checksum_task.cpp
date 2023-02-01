@@ -17,6 +17,7 @@
 
 #include "olap/task/engine_checksum_task.h"
 
+#include "olap/storage_engine.h"
 #include "runtime/thread_context.h"
 #include "vec/olap/block_reader.h"
 

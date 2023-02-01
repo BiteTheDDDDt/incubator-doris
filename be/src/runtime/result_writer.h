@@ -18,7 +18,6 @@
 #pragma once
 
 #include "common/status.h"
-#include "gen_cpp/PlanNodes_types.h"
 
 namespace doris {
 
@@ -33,9 +32,9 @@ class Block;
 // abstract class of the result writer
 class ResultWriter {
 public:
-    ResultWriter() {}
+    ResultWriter() = default;
     ResultWriter(bool output_object_data) : _output_object_data(output_object_data) {}
-    ~ResultWriter() {}
+    virtual ~ResultWriter() = default;
 
     virtual Status init(RuntimeState* state) = 0;
 
@@ -58,8 +57,8 @@ public:
 protected:
     int64_t _written_rows = 0; // number of rows written
     bool _output_object_data = false;
-    std::string _header_type = "";
-    std::string _header = "";
+    std::string _header_type;
+    std::string _header;
 };
 
 } // namespace doris

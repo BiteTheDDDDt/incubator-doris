@@ -30,15 +30,11 @@
 #include "olap/rowset/rowset.h"
 #include "olap/rowset/rowset_factory.h"
 #include "olap/snapshot_manager.h"
+#include "olap/storage_engine.h"
 #include "runtime/client_cache.h"
 #include "runtime/thread_context.h"
 #include "util/defer_op.h"
 #include "util/thrift_rpc_helper.h"
-
-using std::set;
-using std::stringstream;
-using strings::Split;
-using strings::SkipWhitespace;
 
 namespace doris {
 using namespace ErrorCode;

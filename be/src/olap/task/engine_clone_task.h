@@ -15,15 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#ifndef DORIS_BE_SRC_OLAP_TASK_ENGINE_CLONE_TASK_H
-#define DORIS_BE_SRC_OLAP_TASK_ENGINE_CLONE_TASK_H
+#pragma once
 
-#include "agent/utils.h"
 #include "common/status.h"
 #include "gen_cpp/AgentService_types.h"
-#include "gen_cpp/HeartbeatService.h"
 #include "gen_cpp/MasterService_types.h"
-#include "olap/olap_define.h"
+#include "olap/tablet.h"
 #include "olap/task/engine_task.h"
 
 namespace doris {
@@ -32,12 +29,11 @@ namespace doris {
 // add "Engine" as task prefix to prevent duplicate name with agent task
 class EngineCloneTask : public EngineTask {
 public:
-    virtual Status execute();
+    Status execute() override;
 
-public:
     EngineCloneTask(const TCloneReq& clone_req, const TMasterInfo& master_info, int64_t signature,
-                    vector<TTabletInfo>* tablet_infos);
-    ~EngineCloneTask() {}
+                    std::vector<TTabletInfo>* tablet_infos);
+    ~EngineCloneTask() override = default;
 
 private:
     Status _do_clone();
@@ -68,9 +64,8 @@ private:
 
     Status _release_snapshot(const std::string& ip, int port, const std::string& snapshot_path);
 
-private:
     const TCloneReq& _clone_req;
-    vector<TTabletInfo>* _tablet_infos;
+    std::vector<TTabletInfo>* _tablet_infos;
     int64_t _signature;
     const TMasterInfo& _master_info;
     int64_t _copy_size;
@@ -79,4 +74,3 @@ private:
 }; // EngineTask
 
 } // namespace doris
-#endif //DORIS_BE_SRC_OLAP_TASK_ENGINE_CLONE_TASK_H
