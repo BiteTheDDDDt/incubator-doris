@@ -41,7 +41,7 @@ related functions:
       This function is an aggregation function, which is used to aggregate the intermediate results of different quantile calculations. The result returned by this function is still QUANTILE_STATE
 
     
-    TO_QUANTILE_STATE(INT/FLOAT/DOUBLE raw_data [,FLOAT compression]):
+    TO_QUANTILE_STATE(DOUBLE raw_data [,FLOAT compression]):
        
        This function converts a numeric type to a QUANTILE_STATE type
        The compression parameter is optional and can be set in the range [2048, 10000]. 
