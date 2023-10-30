@@ -290,6 +290,8 @@ public:
 
     std::vector<uint8_t>& get_visited() { return visited; }
 
+    size_t size() const { return next.size(); }
+
 private:
     auto _find_batch_right_semi_anti(const Key* __restrict keys,
                                      const size_t* __restrict bucket_nums, int probe_idx,
