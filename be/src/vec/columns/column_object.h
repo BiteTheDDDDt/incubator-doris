@@ -264,7 +264,7 @@ public:
         // distinguish from num_of_defaults_in_prefix when data is not empty
         size_t current_num_of_defaults = 0;
     };
-    using Subcolumns = SubcolumnsTree<Subcolumn>;
+    using Subcolumns = SubcolumnsTree<Subcolumn, false>;
 
 private:
     /// If true then all subcolumns are nullable.
