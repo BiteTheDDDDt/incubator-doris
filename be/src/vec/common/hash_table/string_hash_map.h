@@ -59,6 +59,28 @@ struct StringHashMapCell<StringKey16, TMapped>
 };
 
 template <typename TMapped>
+struct StringHashMapCell<StringKey32, TMapped>
+        : public HashMapCell<StringKey32, TMapped, StringHashTableHash, HashTableNoState> {
+    using Base = HashMapCell<StringKey32, TMapped, StringHashTableHash, HashTableNoState>;
+    using value_type = typename Base::value_type;
+    using Base::Base;
+    static constexpr bool need_zero_value_storage = false;
+    bool is_zero(const HashTableNoState& state) const { return is_zero(this->value.first, state); }
+
+    // Zero means unoccupied cells in hash table. Use key with last word = 0 as
+    // zero keys, because such keys are unrepresentable (no way to encode length).
+    static bool is_zero(const StringKey32& key, const HashTableNoState&) {
+        return key.items[3] == 0;
+    }
+    void set_zero() { this->value.first.items[3] = 0; }
+
+    // external
+    const doris::StringRef get_key() const { return to_string_ref(this->value.first); } /// NOLINT
+    // internal
+    static const StringKey32& get_key(const value_type& value_) { return value_.first; }
+};
+
+template <typename TMapped>
 struct StringHashMapCell<doris::StringRef, TMapped>
         : public HashMapCellWithSavedHash<doris::StringRef, TMapped, StringHashTableHash,
                                           HashTableNoState> {
@@ -103,6 +125,9 @@ struct StringHashMapSubMaps {
     using T4 = HashMapTable<StringHashMapSubKeys::T4,
                             StringHashMapCell<StringHashMapSubKeys::T4, TMapped>,
                             StringHashTableHash, StringHashTableGrower<>, Allocator>;
+    using T5 = HashMapTable<StringHashMapSubKeys::T5,
+                            StringHashMapCell<StringHashMapSubKeys::T5, TMapped>,
+                            StringHashTableHash, StringHashTableGrower<>, Allocator>;
     using Ts = HashMapTable<doris::StringRef, StringHashMapCell<doris::StringRef, TMapped>,
                             StringHashTableHash, StringHashTableGrower<>, Allocator>;
 };
@@ -144,6 +169,9 @@ public:
             func(v.get_second());
         }
         for (auto& v : this->m4) {
+            func(v.get_second());
+        }
+        for (auto& v : this->m5) {
             func(v.get_second());
         }
         for (auto& v : this->ms) {

@@ -21,9 +21,7 @@
 #pragma once
 
 #include <new>
-#include <variant>
 
-#include "vec/common/hash_table/hash.h"
 #include "vec/common/hash_table/hash_table.h"
 #include "vec/common/memcpy_small.h"
 
@@ -31,12 +29,13 @@ using StringKey2 = doris::vectorized::UInt16;
 using StringKey4 = doris::vectorized::UInt32;
 using StringKey8 = doris::vectorized::UInt64;
 using StringKey16 = doris::vectorized::UInt128;
-
+using StringKey32 = doris::vectorized::UInt256;
 struct StringHashMapSubKeys {
     using T1 = StringKey2;
     using T2 = StringKey4;
     using T3 = StringKey8;
     using T4 = StringKey16;
+    using T5 = StringKey32;
 };
 
 template <typename StringKey>
@@ -54,7 +53,13 @@ inline doris::StringRef ALWAYS_INLINE to_string_ref(const T& n) {
 }
 inline doris::StringRef ALWAYS_INLINE to_string_ref(const StringKey16& n) {
     assert(n.items[1] != 0);
-    return {reinterpret_cast<const char*>(&n), 16UL - (__builtin_clzll(n.items[1]) >> 3)};
+    return {reinterpret_cast<const char*>(&n),
+            sizeof(StringKey16) - (__builtin_clzll(n.items[1]) >> 3)};
+}
+inline doris::StringRef ALWAYS_INLINE to_string_ref(const StringKey32& n) {
+    assert(n.items[3] != 0);
+    return {reinterpret_cast<const char*>(&n),
+            sizeof(StringKey32) - (__builtin_clzll(n.items[3]) >> 3)};
 }
 
 struct StringHashTableHash {
@@ -69,6 +74,14 @@ struct StringHashTableHash {
         size_t res = -1ULL;
         res = _mm_crc32_u64(res, key.low());
         res = _mm_crc32_u64(res, key.high());
+        return res;
+    }
+    size_t ALWAYS_INLINE operator()(StringKey32 key) const {
+        size_t res = -1ULL;
+        res = _mm_crc32_u64(res, key.items[0]);
+        res = _mm_crc32_u64(res, key.items[1]);
+        res = _mm_crc32_u64(res, key.items[2]);
+        res = _mm_crc32_u64(res, key.items[3]);
         return res;
     }
 #else
@@ -88,6 +101,8 @@ struct StringHashTableHash {
             return StringHashTableHash()(to_string_key<StringHashMapSubKeys::T3>(key));
         } else if (key.size <= sizeof(StringHashMapSubKeys::T4)) {
             return StringHashTableHash()(to_string_key<StringHashMapSubKeys::T4>(key));
+        } else if (key.size <= sizeof(StringHashMapSubKeys::T5)) {
+            return StringHashTableHash()(to_string_key<StringHashMapSubKeys::T5>(key));
         }
         return doris::StringRefHash()(key);
     }
@@ -227,6 +242,7 @@ protected:
     using T2 = typename SubMaps::T2;
     using T3 = typename SubMaps::T3;
     using T4 = typename SubMaps::T4;
+    using T5 = typename SubMaps::T5;
 
     // Long strings are stored as doris::StringRef along with saved hash
     using Ts = typename SubMaps::Ts;
@@ -237,6 +253,7 @@ protected:
     T2 m2;
     T3 m3;
     T4 m4;
+    T5 m5;
     Ts ms;
 
     using Cell = typename Ts::cell_type;
@@ -251,7 +268,8 @@ protected:
         typename T2::iterator iterator2;
         typename T3::iterator iterator3;
         typename T4::iterator iterator4;
-        typename Ts::iterator iterator5;
+        typename T5::iterator iterator5;
+        typename Ts::iterator iterator6;
 
         typename Ts::cell_type cell;
 
@@ -261,8 +279,8 @@ protected:
         iterator_base() = default;
         iterator_base(Container* container_, bool end = false) : container(container_) {
             if (end) {
-                sub_table_index = 5;
-                iterator5 = container->ms.end();
+                sub_table_index = 6;
+                iterator6 = container->ms.end();
             } else {
                 sub_table_index = 0;
                 if (container->m0.size() == 0) {
@@ -299,7 +317,14 @@ protected:
                     return;
                 }
 
-                iterator5 = container->ms.begin();
+                iterator5 = container->m5.begin();
+                if (iterator5 == container->m5.end()) {
+                    sub_table_index++;
+                } else {
+                    return;
+                }
+
+                iterator6 = container->ms.begin();
             }
         }
 
@@ -325,6 +350,9 @@ protected:
             }
             case 5: {
                 return iterator5 == rhs.iterator5;
+            }
+            case 6: {
+                return iterator6 == rhs.iterator6;
             }
             }
             throw doris::Exception(doris::Status::FatalError("__builtin_unreachable"));
@@ -369,6 +397,13 @@ protected:
             }
             case 5: {
                 ++iterator5;
+                if (iterator5 == container->m5.end()) {
+                    need_switch_to_next = true;
+                }
+                break;
+            }
+            case 6: {
+                ++iterator6;
                 break;
             }
             }
@@ -406,7 +441,14 @@ protected:
                     break;
                 }
                 case 5: {
-                    iterator5 = container->ms.begin();
+                    iterator5 = container->m5.begin();
+                    if (iterator5 == container->m5.end()) {
+                        need_switch_to_next = true;
+                    }
+                    break;
+                }
+                case 6: {
+                    iterator6 = container->ms.begin();
                     break;
                 }
                 }
@@ -441,6 +483,10 @@ protected:
                 const_cast<iterator_base*>(this)->cell = *iterator5;
                 break;
             }
+            case 6: {
+                const_cast<iterator_base*>(this)->cell = *iterator6;
+                break;
+            }
             }
             return cell;
         }
@@ -466,6 +512,9 @@ protected:
                 return iterator4->get_hash(container->m4);
             }
             case 5: {
+                return iterator5->get_hash(container->m5);
+            }
+            case 6: {
                 return iterator5->get_hash(container->ms);
             }
             }
@@ -502,11 +551,12 @@ public:
     StringHashTable() = default;
 
     explicit StringHashTable(size_t reserve_for_num_elements)
-            : m1 {reserve_for_num_elements / 5},
-              m2 {reserve_for_num_elements / 5},
-              m3 {reserve_for_num_elements / 5},
-              m4 {reserve_for_num_elements / 5},
-              ms {reserve_for_num_elements / 5} {}
+            : m1 {reserve_for_num_elements / 6},
+              m2 {reserve_for_num_elements / 6},
+              m3 {reserve_for_num_elements / 6},
+              m4 {reserve_for_num_elements / 6},
+              m5 {reserve_for_num_elements / 6},
+              ms {reserve_for_num_elements / 6} {}
 
     ~StringHashTable() = default;
 
@@ -547,6 +597,9 @@ public:
         }
         if (sz <= sizeof(StringHashMapSubKeys::T4)) {
             return func(self.m4, to_string_key<StringHashMapSubKeys::T4>(key), key, hash_value);
+        }
+        if (sz <= sizeof(StringHashMapSubKeys::T5)) {
+            return func(self.m5, to_string_key<StringHashMapSubKeys::T5>(key), key, hash_value);
         }
 
         return func(self.ms, std::forward<KeyHolder>(key), key, hash_value);
@@ -610,6 +663,8 @@ public:
             m3.template prefetch<read>(hash_value);
         } else if (key.size <= sizeof(StringHashMapSubKeys::T4)) {
             m4.template prefetch<read>(hash_value);
+        } else if (key.size <= sizeof(StringHashMapSubKeys::T5)) {
+            m5.template prefetch<read>(hash_value);
         } else {
             ms.template prefetch<read>(hash_value);
         }
@@ -640,17 +695,19 @@ public:
     }
 
     size_t size() const {
-        return m0.size() + m1.size() + m2.size() + m3.size() + m4.size() + ms.size();
+        return m0.size() + m1.size() + m2.size() + m3.size() + m4.size() + m5.size() + ms.size();
     }
 
     bool empty() const {
-        return m0.empty() && m1.empty() && m2.empty() && m3.empty() && m4.empty() && ms.empty();
+        return m0.empty() && m1.empty() && m2.empty() && m3.empty() && m4.empty() && m5.empty() &&
+               ms.empty();
     }
 
     size_t get_buffer_size_in_bytes() const {
         return m0.get_buffer_size_in_bytes() + m1.get_buffer_size_in_bytes() +
                m2.get_buffer_size_in_bytes() + m3.get_buffer_size_in_bytes() +
-               m4.get_buffer_size_in_bytes() + ms.get_buffer_size_in_bytes();
+               m4.get_buffer_size_in_bytes() + m5.get_buffer_size_in_bytes() +
+               ms.get_buffer_size_in_bytes();
     }
 
     class iterator : public iterator_base<iterator, false> {
@@ -676,7 +733,7 @@ public:
     bool add_elem_size_overflow(size_t add_size) const {
         return m1.add_elem_size_overflow(add_size) || m2.add_elem_size_overflow(add_size) ||
                m3.add_elem_size_overflow(add_size) || m4.add_elem_size_overflow(add_size) ||
-               ms.add_elem_size_overflow(add_size);
+               m5.add_elem_size_overflow(add_size) || ms.add_elem_size_overflow(add_size);
     }
 
     size_t estimate_memory(size_t num_elem) const {
@@ -696,6 +753,10 @@ public:
 
         if (m4.add_elem_size_overflow(num_elem)) {
             estimate_size = std::max(estimate_size, m4.estimate_memory(num_elem));
+        }
+
+        if (m5.add_elem_size_overflow(num_elem)) {
+            estimate_size = std::max(estimate_size, m5.estimate_memory(num_elem));
         }
 
         if (ms.add_elem_size_overflow(num_elem)) {
