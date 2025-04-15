@@ -73,18 +73,16 @@ public:
 
     void set_to_min_max(bool max) { value = max ? type_limit<T>::max() : type_limit<T>::min(); }
 
-    void change_if_less(const IColumn& column, size_t row_num) {
+    void change_if(const IColumn& column, size_t row_num, bool less) {
         has_value = true;
-        value = std::min(assert_cast<const ColumnVector<T>&, TypeCheckOnRelease::DISABLE>(column)
-                                 .get_data()[row_num],
-                         value);
-    }
-
-    void change_if_greater(const IColumn& column, size_t row_num) {
-        has_value = true;
-        value = std::max(assert_cast<const ColumnVector<T>&, TypeCheckOnRelease::DISABLE>(column)
-                                 .get_data()[row_num],
-                         value);
+        value = less ? std::min(assert_cast<const ColumnVector<T>&, TypeCheckOnRelease::DISABLE>(
+                                        column)
+                                        .get_data()[row_num],
+                                value)
+                     : std::max(assert_cast<const ColumnVector<T>&, TypeCheckOnRelease::DISABLE>(
+                                        column)
+                                        .get_data()[row_num],
+                                value);
     }
 
     void insert_result_into(IColumn& to) const {
@@ -197,18 +195,16 @@ public:
 
     void set_to_min_max(bool max) { value = max ? type_limit<T>::max() : type_limit<T>::min(); }
 
-    void change_if_less(const IColumn& column, size_t row_num) {
+    void change_if(const IColumn& column, size_t row_num, bool less) {
         has_value = true;
-        value = std::min(assert_cast<const ColumnDecimal<T>&, TypeCheckOnRelease::DISABLE>(column)
-                                 .get_data()[row_num],
-                         value);
-    }
-
-    void change_if_greater(const IColumn& column, size_t row_num) {
-        has_value = true;
-        value = std::max(assert_cast<const ColumnDecimal<T>&, TypeCheckOnRelease::DISABLE>(column)
-                                 .get_data()[row_num],
-                         value);
+        value = less ? std::min(assert_cast<const ColumnDecimal<T>&, TypeCheckOnRelease::DISABLE>(
+                                        column)
+                                        .get_data()[row_num],
+                                value)
+                     : std::max(assert_cast<const ColumnDecimal<T>&, TypeCheckOnRelease::DISABLE>(
+                                        column)
+                                        .get_data()[row_num],
+                                value);
     }
 
     void insert_result_into(IColumn& to) const {
@@ -480,7 +476,7 @@ struct AggregateFunctionMaxData : public Data {
 
     void change_if_better(const IColumn& column, size_t row_num, Arena*) {
         if constexpr (Data::IsFixedLength) {
-            this->change_if_less(column, row_num);
+            this->change_if(column, row_num, false);
         } else {
             this->change_if_greater(column, row_num, nullptr);
         }
@@ -508,7 +504,7 @@ struct AggregateFunctionMinData : Data {
 
     void change_if_better(const IColumn& column, size_t row_num, Arena*) {
         if constexpr (Data::IsFixedLength) {
-            this->change_if_greater(column, row_num);
+            this->change_if(column, row_num, true);
         } else {
             this->change_if_less(column, row_num, nullptr);
         }
