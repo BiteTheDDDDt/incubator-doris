@@ -28,8 +28,8 @@
 #include <type_traits>
 
 #include "absl/strings/substitute.h"
+#include "common/endian.h"
 #include "common/status.h"
-#include "gutil/endian.h"
 #include "olap/decimal12.h"
 #include "olap/olap_common.h"
 #include "olap/types.h"

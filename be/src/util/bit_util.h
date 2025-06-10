@@ -28,9 +28,8 @@
 #endif
 
 #include "common/compiler_util.h" // IWYU pragma: keep
-#include "gutil/endian.h"
+#include "common/endian.h"
 #include "util/cpu_info.h"
-#include "util/sse_util.hpp"
 
 namespace doris {
 

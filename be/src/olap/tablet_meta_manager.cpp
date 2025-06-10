@@ -30,7 +30,7 @@
 
 #include "common/logging.h"
 #include "common/status.h"
-#include "gutil/endian.h"
+#include "common/endian.h"
 #include "json2pb/json_to_pb.h"
 #include "json2pb/pb_to_json.h"
 #include "olap/data_dir.h"
@@ -229,8 +229,8 @@ std::string TabletMetaManager::encode_delete_bitmap_key(TTabletId tablet_id) {
 void TabletMetaManager::decode_delete_bitmap_key(std::string_view enc_key, TTabletId* tablet_id,
                                                  int64_t* version) {
     DCHECK_EQ(enc_key.size(), 20);
-    *tablet_id = BigEndian::ToHost64(UNALIGNED_LOAD64(enc_key.data() + 4));
-    *version = BigEndian::ToHost64(UNALIGNED_LOAD64(enc_key.data() + 12));
+    *tablet_id = BigEndian::Load64(enc_key.data() + 4);
+    *version = BigEndian::Load64(enc_key.data() + 12);
 }
 
 Status TabletMetaManager::save_delete_bitmap(DataDir* store, TTabletId tablet_id,

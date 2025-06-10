@@ -21,10 +21,9 @@
 #include <cstring>
 #include <vector>
 
-#include "cctz/civil_time.h"
 #include "cctz/time_zone.h"
+#include "common/endian.h"
 #include "exec/olap_common.h"
-#include "gutil/endian.h"
 #include "parquet_common.h"
 #include "util/timezone_utils.h"
 #include "vec/data_types/data_type_decimal.h"

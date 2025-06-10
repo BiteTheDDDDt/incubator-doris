@@ -24,7 +24,6 @@ set(LIBRARY_OUTPUT_PATH "${BUILD_DIR}/src/gutil")
 set(EXECUTABLE_OUTPUT_PATH "${BUILD_DIR}/src/gutil")
 
 SET(SOURCE_FILES
-        hash/city.cc
         ref_counted.cc
         strings/ascii_ctype.cc
         strings/numbers.cc
