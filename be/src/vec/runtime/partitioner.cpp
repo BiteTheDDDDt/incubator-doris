@@ -70,32 +70,20 @@ template <typename ChannelIds>
 Status Crc32HashPartitioner<ChannelIds>::clone(RuntimeState* state,
                                                std::unique_ptr<PartitionerBase>& partitioner) {
     auto* new_partitioner = new Crc32HashPartitioner<ChannelIds>(cast_set<int>(_partition_count));
-
     partitioner.reset(new_partitioner);
-    new_partitioner->_partition_expr_ctxs.resize(_partition_expr_ctxs.size());
-    for (size_t i = 0; i < _partition_expr_ctxs.size(); i++) {
-        RETURN_IF_ERROR(
-                _partition_expr_ctxs[i]->clone(state, new_partitioner->_partition_expr_ctxs[i]));
-    }
-    return Status::OK();
+    return _clone_expr_ctxs(state, new_partitioner->_partition_expr_ctxs);
 }
 
 void Crc32CHashPartitioner::_do_hash(const ColumnPtr& column, uint32_t* __restrict result,
                                      int idx) const {
-    column->update_crc32cs_with_value(result, cast_set<uint32_t>(column->size()), 0);
+    column->update_crc32c_batch(result, nullptr);
 }
 
 Status Crc32CHashPartitioner::clone(RuntimeState* state,
                                     std::unique_ptr<PartitionerBase>& partitioner) {
     auto* new_partitioner = new Crc32CHashPartitioner(cast_set<int>(_partition_count));
-
     partitioner.reset(new_partitioner);
-    new_partitioner->_partition_expr_ctxs.resize(_partition_expr_ctxs.size());
-    for (size_t i = 0; i < _partition_expr_ctxs.size(); i++) {
-        RETURN_IF_ERROR(
-                _partition_expr_ctxs[i]->clone(state, new_partitioner->_partition_expr_ctxs[i]));
-    }
-    return Status::OK();
+    return _clone_expr_ctxs(state, new_partitioner->_partition_expr_ctxs);
 }
 
 template class Crc32HashPartitioner<ShuffleChannelIds>;

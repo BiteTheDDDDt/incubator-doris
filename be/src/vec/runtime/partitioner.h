@@ -97,6 +97,14 @@ protected:
         return Status::OK();
     }
 
+    Status _clone_expr_ctxs(RuntimeState* state, VExprContextSPtrs& new_partition_expr_ctxs) const {
+        new_partition_expr_ctxs.resize(_partition_expr_ctxs.size());
+        for (size_t i = 0; i < _partition_expr_ctxs.size(); i++) {
+            RETURN_IF_ERROR(_partition_expr_ctxs[i]->clone(state, new_partition_expr_ctxs[i]));
+        }
+        return Status::OK();
+    }
+
     virtual void _do_hash(const ColumnPtr& column, uint32_t* __restrict result, int idx) const;
     virtual void _initialize_hash_vals(size_t rows) const {
         _hash_vals.resize(rows);
