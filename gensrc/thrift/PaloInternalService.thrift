@@ -421,6 +421,8 @@ struct TQueryOptions {
   // Parquet page cache session options
   // Whether to enable parquet file page cache on BE for this query
   184: optional bool enable_parquet_file_page_cache = true;
+  185: optional bool enable_aggregate_function_null_v2 = false;
+
   200: optional bool enable_adjust_conjunct_order_by_cost
 
   // For cloud, to control if the content would be written into file cache

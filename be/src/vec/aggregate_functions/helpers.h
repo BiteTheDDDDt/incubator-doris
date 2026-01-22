@@ -22,6 +22,7 @@
 
 #include "vec/aggregate_functions/aggregate_function.h"
 #include "vec/aggregate_functions/aggregate_function_null.h"
+#include "vec/aggregate_functions/aggregate_function_null_v2.h"
 #include "vec/data_types/data_type.h"
 #include "vec/utils/template_helpers.hpp"
 
@@ -83,6 +84,11 @@ struct creator_without_type {
     using NullableT = std::conditional_t<multi_arguments, AggregateFunctionNullVariadicInline<T, f>,
                                          AggregateFunctionNullUnaryInline<T, f>>;
 
+    template <bool multi_arguments, bool f, typename T>
+    using NullableV2T =
+            std::conditional_t<multi_arguments, AggregateFunctionNullVariadicInlineV2<T, f>,
+                               AggregateFunctionNullUnaryInlineV2<T, f>>;
+
     template <typename AggregateFunctionTemplate>
     static AggregateFunctionPtr creator(const std::string& name, const DataTypes& argument_types,
                                         const bool result_is_nullable,
@@ -139,9 +145,15 @@ struct creator_without_type {
         if (have_nullable(argument_types_)) {
             std::visit(
                     [&](auto multi_arguments, auto result_is_nullable) {
-                        result.reset(new NullableT<multi_arguments, result_is_nullable,
-                                                   AggregateFunctionTemplate>(
-                                result.release(), argument_types_, attr.is_window_function));
+                        if (attr.enable_aggregate_function_null_v2) {
+                            result.reset(new NullableV2T<multi_arguments, result_is_nullable,
+                                                          AggregateFunctionTemplate>(
+                                    result.release(), argument_types_, attr.is_window_function));
+                        } else {
+                            result.reset(new NullableT<multi_arguments, result_is_nullable,
+                                                        AggregateFunctionTemplate>(
+                                    result.release(), argument_types_, attr.is_window_function));
+                        }
                     },
                     make_bool_variant(argument_types_.size() > 1),
                     make_bool_variant(result_is_nullable));
@@ -163,11 +175,21 @@ struct creator_without_type {
                 std::forward<TArgs>(args)..., remove_nullable(argument_types_)));
         if (have_nullable(argument_types_)) {
             if (argument_types_.size() > 1) {
-                result.reset(new NullableT<true, false, AggregateFunctionTemplate>(
-                        result.release(), argument_types_, attr.is_window_function));
+                if (attr.enable_aggregate_function_null_v2) {
+                    result.reset(new NullableV2T<true, false, AggregateFunctionTemplate>(
+                            result.release(), argument_types_, attr.is_window_function));
+                } else {
+                    result.reset(new NullableT<true, false, AggregateFunctionTemplate>(
+                            result.release(), argument_types_, attr.is_window_function));
+                }
             } else {
-                result.reset(new NullableT<false, false, AggregateFunctionTemplate>(
-                        result.release(), argument_types_, attr.is_window_function));
+                if (attr.enable_aggregate_function_null_v2) {
+                    result.reset(new NullableV2T<false, false, AggregateFunctionTemplate>(
+                            result.release(), argument_types_, attr.is_window_function));
+                } else {
+                    result.reset(new NullableT<false, false, AggregateFunctionTemplate>(
+                            result.release(), argument_types_, attr.is_window_function));
+                }
             }
         }
 
@@ -189,10 +211,15 @@ struct creator_without_type {
         if (have_nullable(argument_types_)) {
             std::visit(
                     [&](auto result_is_nullable) {
-                        result.reset(
-                                new NullableT<true, result_is_nullable, AggregateFunctionTemplate>(
-                                        result.release(), argument_types_,
-                                        attr.is_window_function));
+                        if (attr.enable_aggregate_function_null_v2) {
+                            result.reset(
+                                    new NullableV2T<true, result_is_nullable, AggregateFunctionTemplate>(
+                                            result.release(), argument_types_, attr.is_window_function));
+                        } else {
+                            result.reset(
+                                    new NullableT<true, result_is_nullable, AggregateFunctionTemplate>(
+                                            result.release(), argument_types_, attr.is_window_function));
+                        }
                     },
                     make_bool_variant(result_is_nullable));
         }
@@ -217,8 +244,13 @@ struct creator_without_type {
         std::unique_ptr<IAggregateFunction> result(std::make_unique<AggregateFunctionTemplate>(
                 std::forward<TArgs>(args)..., remove_nullable(argument_types_)));
         if (have_nullable(argument_types_)) {
-            result.reset(new NullableT<true, false, AggregateFunctionTemplate>(
-                    result.release(), argument_types_, attr.is_window_function));
+            if (attr.enable_aggregate_function_null_v2) {
+                result.reset(new NullableV2T<true, false, AggregateFunctionTemplate>(
+                        result.release(), argument_types_, attr.is_window_function));
+            } else {
+                result.reset(new NullableT<true, false, AggregateFunctionTemplate>(
+                        result.release(), argument_types_, attr.is_window_function));
+            }
         }
         CHECK_AGG_FUNCTION_SERIALIZED_TYPE(AggregateFunctionTemplate);
         return AggregateFunctionPtr(result.release());
@@ -238,10 +270,15 @@ struct creator_without_type {
         if (have_nullable(argument_types_)) {
             std::visit(
                     [&](auto result_is_nullable) {
-                        result.reset(
-                                new NullableT<false, result_is_nullable, AggregateFunctionTemplate>(
-                                        result.release(), argument_types_,
-                                        attr.is_window_function));
+                        if (attr.enable_aggregate_function_null_v2) {
+                            result.reset(
+                                    new NullableV2T<false, result_is_nullable, AggregateFunctionTemplate>(
+                                            result.release(), argument_types_, attr.is_window_function));
+                        } else {
+                            result.reset(
+                                    new NullableT<false, result_is_nullable, AggregateFunctionTemplate>(
+                                            result.release(), argument_types_, attr.is_window_function));
+                        }
                     },
                     make_bool_variant(result_is_nullable));
         }
@@ -265,8 +302,13 @@ struct creator_without_type {
         std::unique_ptr<IAggregateFunction> result(std::make_unique<AggregateFunctionTemplate>(
                 std::forward<TArgs>(args)..., remove_nullable(argument_types_)));
         if (have_nullable(argument_types_)) {
-            result.reset(new NullableT<false, false, AggregateFunctionTemplate>(
-                    result.release(), argument_types_, attr.is_window_function));
+            if (attr.enable_aggregate_function_null_v2) {
+                result.reset(new NullableV2T<false, false, AggregateFunctionTemplate>(
+                        result.release(), argument_types_, attr.is_window_function));
+            } else {
+                result.reset(new NullableT<false, false, AggregateFunctionTemplate>(
+                        result.release(), argument_types_, attr.is_window_function));
+            }
         }
         CHECK_AGG_FUNCTION_SERIALIZED_TYPE(AggregateFunctionTemplate);
         return AggregateFunctionPtr(result.release());

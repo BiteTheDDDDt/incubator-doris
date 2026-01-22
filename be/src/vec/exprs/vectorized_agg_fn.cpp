@@ -218,6 +218,8 @@ Status AggFnEvaluator::prepare(RuntimeState* state, const RowDescriptor& desc,
                     {.enable_decimal256 = state->enable_decimal256(),
                      .is_window_function = _is_window_function,
                      .is_foreach = is_foreach,
+                     .enable_aggregate_function_null_v2 =
+                             state->enable_aggregate_function_null_v2(),
                      .column_names = std::move(column_names)});
         } else {
             _function = AggregateFunctionSimpleFactory::instance().get(
@@ -226,6 +228,8 @@ Status AggFnEvaluator::prepare(RuntimeState* state, const RowDescriptor& desc,
                     {.enable_decimal256 = state->enable_decimal256(),
                      .is_window_function = _is_window_function,
                      .is_foreach = is_foreach,
+                     .enable_aggregate_function_null_v2 =
+                             state->enable_aggregate_function_null_v2(),
                      .column_names = std::move(column_names)});
         }
     }

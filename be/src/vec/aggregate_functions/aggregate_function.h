@@ -47,6 +47,7 @@ struct AggregateFunctionAttr {
     bool enable_decimal256 {false};
     bool is_window_function {false};
     bool is_foreach {false};
+    bool enable_aggregate_function_null_v2 {false};
     std::vector<std::string> column_names;
 };
 
