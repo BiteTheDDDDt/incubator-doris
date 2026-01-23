@@ -1432,9 +1432,8 @@ public class SessionVariable implements Serializable, Writable {
             needForward = true)
     private boolean enableParallelScan = true;
 
-    @VariableMgr.VarAttr(name = ENABLE_AGGREGATE_FUNCTION_NULL_V2, fuzzy = true, varType = VariableAnnotation.EXPERIMENTAL,
-            needForward = true)
-    private boolean enableAggregateFunctionNullV2 = false;
+    @VariableMgr.VarAttr(name = ENABLE_AGGREGATE_FUNCTION_NULL_V2, fuzzy = true, needForward = true)
+    private boolean enableAggregateFunctionNullV2 = true;
 
     @VariableMgr.VarAttr(name = OPTIMIZE_INDEX_SCAN_PARALLELISM,
             needForward = true,

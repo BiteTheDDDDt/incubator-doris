@@ -291,13 +291,6 @@ Status AggFnEvaluator::execute_batch_add_selected(Block* block, size_t offset,
     return Status::OK();
 }
 
-Status AggFnEvaluator::streaming_agg_serialize(Block* block, BufferWritable& buf,
-                                               const size_t num_rows, Arena& arena) {
-    RETURN_IF_ERROR(_calc_argument_columns(block));
-    _function->streaming_agg_serialize(_agg_columns.data(), buf, num_rows, arena);
-    return Status::OK();
-}
-
 Status AggFnEvaluator::streaming_agg_serialize_to_column(Block* block, MutableColumnPtr& dst,
                                                          const size_t num_rows, Arena& arena) {
     RETURN_IF_ERROR(_calc_argument_columns(block));

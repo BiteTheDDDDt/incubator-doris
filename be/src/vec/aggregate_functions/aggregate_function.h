@@ -168,9 +168,6 @@ public:
                                                     AggregateDataPtr rhs, const IColumn* column,
                                                     Arena&, const size_t num_rows) const = 0;
 
-    virtual void deserialize_from_column(AggregateDataPtr places, const IColumn& column, Arena&,
-                                         size_t num_rows) const = 0;
-
     /// Deserializes state and merge it with current aggregation function.
     virtual void deserialize_and_merge(AggregateDataPtr __restrict place,
                                        AggregateDataPtr __restrict rhs, BufferReadable& buf,
@@ -180,8 +177,10 @@ public:
                                                          const IColumn& column, size_t begin,
                                                          size_t end, Arena&) const = 0;
 
-    virtual void deserialize_and_merge_from_column(AggregateDataPtr __restrict place,
-                                                   const IColumn& column, Arena&) const = 0;
+    void deserialize_and_merge_from_column(AggregateDataPtr __restrict place, const IColumn& column,
+                                           Arena& arena) const {
+        deserialize_and_merge_from_column_range(place, column, 0, column.size() - 1, arena);
+    }
 
     /// Inserts results into a column.
     // todo: Consider whether this passes a ConstAggregateDataPtr
@@ -219,9 +218,6 @@ public:
                                         AggregateDataPtr place, const IColumn** columns,
                                         Arena& arena, UInt8* use_null_result,
                                         UInt8* could_use_previous_result) const = 0;
-
-    virtual void streaming_agg_serialize(const IColumn** columns, BufferWritable& buf,
-                                         const size_t num_rows, Arena&) const = 0;
 
     virtual void streaming_agg_serialize_to_column(const IColumn** columns, MutableColumnPtr& dst,
                                                    const size_t num_rows, Arena&) const = 0;
@@ -421,8 +417,9 @@ public:
         serialize_vec(places, offset, writer, num_rows);
     }
 
-    void streaming_agg_serialize(const IColumn** columns, BufferWritable& buf,
-                                 const size_t num_rows, Arena& arena) const override {
+    void streaming_agg_serialize_to_column(const IColumn** columns, MutableColumnPtr& dst,
+                                           const size_t num_rows, Arena& arena) const override {
+        VectorBufferWriter buf(assert_cast<ColumnString&>(*dst));
         std::vector<char> place(size_of_data());
         const Derived* derived = assert_cast<const Derived*>(this);
         for (size_t i = 0; i != num_rows; ++i) {
@@ -432,12 +429,6 @@ public:
             derived->serialize(place.data(), buf);
             buf.commit();
         }
-    }
-
-    void streaming_agg_serialize_to_column(const IColumn** columns, MutableColumnPtr& dst,
-                                           const size_t num_rows, Arena& arena) const override {
-        VectorBufferWriter writer(assert_cast<ColumnString&>(*dst));
-        streaming_agg_serialize(columns, writer, num_rows, arena);
     }
 
     void serialize_without_key_to_column(ConstAggregateDataPtr __restrict place,
@@ -518,11 +509,6 @@ public:
         derived->destroy_vec(rhs, num_rows);
     }
 
-    void deserialize_from_column(AggregateDataPtr places, const IColumn& column, Arena& arena,
-                                 size_t num_rows) const override {
-        deserialize_vec(places, assert_cast<const ColumnString*>(&column), arena, num_rows);
-    }
-
     void merge_vec(const AggregateDataPtr* places, size_t offset, ConstAggregateDataPtr rhs,
                    Arena& arena, const size_t num_rows) const override {
         const auto* derived = assert_cast<const Derived*>(this);
@@ -561,14 +547,6 @@ public:
 
             derived->deserialize_and_merge(place, deserialized_place, buffer_reader, arena);
         }
-    }
-
-    void deserialize_and_merge_from_column(AggregateDataPtr __restrict place, const IColumn& column,
-                                           Arena& arena) const override {
-        if (column.empty()) {
-            return;
-        }
-        deserialize_and_merge_from_column_range(place, column, 0, column.size() - 1, arena);
     }
 
     void deserialize_and_merge(AggregateDataPtr __restrict place, AggregateDataPtr __restrict rhs,

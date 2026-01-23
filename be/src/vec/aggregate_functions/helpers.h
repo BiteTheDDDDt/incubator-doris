@@ -67,12 +67,13 @@
                                     decltype(&IAggregateFunctionHelper<                            \
                                              FunctionTemplate>::serialize_without_key_to_column)>, \
                     "need to override serialize_without_key_to_column");                           \
-            static_assert(!std::is_same_v<                                                         \
-                                  decltype(&FunctionTemplate::deserialize_and_merge_from_column),  \
-                                  decltype(&IAggregateFunctionHelper<                              \
-                                           FunctionTemplate>::deserialize_and_merge_from_column)>, \
-                          "need to override "                                                      \
-                          "deserialize_and_merge_from_column");                                    \
+            static_assert(                                                                         \
+                    !std::is_same_v<                                                               \
+                            decltype(&FunctionTemplate::deserialize_and_merge_from_column_range),  \
+                            decltype(&IAggregateFunctionHelper<                                    \
+                                     FunctionTemplate>::deserialize_and_merge_from_column)>,       \
+                    "need to override "                                                            \
+                    "deserialize_and_merge_from_column");                                          \
         }                                                                                          \
     } while (false)
 
@@ -86,7 +87,7 @@ struct creator_without_type {
 
     template <bool multi_arguments, bool f, typename T>
     using NullableV2T =
-            std::conditional_t<multi_arguments, AggregateFunctionNullVariadicInlineV2<T, f>,
+            std::conditional_t<multi_arguments, AggregateFunctionNullVariadicInline<T, f>,
                                AggregateFunctionNullUnaryInlineV2<T, f>>;
 
     template <typename AggregateFunctionTemplate>
@@ -147,11 +148,11 @@ struct creator_without_type {
                     [&](auto multi_arguments, auto result_is_nullable) {
                         if (attr.enable_aggregate_function_null_v2) {
                             result.reset(new NullableV2T<multi_arguments, result_is_nullable,
-                                                          AggregateFunctionTemplate>(
+                                                         AggregateFunctionTemplate>(
                                     result.release(), argument_types_, attr.is_window_function));
                         } else {
                             result.reset(new NullableT<multi_arguments, result_is_nullable,
-                                                        AggregateFunctionTemplate>(
+                                                       AggregateFunctionTemplate>(
                                     result.release(), argument_types_, attr.is_window_function));
                         }
                     },
@@ -212,13 +213,13 @@ struct creator_without_type {
             std::visit(
                     [&](auto result_is_nullable) {
                         if (attr.enable_aggregate_function_null_v2) {
-                            result.reset(
-                                    new NullableV2T<true, result_is_nullable, AggregateFunctionTemplate>(
-                                            result.release(), argument_types_, attr.is_window_function));
+                            result.reset(new NullableV2T<true, result_is_nullable,
+                                                         AggregateFunctionTemplate>(
+                                    result.release(), argument_types_, attr.is_window_function));
                         } else {
-                            result.reset(
-                                    new NullableT<true, result_is_nullable, AggregateFunctionTemplate>(
-                                            result.release(), argument_types_, attr.is_window_function));
+                            result.reset(new NullableT<true, result_is_nullable,
+                                                       AggregateFunctionTemplate>(
+                                    result.release(), argument_types_, attr.is_window_function));
                         }
                     },
                     make_bool_variant(result_is_nullable));
@@ -271,13 +272,13 @@ struct creator_without_type {
             std::visit(
                     [&](auto result_is_nullable) {
                         if (attr.enable_aggregate_function_null_v2) {
-                            result.reset(
-                                    new NullableV2T<false, result_is_nullable, AggregateFunctionTemplate>(
-                                            result.release(), argument_types_, attr.is_window_function));
+                            result.reset(new NullableV2T<false, result_is_nullable,
+                                                         AggregateFunctionTemplate>(
+                                    result.release(), argument_types_, attr.is_window_function));
                         } else {
-                            result.reset(
-                                    new NullableT<false, result_is_nullable, AggregateFunctionTemplate>(
-                                            result.release(), argument_types_, attr.is_window_function));
+                            result.reset(new NullableT<false, result_is_nullable,
+                                                       AggregateFunctionTemplate>(
+                                    result.release(), argument_types_, attr.is_window_function));
                         }
                     },
                     make_bool_variant(result_is_nullable));
