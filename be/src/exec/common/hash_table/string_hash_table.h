@@ -20,12 +20,14 @@
 
 #pragma once
 
+#include <boost/noncopyable.hpp>
 #include <new>
 #include <variant>
 
+#include "common/exception.h"
+#include "common/status.h"
 #include "core/memcpy_small.h"
 #include "exec/common/hash_table/hash.h"
-#include "exec/common/hash_table/hash_table.h"
 
 using StringKey2 = doris::UInt16;
 using StringKey4 = doris::UInt32;
@@ -177,12 +179,6 @@ public:
     size_t size() const { return has_zero() ? 1 : 0; }
     bool empty() const { return !has_zero(); }
     size_t get_buffer_size_in_bytes() const { return sizeof(Cell); }
-};
-
-template <size_t initial_size_degree = 8>
-struct StringHashTableGrower : public HashTableGrowerWithPrecalculation<initial_size_degree> {
-    // Smooth growing for string maps
-    void increase_size() { this->increase_size_degree(1); }
 };
 
 template <typename Mapped>
@@ -415,30 +411,38 @@ protected:
             return static_cast<Derived&>(*this);
         }
 
+        /// Populate the cell from a sub-map iterator.
+        /// Sub-map iterators provide get_key() (returns StringRef) and get_second().
+        template <typename SubIter>
+        void populate_cell_from(const SubIter& it) const {
+            cell.value.first = it.get_key();
+            cell.value.second = it.get_second();
+        }
+
         auto& operator*() const {
             switch (sub_table_index) {
             case 0: {
-                this->cell = *(container->m0.zero_value());
+                cell = *(container->m0.zero_value());
                 break;
             }
             case 1: {
-                this->cell = *iterator1;
+                populate_cell_from(*iterator1);
                 break;
             }
             case 2: {
-                this->cell = *iterator2;
+                populate_cell_from(*iterator2);
                 break;
             }
             case 3: {
-                this->cell = *iterator3;
+                populate_cell_from(*iterator3);
                 break;
             }
             case 4: {
-                this->cell = *iterator4;
+                populate_cell_from(*iterator4);
                 break;
             }
             case 5: {
-                this->cell = *iterator5;
+                populate_cell_from(*iterator5);
                 break;
             }
             }
@@ -448,44 +452,7 @@ protected:
 
         auto get_ptr() const { return &(this->operator*()); }
 
-        size_t get_hash() const {
-            switch (sub_table_index) {
-            case 0: {
-                return container->m0.zero_value()->get_hash(container->m0);
-            }
-            case 1: {
-                return iterator1->get_hash(container->m1);
-            }
-            case 2: {
-                return iterator2->get_hash(container->m2);
-            }
-            case 3: {
-                return iterator3->get_hash(container->m3);
-            }
-            case 4: {
-                return iterator4->get_hash(container->m4);
-            }
-            case 5: {
-                return iterator5->get_hash(container->ms);
-            }
-            }
-        }
-
-        /**
-          * A hack for HashedDictionary.
-          *
-          * The problem: std-like find() returns an iterator, which has to be
-          * compared to end(). On the other hand, HashMap::find() returns
-          * LookupResult, which is compared to nullptr. HashedDictionary has to
-          * support both hash maps with the same code, hence the need for this
-          * hack.
-          *
-          * The proper way would be to remove iterator interface from our
-          * HashMap completely, change all its users to the existing internal
-          * iteration interface, and redefine end() to return LookupResult for
-          * compatibility with std find(). Unfortunately, now is not the time to
-          * do this.
-          */
+        /// Compatibility hack: allow comparing iterator to nullptr (for LookupResult interop).
         operator Cell*() const { return nullptr; }
     };
 
@@ -510,7 +477,12 @@ public:
 
     ~StringHashTable() = default;
 
-    size_t hash(const doris::StringRef& key) { return StringHashTableHash()(key); }
+    size_t hash(const doris::StringRef& key) {
+        // Apply phmap_mix to match what phmap internally computes during rehash.
+        // phmap's HashElement applies phmap_mix(h(key)) when rehashing, so the
+        // precomputed hash passed to lazy_emplace_with_hash/find must also be mixed.
+        return phmap::phmap_mix<sizeof(size_t)>()(StringHashTableHash()(key));
+    }
 
     // Dispatch is written in a way that maximizes the performance:
     // 1. Always memcpy 8 times bytes

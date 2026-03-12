@@ -111,23 +111,26 @@ struct MethodBaseInner {
         }
     }
 
-    template <bool read>
+    template <bool read, bool enable_prefetch = true>
     void prefetch(size_t i) {
+        if constexpr (!enable_prefetch) {
+            return;
+        }
         if (LIKELY(i + HASH_MAP_PREFETCH_DIST < hash_values.size())) {
             hash_table->template prefetch<read>(keys[i + HASH_MAP_PREFETCH_DIST],
                                                 hash_values[i + HASH_MAP_PREFETCH_DIST]);
         }
     }
 
-    template <typename State>
+    template <typename State, bool enable_prefetch = true>
     auto find(State& state, size_t i) {
-        prefetch<true>(i);
+        prefetch<true, enable_prefetch>(i);
         return state.find_key_with_hash(*hash_table, i, keys[i], hash_values[i]);
     }
 
-    template <typename State, typename F, typename FF>
+    template <typename State, typename F, typename FF, bool enable_prefetch = true>
     auto lazy_emplace(State& state, size_t i, F&& creator, FF&& creator_for_null_key) {
-        prefetch<false>(i);
+        prefetch<false, enable_prefetch>(i);
         return state.lazy_emplace_key(*hash_table, i, keys[i], hash_values[i], creator,
                                       creator_for_null_key);
     }
@@ -475,15 +478,16 @@ static constexpr bool group_needs_prefetch = (GroupIdx != 0);
 /// Handles nullable null-key check, prefetch, key conversion, and emplace.
 /// pre_handler(row) is called before each emplace, allowing callers to set per-row state
 /// (e.g., current row index used inside creator lambdas).
-template <int GroupIdx, bool is_nullable, typename Submap, typename HashMethodType, typename State,
-          typename HashMap, typename F, typename FF, typename PreHandler, typename ResultHandler>
+template <int GroupIdx, bool is_nullable, bool enable_prefetch = true, typename Submap,
+          typename HashMethodType, typename State, typename HashMap, typename F, typename FF,
+          typename PreHandler, typename ResultHandler>
 void process_submap_emplace(Submap& submap, const uint32_t* indices, size_t count,
                             HashMethodType& agg_method, State& state, HashMap& hash_table,
                             F&& creator, FF&& creator_for_null_key, PreHandler&& pre_handler,
                             ResultHandler&& result_handler) {
     using Mapped = typename HashMethodType::Mapped;
     for (size_t j = 0; j < count; j++) {
-        if constexpr (group_needs_prefetch<GroupIdx>) {
+        if constexpr (enable_prefetch && group_needs_prefetch<GroupIdx>) {
             if (j + HASH_MAP_PREFETCH_DIST < count) {
                 submap.template prefetch<false>(
                         agg_method.hash_values[indices[j + HASH_MAP_PREFETCH_DIST]]);
@@ -503,7 +507,12 @@ void process_submap_emplace(Submap& submap, const uint32_t* indices, size_t coun
                 continue;
             }
         }
-        const auto& origin = agg_method.keys[row];
+        // Make a non-const copy of origin. This is critical: the creator lambda
+        // passes origin to try_presis_key_and_origin, which checks
+        // std::is_same_v<Origin, StringRef>. If origin were const StringRef&,
+        // perfect forwarding would deduce Origin as const StringRef, causing the
+        // check to fail and key data to NOT be persisted to the arena.
+        auto origin = agg_method.keys[row];
         auto converted_key = convert_key_for_submap<GroupIdx>(origin);
         typename Submap::LookupResult result;
         if constexpr (GroupIdx == 0 || GroupIdx == 5) {
@@ -523,13 +532,14 @@ void process_submap_emplace(Submap& submap, const uint32_t* indices, size_t coun
 
 /// Process one sub-table group for emplace without result_handler (void version).
 /// pre_handler(row) is called before each emplace.
-template <int GroupIdx, bool is_nullable, typename Submap, typename HashMethodType, typename State,
-          typename HashMap, typename F, typename FF, typename PreHandler>
+template <int GroupIdx, bool is_nullable, bool enable_prefetch = true, typename Submap,
+          typename HashMethodType, typename State, typename HashMap, typename F, typename FF,
+          typename PreHandler>
 void process_submap_emplace_void(Submap& submap, const uint32_t* indices, size_t count,
                                  HashMethodType& agg_method, State& state, HashMap& hash_table,
                                  F&& creator, FF&& creator_for_null_key, PreHandler&& pre_handler) {
     for (size_t j = 0; j < count; j++) {
-        if constexpr (group_needs_prefetch<GroupIdx>) {
+        if constexpr (enable_prefetch && group_needs_prefetch<GroupIdx>) {
             if (j + HASH_MAP_PREFETCH_DIST < count) {
                 submap.template prefetch<false>(
                         agg_method.hash_values[indices[j + HASH_MAP_PREFETCH_DIST]]);
@@ -547,7 +557,8 @@ void process_submap_emplace_void(Submap& submap, const uint32_t* indices, size_t
                 continue;
             }
         }
-        const auto& origin = agg_method.keys[row];
+        // Non-const copy — same reasoning as process_submap_emplace above.
+        auto origin = agg_method.keys[row];
         auto converted_key = convert_key_for_submap<GroupIdx>(origin);
         typename Submap::LookupResult result;
         if constexpr (GroupIdx == 0 || GroupIdx == 5) {
@@ -563,15 +574,15 @@ void process_submap_emplace_void(Submap& submap, const uint32_t* indices, size_t
 }
 
 /// Process one sub-table group for find with result_handler.
-template <int GroupIdx, bool is_nullable, typename Submap, typename HashMethodType, typename State,
-          typename HashMap, typename ResultHandler>
+template <int GroupIdx, bool is_nullable, bool enable_prefetch = true, typename Submap,
+          typename HashMethodType, typename State, typename HashMap, typename ResultHandler>
 void process_submap_find(Submap& submap, const uint32_t* indices, size_t count,
                          HashMethodType& agg_method, State& state, HashMap& hash_table,
                          ResultHandler&& result_handler) {
     using Mapped = typename HashMethodType::Mapped;
     using FindResult = typename ColumnsHashing::columns_hashing_impl::FindResultImpl<Mapped>;
     for (size_t j = 0; j < count; j++) {
-        if constexpr (group_needs_prefetch<GroupIdx>) {
+        if constexpr (enable_prefetch && group_needs_prefetch<GroupIdx>) {
             if (j + HASH_MAP_PREFETCH_DIST < count) {
                 submap.template prefetch<true>(
                         agg_method.hash_values[indices[j + HASH_MAP_PREFETCH_DIST]]);
@@ -603,16 +614,13 @@ void process_submap_find(Submap& submap, const uint32_t* indices, size_t count,
     }
 }
 
-/// Batch emplace helper: for StringHashMap, directly accesses sub-tables bypassing dispatch();
-/// for other hash maps, does per-row loop with standard prefetch.
-/// pre_handler(row) is called before each emplace, allowing callers to set per-row state
-/// (e.g., current row index used inside creator lambdas).
-/// result_handler(row_index, mapped) is called after each emplace.
-template <typename HashMethodType, typename State, typename F, typename FF, typename PreHandler,
-          typename ResultHandler>
-void lazy_emplace_batch(HashMethodType& agg_method, State& state, uint32_t num_rows, F&& creator,
-                        FF&& creator_for_null_key, PreHandler&& pre_handler,
-                        ResultHandler&& result_handler) {
+/// Batch emplace implementation with compile-time prefetch control.
+/// When enable_prefetch=false, all prefetch instructions are eliminated by the compiler.
+template <bool enable_prefetch, typename HashMethodType, typename State, typename F, typename FF,
+          typename PreHandler, typename ResultHandler>
+void lazy_emplace_batch_impl(HashMethodType& agg_method, State& state, uint32_t num_rows,
+                             F&& creator, FF&& creator_for_null_key, PreHandler&& pre_handler,
+                             ResultHandler&& result_handler) {
     if constexpr (HashMethodType::is_string_hash_map()) {
         using HashMap = typename HashMethodType::HashMapType;
         constexpr bool is_nullable = IsNullableStringHashMap<HashMap>::value;
@@ -625,7 +633,7 @@ void lazy_emplace_batch(HashMethodType& agg_method, State& state, uint32_t num_r
             constexpr int G = decltype(group_idx)::value;
             const auto& indices = groups.group_row_indices[G];
             if (!indices.empty()) {
-                process_submap_emplace<G, is_nullable>(
+                process_submap_emplace<G, is_nullable, enable_prefetch>(
                         submap, indices.data(), indices.size(), agg_method, state, hash_table,
                         creator, creator_for_null_key, pre_handler, result_handler);
             }
@@ -633,12 +641,36 @@ void lazy_emplace_batch(HashMethodType& agg_method, State& state, uint32_t num_r
     } else {
         // Standard per-row loop with ahead prefetch
         for (uint32_t i = 0; i < num_rows; ++i) {
-            agg_method.template prefetch<false>(i);
+            agg_method.template prefetch<false, enable_prefetch>(i);
             pre_handler(i);
             result_handler(i, *state.lazy_emplace_key(*agg_method.hash_table, i, agg_method.keys[i],
                                                       agg_method.hash_values[i], creator,
                                                       creator_for_null_key));
         }
+    }
+}
+
+/// Batch emplace helper: for StringHashMap, directly accesses sub-tables bypassing dispatch();
+/// for other hash maps, does per-row loop with standard prefetch.
+/// pre_handler(row) is called before each emplace, allowing callers to set per-row state
+/// (e.g., current row index used inside creator lambdas).
+/// result_handler(row_index, mapped) is called after each emplace.
+/// Prefetch is automatically disabled when the hash table buffer is small enough to fit in cache.
+template <typename HashMethodType, typename State, typename F, typename FF, typename PreHandler,
+          typename ResultHandler>
+void lazy_emplace_batch(HashMethodType& agg_method, State& state, uint32_t num_rows, F&& creator,
+                        FF&& creator_for_null_key, PreHandler&& pre_handler,
+                        ResultHandler&& result_handler) {
+    if (agg_method.hash_table->get_buffer_size_in_bytes() >= HASH_MAP_PREFETCH_THRESHOLD) {
+        lazy_emplace_batch_impl<true>(agg_method, state, num_rows, std::forward<F>(creator),
+                                      std::forward<FF>(creator_for_null_key),
+                                      std::forward<PreHandler>(pre_handler),
+                                      std::forward<ResultHandler>(result_handler));
+    } else {
+        lazy_emplace_batch_impl<false>(agg_method, state, num_rows, std::forward<F>(creator),
+                                       std::forward<FF>(creator_for_null_key),
+                                       std::forward<PreHandler>(pre_handler),
+                                       std::forward<ResultHandler>(result_handler));
     }
 }
 
@@ -652,12 +684,12 @@ void lazy_emplace_batch(HashMethodType& agg_method, State& state, uint32_t num_r
             std::forward<ResultHandler>(result_handler));
 }
 
-/// Batch emplace helper (void version): like lazy_emplace_batch but ignores the return value.
-/// pre_handler(row) is called before each emplace, allowing callers to update captured state
-/// (e.g., the current row index used inside creator lambdas).
-template <typename HashMethodType, typename State, typename F, typename FF, typename PreHandler>
-void lazy_emplace_batch_void(HashMethodType& agg_method, State& state, uint32_t num_rows,
-                             F&& creator, FF&& creator_for_null_key, PreHandler&& pre_handler) {
+/// Batch emplace void implementation with compile-time prefetch control.
+template <bool enable_prefetch, typename HashMethodType, typename State, typename F, typename FF,
+          typename PreHandler>
+void lazy_emplace_batch_void_impl(HashMethodType& agg_method, State& state, uint32_t num_rows,
+                                  F&& creator, FF&& creator_for_null_key,
+                                  PreHandler&& pre_handler) {
     if constexpr (HashMethodType::is_string_hash_map()) {
         using HashMap = typename HashMethodType::HashMapType;
         constexpr bool is_nullable = IsNullableStringHashMap<HashMap>::value;
@@ -670,14 +702,14 @@ void lazy_emplace_batch_void(HashMethodType& agg_method, State& state, uint32_t 
             constexpr int G = decltype(group_idx)::value;
             const auto& indices = groups.group_row_indices[G];
             if (!indices.empty()) {
-                process_submap_emplace_void<G, is_nullable>(submap, indices.data(), indices.size(),
-                                                            agg_method, state, hash_table, creator,
-                                                            creator_for_null_key, pre_handler);
+                process_submap_emplace_void<G, is_nullable, enable_prefetch>(
+                        submap, indices.data(), indices.size(), agg_method, state, hash_table,
+                        creator, creator_for_null_key, pre_handler);
             }
         });
     } else {
         for (uint32_t i = 0; i < num_rows; ++i) {
-            agg_method.template prefetch<false>(i);
+            agg_method.template prefetch<false, enable_prefetch>(i);
             pre_handler(i);
             state.lazy_emplace_key(*agg_method.hash_table, i, agg_method.keys[i],
                                    agg_method.hash_values[i], creator, creator_for_null_key);
@@ -685,11 +717,28 @@ void lazy_emplace_batch_void(HashMethodType& agg_method, State& state, uint32_t 
     }
 }
 
-/// Batch find helper: for StringHashMap, directly accesses sub-tables bypassing dispatch();
-/// for other hash maps, does per-row loop with standard prefetch.
-template <typename HashMethodType, typename State, typename ResultHandler>
-void find_batch(HashMethodType& agg_method, State& state, uint32_t num_rows,
-                ResultHandler&& result_handler) {
+/// Batch emplace helper (void version): like lazy_emplace_batch but ignores the return value.
+/// pre_handler(row) is called before each emplace, allowing callers to update captured state
+/// (e.g., the current row index used inside creator lambdas).
+/// Prefetch is automatically disabled when the hash table buffer is small enough to fit in cache.
+template <typename HashMethodType, typename State, typename F, typename FF, typename PreHandler>
+void lazy_emplace_batch_void(HashMethodType& agg_method, State& state, uint32_t num_rows,
+                             F&& creator, FF&& creator_for_null_key, PreHandler&& pre_handler) {
+    if (agg_method.hash_table->get_buffer_size_in_bytes() >= HASH_MAP_PREFETCH_THRESHOLD) {
+        lazy_emplace_batch_void_impl<true>(agg_method, state, num_rows, std::forward<F>(creator),
+                                           std::forward<FF>(creator_for_null_key),
+                                           std::forward<PreHandler>(pre_handler));
+    } else {
+        lazy_emplace_batch_void_impl<false>(agg_method, state, num_rows, std::forward<F>(creator),
+                                            std::forward<FF>(creator_for_null_key),
+                                            std::forward<PreHandler>(pre_handler));
+    }
+}
+
+/// Batch find implementation with compile-time prefetch control.
+template <bool enable_prefetch, typename HashMethodType, typename State, typename ResultHandler>
+void find_batch_impl(HashMethodType& agg_method, State& state, uint32_t num_rows,
+                     ResultHandler&& result_handler) {
     if constexpr (HashMethodType::is_string_hash_map()) {
         using HashMap = typename HashMethodType::HashMapType;
         constexpr bool is_nullable = IsNullableStringHashMap<HashMap>::value;
@@ -702,17 +751,33 @@ void find_batch(HashMethodType& agg_method, State& state, uint32_t num_rows,
             constexpr int G = decltype(group_idx)::value;
             const auto& indices = groups.group_row_indices[G];
             if (!indices.empty()) {
-                process_submap_find<G, is_nullable>(submap, indices.data(), indices.size(),
-                                                    agg_method, state, hash_table, result_handler);
+                process_submap_find<G, is_nullable, enable_prefetch>(
+                        submap, indices.data(), indices.size(), agg_method, state, hash_table,
+                        result_handler);
             }
         });
     } else {
         for (uint32_t i = 0; i < num_rows; ++i) {
-            agg_method.template prefetch<true>(i);
+            agg_method.template prefetch<true, enable_prefetch>(i);
             auto find_result = state.find_key_with_hash(
                     *agg_method.hash_table, i, agg_method.keys[i], agg_method.hash_values[i]);
             result_handler(i, find_result);
         }
+    }
+}
+
+/// Batch find helper: for StringHashMap, directly accesses sub-tables bypassing dispatch();
+/// for other hash maps, does per-row loop with standard prefetch.
+/// Prefetch is automatically disabled when the hash table buffer is small enough to fit in cache.
+template <typename HashMethodType, typename State, typename ResultHandler>
+void find_batch(HashMethodType& agg_method, State& state, uint32_t num_rows,
+                ResultHandler&& result_handler) {
+    if (agg_method.hash_table->get_buffer_size_in_bytes() >= HASH_MAP_PREFETCH_THRESHOLD) {
+        find_batch_impl<true>(agg_method, state, num_rows,
+                              std::forward<ResultHandler>(result_handler));
+    } else {
+        find_batch_impl<false>(agg_method, state, num_rows,
+                               std::forward<ResultHandler>(result_handler));
     }
 }
 

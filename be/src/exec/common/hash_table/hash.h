@@ -31,6 +31,11 @@
 // Here is an empirical value.
 static constexpr size_t HASH_MAP_PREFETCH_DIST = 16;
 
+// When the hash table buffer fits within this many bytes, prefetching is skipped
+// because the data is likely already in CPU cache (L1=32-48KB, L2=256-512KB).
+// Below this threshold, prefetch instructions add overhead without benefit.
+static constexpr size_t HASH_MAP_PREFETCH_THRESHOLD = 8192;
+
 /** Hash functions that are better than the trivial function std::hash.
   *
   * Example: when we do aggregation by the visitor ID, the performance increase is more than 5 times.
