@@ -1208,8 +1208,12 @@ public class OlapScanNode extends ScanNode {
 
         msg.olap_scan_node.setDistributeColumnIds(new ArrayList<>(distributionColumnIds));
 
-        // Populate partition boundaries for BE-side runtime filter partition pruning
-        setPartitionBoundaries(msg.olap_scan_node);
+        // Populate partition boundaries for BE-side runtime filter partition pruning.
+        // Only serialize when this scan node actually has runtime filters, to avoid
+        // bloating thrift for tables with many partitions but no RF consumers.
+        if (!runtimeFilters.isEmpty()) {
+            setPartitionBoundaries(msg.olap_scan_node);
+        }
 
         super.toThrift(msg);
     }

@@ -940,7 +940,7 @@ struct TOlapScanNode {
   25: optional bool read_mor_as_dup
   // Partition-id → tablet-id list mapping; used together with partition_boundaries
   // for BE-side runtime filter partition pruning.
-  26: optional map<Types.TPartitionId, list<Types.TTabletId>> partiton_to_tablets
+  26: optional map<Types.TPartitionId, list<Types.TTabletId>> partition_to_tablets
   // Partition boundary descriptors for BE-side runtime filter partition pruning.
   // Only partitions that are candidates for pruning are included; partitions FE
   // does not want pruned (e.g. default catch-all) are omitted from this list.
@@ -1497,13 +1497,13 @@ struct TRuntimeFilterDesc {
   
   17: optional bool build_bf_by_runtime_size;
 
-  // Monotonicity of the target expression for BE-side partition pruning.
-  // For Range partitions, only monotonic target expressions allow boundary
-  // transformation; List partitions can always be pruned regardless.
-  // Absent / NON_MONOTONIC → BE skips Range partition pruning for this RF.
-  // When the target expression is a plain SlotRef, FE should set
-  // MONOTONIC_INCREASING (identity is trivially monotonic increasing).
-  18: optional TTargetExprMonotonicity target_expr_monotonicity;
+  // Per-target monotonicity for BE-side partition pruning, keyed by target
+  // plan-node ID.  For Range partitions, only monotonic target expressions
+  // allow boundary transformation; List partitions can always be pruned
+  // regardless.  Absent entry / NON_MONOTONIC → BE skips Range partition
+  // pruning for that target.  When the target expression is a plain SlotRef,
+  // FE should set MONOTONIC_INCREASING (identity is trivially monotonic).
+  18: optional map<Types.TPlanNodeId, TTargetExprMonotonicity> planId_to_target_monotonicity;
 }
 
 

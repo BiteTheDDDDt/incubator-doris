@@ -42,6 +42,8 @@ static typename PrimitiveTypeTraits<PT>::CppType extract_value_from_column(const
     }
 }
 
+// NOLINTBEGIN(readability-function-cognitive-complexity,readability-function-size)
+// Complexity is inflated by macro expansion for each PrimitiveType case.
 void RuntimeFilterPartitionPruner::parse_boundaries(
         const std::vector<TPartitionBoundary>& boundaries,
         const phmap::flat_hash_map<int, SlotDescriptor*>& slot_descs) {
@@ -68,43 +70,43 @@ void RuntimeFilterPartitionPruner::parse_boundaries(
 
         bool parsed_ok = false;
 
-#define BUILD_BOUNDARY_CVR(NAME)                                                               \
-    case TYPE_##NAME: {                                                                        \
-        using CppType = typename PrimitiveTypeTraits<TYPE_##NAME>::CppType;                    \
-        bool is_list = tb.__isset.list_values && !tb.list_values.empty();                      \
-        bool is_range = tb.__isset.range_start || tb.__isset.range_end;                        \
-        if (!is_list && !is_range) break;                                                      \
-        ColumnValueRange<TYPE_##NAME> cvr(slot->col_name(), is_nullable, precision, scale);    \
+#define BUILD_BOUNDARY_CVR(NAME)                                                              \
+    case TYPE_##NAME: {                                                                       \
+        using CppType = typename PrimitiveTypeTraits<TYPE_##NAME>::CppType;                   \
+        bool is_list = tb.__isset.list_values && !tb.list_values.empty();                     \
+        bool is_range = tb.__isset.range_start || tb.__isset.range_end;                       \
+        if (!is_list && !is_range) break;                                                     \
+        ColumnValueRange<TYPE_##NAME> cvr(slot->col_name(), is_nullable, precision, scale);   \
         auto parse_texpr_node = [&](const TExprNode& node) -> std::pair<CppType, ColumnPtr> { \
-            VLiteral literal(node);                                                            \
-            auto col_ptr = literal.get_column_ptr();                                           \
-            auto val = extract_value_from_column<TYPE_##NAME>(col_ptr);                        \
-            return {val, col_ptr};                                                             \
-        };                                                                                     \
-        if (is_list) {                                                                         \
-            auto empty_cvr = ColumnValueRange<TYPE_##NAME>::create_empty_column_value_range(    \
-                    is_nullable, precision, scale);                                             \
-            for (const auto& node : tb.list_values) {                                          \
-                auto [val, col_ptr] = parse_texpr_node(node);                                  \
-                boundary.literal_columns.push_back(std::move(col_ptr));                        \
-                static_cast<void>(empty_cvr.add_fixed_value(val));                             \
-            }                                                                                  \
-            cvr.intersection(empty_cvr);                                                       \
-        } else {                                                                               \
-            if (tb.__isset.range_start) {                                                      \
-                auto [val, col_ptr] = parse_texpr_node(tb.range_start);                        \
-                boundary.literal_columns.push_back(std::move(col_ptr));                        \
-                static_cast<void>(cvr.add_range(FILTER_LARGER_OR_EQUAL, val));                 \
-            }                                                                                  \
-            if (tb.__isset.range_end) {                                                        \
-                auto [val, col_ptr] = parse_texpr_node(tb.range_end);                          \
-                boundary.literal_columns.push_back(std::move(col_ptr));                        \
-                static_cast<void>(cvr.add_range(FILTER_LESS, val));                            \
-            }                                                                                  \
-        }                                                                                      \
-        boundary.boundary_cvr = std::move(cvr);                                                \
-        parsed_ok = true;                                                                      \
-        break;                                                                                 \
+            VLiteral literal(node);                                                           \
+            auto col_ptr = literal.get_column_ptr();                                          \
+            auto val = extract_value_from_column<TYPE_##NAME>(col_ptr);                       \
+            return {val, col_ptr};                                                            \
+        };                                                                                    \
+        if (is_list) {                                                                        \
+            auto empty_cvr = ColumnValueRange<TYPE_##NAME>::create_empty_column_value_range(  \
+                    is_nullable, precision, scale);                                           \
+            for (const auto& node : tb.list_values) {                                         \
+                auto [val, col_ptr] = parse_texpr_node(node);                                 \
+                boundary.literal_columns.push_back(std::move(col_ptr));                       \
+                static_cast<void>(empty_cvr.add_fixed_value(val));                            \
+            }                                                                                 \
+            cvr.intersection(empty_cvr);                                                      \
+        } else {                                                                              \
+            if (tb.__isset.range_start) {                                                     \
+                auto [val, col_ptr] = parse_texpr_node(tb.range_start);                       \
+                boundary.literal_columns.push_back(std::move(col_ptr));                       \
+                static_cast<void>(cvr.add_range(FILTER_LARGER_OR_EQUAL, val));                \
+            }                                                                                 \
+            if (tb.__isset.range_end) {                                                       \
+                auto [val, col_ptr] = parse_texpr_node(tb.range_end);                         \
+                boundary.literal_columns.push_back(std::move(col_ptr));                       \
+                static_cast<void>(cvr.add_range(FILTER_LESS, val));                           \
+            }                                                                                 \
+        }                                                                                     \
+        boundary.boundary_cvr = std::move(cvr);                                               \
+        parsed_ok = true;                                                                     \
+        break;                                                                                \
     }
 
         switch (ptype) {
@@ -153,13 +155,108 @@ void RuntimeFilterPartitionPruner::parse_boundaries(
         _total_partition_count = static_cast<int64_t>(all_partition_ids.size());
     }
 }
+// NOLINTEND(readability-function-cognitive-complexity,readability-function-size)
 
-int64_t RuntimeFilterPartitionPruner::prune_by_runtime_filters(
-        const VExprContextSPtrs& conjuncts) {
+static SQLFilterOp convert_opcode_to_filter_op(TExprOpcode::type op) {
+    switch (op) {
+    case TExprOpcode::LE:
+        return FILTER_LESS_OR_EQUAL;
+    case TExprOpcode::LT:
+        return FILTER_LESS;
+    case TExprOpcode::GE:
+        return FILTER_LARGER_OR_EQUAL;
+    case TExprOpcode::GT:
+        return FILTER_LARGER;
+    default:
+        return FILTER_IN; // sentinel: caller should skip
+    }
+}
+
+void RuntimeFilterPartitionPruner::_try_prune_by_single_rf(
+        const VExprSPtr& impl, SlotId slot_id, phmap::flat_hash_set<int64_t>& newly_pruned) {
+    auto boundaries_it = _slot_to_boundaries.find(slot_id);
+    if (boundaries_it == _slot_to_boundaries.end()) {
+        return;
+    }
+
+    for (const auto& pb : boundaries_it->second) {
+        if (_pruned_partition_ids.contains(pb.partition_id) ||
+            newly_pruned.contains(pb.partition_id)) {
+            continue;
+        }
+
+        std::visit(
+                [&](const auto& boundary_cvr) {
+                    using CvrType = std::decay_t<decltype(boundary_cvr)>;
+                    using CppType = typename CvrType::CppType;
+
+                    auto hybrid_set = impl->get_set_func();
+                    if (hybrid_set) {
+                        // IN filter: build a fixed-value CVR from the HybridSet
+                        auto rf_cvr = CvrType::create_empty_column_value_range(
+                                pb.is_nullable, boundary_cvr.precision(), boundary_cvr.scale());
+                        auto* iter = hybrid_set->begin();
+                        while (iter->has_next()) {
+                            const void* value = iter->get_value();
+                            if (value) {
+                                if constexpr (std::is_same_v<CppType, StringRef>) {
+                                    const auto* str_val = reinterpret_cast<const StringRef*>(value);
+                                    static_cast<void>(rf_cvr.add_fixed_value(
+                                            CppType(str_val->data, str_val->size)));
+                                } else {
+                                    static_cast<void>(rf_cvr.add_fixed_value(
+                                            *reinterpret_cast<const CppType*>(value)));
+                                }
+                            }
+                            iter->next();
+                        }
+                        auto boundary_copy = boundary_cvr;
+                        boundary_copy.intersection(rf_cvr);
+                        if (boundary_copy.is_empty_value_range()) {
+                            newly_pruned.insert(pb.partition_id);
+                        }
+                    } else if (impl->node_type() == TExprNodeType::BINARY_PRED &&
+                               impl->children().size() == 2 && impl->children()[1]->is_literal()) {
+                        // MinMax filter: binary pred with literal bound
+                        auto* literal = assert_cast<VLiteral*>(impl->children()[1].get());
+                        auto col_ptr = literal->get_column_ptr();
+                        auto data = col_ptr->get_data_at(0);
+                        CppType val {};
+                        if constexpr (std::is_same_v<CppType, StringRef>) {
+                            val = CppType(data.data, data.size);
+                        } else {
+                            val = *reinterpret_cast<const CppType*>(data.data);
+                        }
+
+                        SQLFilterOp op = convert_opcode_to_filter_op(impl->op());
+                        if (op == FILTER_IN) {
+                            return; // unrecognized opcode, skip
+                        }
+
+                        CvrType rf_cvr(boundary_cvr.column_name(), pb.is_nullable,
+                                       boundary_cvr.precision(), boundary_cvr.scale());
+                        static_cast<void>(rf_cvr.add_range(op, val));
+
+                        auto boundary_copy = boundary_cvr;
+                        boundary_copy.intersection(rf_cvr);
+                        if (boundary_copy.is_empty_value_range()) {
+                            newly_pruned.insert(pb.partition_id);
+                        }
+                    }
+                },
+                pb.boundary_cvr);
+    }
+}
+
+int64_t RuntimeFilterPartitionPruner::prune_by_runtime_filters(const VExprContextSPtrs& conjuncts) {
     if (_partition_column_slot_ids.empty()) {
         return 0;
     }
 
+    // This function is serialized by _conjuncts_lock in the caller, so our reads
+    // of _pruned_partition_ids never race with our writes below. The only concurrent
+    // readers are is_partition_pruned() calls (under shared_lock), which are
+    // properly synchronized by the unique_lock we take when inserting.
     phmap::flat_hash_set<int64_t> newly_pruned;
 
     for (const auto& conjunct_ctx : conjuncts) {
@@ -173,9 +270,7 @@ int64_t RuntimeFilterPartitionPruner::prune_by_runtime_filters(
             continue;
         }
 
-        // Determine the target slot_id from the RF's probe expression.
-        // For IN filter: impl is VDirectInPredicate, children()[0] is VSlotRef
-        // For MinMax filter: impl is VectorizedFnCall (binary pred), children()[0] is VSlotRef
+        // Only handle RFs whose target is a simple SlotRef on a partition column.
         if (impl->children().empty() || !impl->children()[0]->is_slot_ref()) {
             continue;
         }
@@ -185,92 +280,10 @@ int64_t RuntimeFilterPartitionPruner::prune_by_runtime_filters(
             continue;
         }
 
-        auto boundaries_it = _slot_to_boundaries.find(slot_id);
-        if (boundaries_it == _slot_to_boundaries.end()) {
-            continue;
-        }
-
-        for (const auto& pb : boundaries_it->second) {
-            if (_pruned_partition_ids.contains(pb.partition_id) ||
-                newly_pruned.contains(pb.partition_id)) {
-                continue;
-            }
-
-            std::visit(
-                    [&](const auto& boundary_cvr) {
-                        using CvrType = std::decay_t<decltype(boundary_cvr)>;
-                        using CppType = typename CvrType::CppType;
-
-                        auto hybrid_set = impl->get_set_func();
-                        if (hybrid_set) {
-                            // IN filter: build a fixed-value CVR from the HybridSet
-                            auto rf_cvr = CvrType::create_empty_column_value_range(
-                                    pb.is_nullable, boundary_cvr.precision(),
-                                    boundary_cvr.scale());
-                            auto* iter = hybrid_set->begin();
-                            while (iter->has_next()) {
-                                const void* value = iter->get_value();
-                                if (value) {
-                                    if constexpr (std::is_same_v<CppType, StringRef>) {
-                                        auto* str_val =
-                                                reinterpret_cast<const StringRef*>(value);
-                                        static_cast<void>(rf_cvr.add_fixed_value(
-                                                CppType(str_val->data, str_val->size)));
-                                    } else {
-                                        static_cast<void>(rf_cvr.add_fixed_value(
-                                                *reinterpret_cast<const CppType*>(value)));
-                                    }
-                                }
-                                iter->next();
-                            }
-                            auto boundary_copy = boundary_cvr;
-                            boundary_copy.intersection(rf_cvr);
-                            if (boundary_copy.is_empty_value_range()) {
-                                newly_pruned.insert(pb.partition_id);
-                            }
-                        } else if (impl->node_type() == TExprNodeType::BINARY_PRED &&
-                                   impl->children().size() == 2 &&
-                                   impl->children()[1]->is_literal()) {
-                            // MinMax filter: binary pred with literal bound
-                            auto* literal =
-                                    assert_cast<VLiteral*>(impl->children()[1].get());
-                            auto col_ptr = literal->get_column_ptr();
-                            auto data = col_ptr->get_data_at(0);
-                            CppType val {};
-                            if constexpr (std::is_same_v<CppType, StringRef>) {
-                                val = CppType(data.data, data.size);
-                            } else {
-                                val = *reinterpret_cast<const CppType*>(data.data);
-                            }
-
-                            CvrType rf_cvr(boundary_cvr.column_name(), pb.is_nullable,
-                                           boundary_cvr.precision(), boundary_cvr.scale());
-                            SQLFilterOp op = FILTER_LARGER_OR_EQUAL;
-                            if (impl->op() == TExprOpcode::LE) {
-                                op = FILTER_LESS_OR_EQUAL;
-                            } else if (impl->op() == TExprOpcode::LT) {
-                                op = FILTER_LESS;
-                            } else if (impl->op() == TExprOpcode::GE) {
-                                op = FILTER_LARGER_OR_EQUAL;
-                            } else if (impl->op() == TExprOpcode::GT) {
-                                op = FILTER_LARGER;
-                            } else {
-                                return;
-                            }
-                            static_cast<void>(rf_cvr.add_range(op, val));
-
-                            auto boundary_copy = boundary_cvr;
-                            boundary_copy.intersection(rf_cvr);
-                            if (boundary_copy.is_empty_value_range()) {
-                                newly_pruned.insert(pb.partition_id);
-                            }
-                        }
-                    },
-                    pb.boundary_cvr);
-        }
+        _try_prune_by_single_rf(impl, slot_id, newly_pruned);
     }
 
-    int64_t count = static_cast<int64_t>(newly_pruned.size());
+    auto count = static_cast<int64_t>(newly_pruned.size());
     if (count > 0) {
         std::unique_lock lock(_prune_mutex);
         for (int64_t pid : newly_pruned) {

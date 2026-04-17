@@ -23,9 +23,10 @@
 #include <vector>
 
 #include "common/global_types.h"
+#include "core/column/column.h"
+#include "exec/common/hash_table/phmap_fwd_decl.h"
 #include "exprs/vexpr_fwd.h"
 #include "storage/olap_scan_common.h"
-#include "core/column/column.h"
 
 namespace doris {
 
@@ -86,6 +87,11 @@ private:
     mutable std::shared_mutex _prune_mutex;
 
     int64_t _total_partition_count = 0;
+
+    // Try to prune partitions using a single RF's impl expression on the given slot.
+    // Adds newly pruned partition IDs to `newly_pruned`.
+    void _try_prune_by_single_rf(const VExprSPtr& impl, SlotId slot_id,
+                                 phmap::flat_hash_set<int64_t>& newly_pruned);
 };
 
 } // namespace doris

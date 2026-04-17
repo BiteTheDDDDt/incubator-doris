@@ -43,6 +43,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -286,10 +287,11 @@ public final class RuntimeFilter {
             tFilter.setNullAware(true);
         }
 
-        // Set target_expr_monotonicity for partition column identity path.
-        // When the RF target is a direct SlotRef on a partition column, the
+        // Build per-target monotonicity map for BE-side partition pruning.
+        // When an RF target is a direct SlotRef on a partition column, the
         // mapping from column value to partition is monotonic (identity), so
-        // the BE can use the RF values to prune partitions.
+        // the BE can use the RF values to prune partitions for that target.
+        Map<Integer, TTargetExprMonotonicity> monoMap = new HashMap<>();
         for (RuntimeFilterTarget target : targets) {
             if (target.expr instanceof SlotRef && target.node instanceof OlapScanNode) {
                 SlotRef slotRef = (SlotRef) target.expr;
@@ -301,7 +303,7 @@ public final class RuntimeFilter {
                     if (partType == PartitionType.RANGE || partType == PartitionType.LIST) {
                         for (Column partCol : table.getPartitionInfo().getPartitionColumns()) {
                             if (partCol.getName().equalsIgnoreCase(col.getName())) {
-                                tFilter.setTargetExprMonotonicity(
+                                monoMap.put(target.node.getId().asInt(),
                                         TTargetExprMonotonicity.MONOTONIC_INCREASING);
                                 break;
                             }
@@ -309,10 +311,9 @@ public final class RuntimeFilter {
                     }
                 }
             }
-            // Only check the first target; if there are multiple targets on
-            // different tables, monotonicity may differ. We conservatively
-            // set it based on the first target only.
-            break;
+        }
+        if (!monoMap.isEmpty()) {
+            tFilter.setPlanIdToTargetMonotonicity(monoMap);
         }
 
         return tFilter;
