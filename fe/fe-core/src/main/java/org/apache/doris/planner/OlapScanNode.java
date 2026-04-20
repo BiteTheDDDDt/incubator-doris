@@ -22,7 +22,6 @@ import org.apache.doris.analysis.ExprToSqlVisitor;
 import org.apache.doris.analysis.ExprToThriftVisitor;
 import org.apache.doris.analysis.LiteralExpr;
 import org.apache.doris.analysis.MaxLiteral;
-import org.apache.doris.analysis.NullLiteral;
 import org.apache.doris.analysis.SlotDescriptor;
 import org.apache.doris.analysis.SlotId;
 import org.apache.doris.analysis.SlotRef;
@@ -1272,36 +1271,40 @@ public class OlapScanNode extends ScanNode {
     private void addRangeBoundaries(List<TPartitionBoundary> boundaries, long partitionId,
             RangePartitionItem rangeItem, List<Column> partColumns,
             Map<String, Integer> partColToSlotId) {
-        com.google.common.collect.Range<PartitionKey> range = rangeItem.getItems();
-        // For multi-column range partitions, only the first column's range is
-        // independent; subsequent columns' ranges depend on the first column's
-        // value, so we only emit the first column to guarantee correctness.
-        int colCount = Math.min(1, partColumns.size());
-        for (int i = 0; i < colCount; i++) {
-            String colName = partColumns.get(i).getName();
-            Integer slotId = partColToSlotId.get(colName);
-            if (slotId == null) {
-                continue;
-            }
-            TPartitionBoundary boundary = new TPartitionBoundary();
-            boundary.setPartitionId(partitionId);
-            boundary.setSlotId(slotId);
-            if (range.hasLowerBound() && !range.lowerEndpoint().isMinValue()) {
-                LiteralExpr lower = range.lowerEndpoint().getKeys().get(i);
-                if (!(lower instanceof MaxLiteral)) {
-                    boundary.setRangeStart(
-                            ExprToThriftVisitor.treeToThrift(lower).getNodes().get(0));
-                }
-            }
-            if (range.hasUpperBound() && !range.upperEndpoint().isMaxValue()) {
-                LiteralExpr upper = range.upperEndpoint().getKeys().get(i);
-                if (!(upper instanceof MaxLiteral)) {
-                    boundary.setRangeEnd(
-                            ExprToThriftVisitor.treeToThrift(upper).getNodes().get(0));
-                }
-            }
-            boundaries.add(boundary);
+        // Doris RANGE partition membership is based on lexicographic PartitionKey
+        // comparison across all partition columns, not on independent per-column
+        // ranges. Projecting a multi-column range like [(1,1),(1,5)) onto its
+        // first column yields the empty interval [1,1), which would let the BE
+        // wrongly prune partitions whose rows actually match the RF. Until we
+        // can serialize a provably correct projection, only emit boundaries for
+        // single-column RANGE partitions.
+        if (partColumns.size() != 1) {
+            return;
         }
+        String colName = partColumns.get(0).getName();
+        Integer slotId = partColToSlotId.get(colName);
+        if (slotId == null) {
+            return;
+        }
+        com.google.common.collect.Range<PartitionKey> range = rangeItem.getItems();
+        TPartitionBoundary boundary = new TPartitionBoundary();
+        boundary.setPartitionId(partitionId);
+        boundary.setSlotId(slotId);
+        if (range.hasLowerBound() && !range.lowerEndpoint().isMinValue()) {
+            LiteralExpr lower = range.lowerEndpoint().getKeys().get(0);
+            if (!(lower instanceof MaxLiteral)) {
+                boundary.setRangeStart(
+                        ExprToThriftVisitor.treeToThrift(lower).getNodes().get(0));
+            }
+        }
+        if (range.hasUpperBound() && !range.upperEndpoint().isMaxValue()) {
+            LiteralExpr upper = range.upperEndpoint().getKeys().get(0);
+            if (!(upper instanceof MaxLiteral)) {
+                boundary.setRangeEnd(
+                        ExprToThriftVisitor.treeToThrift(upper).getNodes().get(0));
+            }
+        }
+        boundaries.add(boundary);
     }
 
     private void addListBoundaries(List<TPartitionBoundary> boundaries, long partitionId,
@@ -1311,27 +1314,36 @@ public class OlapScanNode extends ScanNode {
             return;
         }
         List<PartitionKey> partitionKeys = listItem.getItems();
-        // For list partitions, collect distinct values per column
+        // For list partitions, collect distinct values per column.
+        // If any value of a column in this partition is NULL, we cannot
+        // currently represent that on the BE side (the pruner has no NULL
+        // boundary support and would either crash or treat NULL as ""). Drop
+        // the whole boundary for that column so the BE will not attempt to
+        // prune this partition by it. Doing nothing is always safe; emitting
+        // a wrong boundary is not.
         for (int i = 0; i < partColumns.size(); i++) {
             String colName = partColumns.get(i).getName();
             Integer slotId = partColToSlotId.get(colName);
             if (slotId == null) {
                 continue;
             }
-            TPartitionBoundary boundary = new TPartitionBoundary();
-            boundary.setPartitionId(partitionId);
-            boundary.setSlotId(slotId);
-            List<TExprNode> listValues = new ArrayList<>();
+            List<TExprNode> listValues = new ArrayList<>(partitionKeys.size());
+            boolean hasNull = false;
             for (PartitionKey pk : partitionKeys) {
                 LiteralExpr literalExpr = pk.getKeys().get(i);
                 if (literalExpr.isNullLiteral()) {
-                    listValues.add(ExprToThriftVisitor.treeToThrift(
-                            NullLiteral.create(literalExpr.getType())).getNodes().get(0));
-                } else {
-                    listValues.add(
-                            ExprToThriftVisitor.treeToThrift(literalExpr).getNodes().get(0));
+                    hasNull = true;
+                    break;
                 }
+                listValues.add(
+                        ExprToThriftVisitor.treeToThrift(literalExpr).getNodes().get(0));
             }
+            if (hasNull || listValues.isEmpty()) {
+                continue;
+            }
+            TPartitionBoundary boundary = new TPartitionBoundary();
+            boundary.setPartitionId(partitionId);
+            boundary.setSlotId(slotId);
             boundary.setListValues(listValues);
             boundaries.add(boundary);
         }
