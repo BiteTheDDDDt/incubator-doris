@@ -680,11 +680,29 @@ struct TPartitionBoundary {
 
   // Range partition: closed lower bound; absent means unbounded below
   3: optional Exprs.TExprNode range_start
-  // Range partition: open upper bound; absent means unbounded above (MAXVALUE)
+  // Range partition: upper bound. By default (range_end_inclusive=false) the
+  // bound is OPEN, i.e. the column range is [range_start, range_end), which
+  // matches Doris RANGE partition's `VALUES [..., ...)` syntax for the
+  // single-column case. Absent means unbounded above (MAXVALUE).
   4: optional Exprs.TExprNode range_end
 
-  // List partition: set of concrete values in this partition
+  // List partition: set of concrete values in this partition. A NULL_LITERAL
+  // entry indicates the partition logically contains NULL rows for this column;
+  // the BE pruner translates that into ColumnValueRange::set_contain_null(true)
+  // rather than treating it as an ordinary fixed value.
   5: optional list<Exprs.TExprNode> list_values
+
+  // When true, treat `range_end` as a CLOSED upper bound, i.e. the projected
+  // column range is [range_start, range_end]. Used when projecting a
+  // multi-column RANGE partition onto its first column: a partition like
+  // [(L1, L2, ...), (U1, U2, ...)) projects to the first column as
+  // [L1, U1] (both ends closed) — for the L1 == U1 case the projection is the
+  // singleton {L1}, and for L1 < U1 the value U1 is reachable via inner-tuple
+  // values of the second+ column. The original half-open form [L1, U1) would
+  // be a strict UNDER-approximation and could wrongly prune the partition.
+  // The single-column case keeps the default open form to preserve exact
+  // Doris partition semantics.
+  6: optional bool range_end_inclusive = false
 }
 
 struct TMetaScanRange {

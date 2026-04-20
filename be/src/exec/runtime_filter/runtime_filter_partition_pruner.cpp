@@ -19,6 +19,9 @@
 
 #include <gen_cpp/PlanNodes_types.h>
 
+#include <optional>
+#include <utility>
+
 #include "exprs/hybrid_set.h"
 #include "exprs/vexpr.h"
 #include "exprs/vexpr_context.h"
@@ -70,43 +73,76 @@ void RuntimeFilterPartitionPruner::parse_boundaries(
 
         bool parsed_ok = false;
 
-#define BUILD_BOUNDARY_CVR(NAME)                                                              \
-    case TYPE_##NAME: {                                                                       \
-        using CppType = typename PrimitiveTypeTraits<TYPE_##NAME>::CppType;                   \
-        bool is_list = tb.__isset.list_values && !tb.list_values.empty();                     \
-        bool is_range = tb.__isset.range_start || tb.__isset.range_end;                       \
-        if (!is_list && !is_range) break;                                                     \
-        ColumnValueRange<TYPE_##NAME> cvr(slot->col_name(), is_nullable, precision, scale);   \
-        auto parse_texpr_node = [&](const TExprNode& node) -> std::pair<CppType, ColumnPtr> { \
-            VLiteral literal(node);                                                           \
-            auto col_ptr = literal.get_column_ptr();                                          \
-            auto val = extract_value_from_column<TYPE_##NAME>(col_ptr);                       \
-            return {val, col_ptr};                                                            \
-        };                                                                                    \
-        if (is_list) {                                                                        \
-            auto empty_cvr = ColumnValueRange<TYPE_##NAME>::create_empty_column_value_range(  \
-                    is_nullable, precision, scale);                                           \
-            for (const auto& node : tb.list_values) {                                         \
-                auto [val, col_ptr] = parse_texpr_node(node);                                 \
-                boundary.literal_columns.push_back(std::move(col_ptr));                       \
-                static_cast<void>(empty_cvr.add_fixed_value(val));                            \
-            }                                                                                 \
-            cvr.intersection(empty_cvr);                                                      \
-        } else {                                                                              \
-            if (tb.__isset.range_start) {                                                     \
-                auto [val, col_ptr] = parse_texpr_node(tb.range_start);                       \
-                boundary.literal_columns.push_back(std::move(col_ptr));                       \
-                static_cast<void>(cvr.add_range(FILTER_LARGER_OR_EQUAL, val));                \
-            }                                                                                 \
-            if (tb.__isset.range_end) {                                                       \
-                auto [val, col_ptr] = parse_texpr_node(tb.range_end);                         \
-                boundary.literal_columns.push_back(std::move(col_ptr));                       \
-                static_cast<void>(cvr.add_range(FILTER_LESS, val));                           \
-            }                                                                                 \
-        }                                                                                     \
-        boundary.boundary_cvr = std::move(cvr);                                               \
-        parsed_ok = true;                                                                     \
-        break;                                                                                \
+#define BUILD_BOUNDARY_CVR(NAME)                                                               \
+    case TYPE_##NAME: {                                                                        \
+        using CppType = typename PrimitiveTypeTraits<TYPE_##NAME>::CppType;                    \
+        bool is_list = tb.__isset.list_values && !tb.list_values.empty();                      \
+        bool is_range = tb.__isset.range_start || tb.__isset.range_end;                        \
+        if (!is_list && !is_range) break;                                                      \
+        ColumnValueRange<TYPE_##NAME> cvr(slot->col_name(), is_nullable, precision, scale);    \
+        /* Returns nullopt if `node` is a NULL literal; the caller then sets contain_null  */  \
+        /* on the CVR instead of trying to extract a typed value (which would dereference  */  \
+        /* a null data pointer for the non-string branch).                                 */  \
+        auto parse_texpr_node =                                                                \
+                [&](const TExprNode& node) -> std::optional<std::pair<CppType, ColumnPtr>> {   \
+            if (node.node_type == TExprNodeType::NULL_LITERAL) {                               \
+                return std::nullopt;                                                           \
+            }                                                                                  \
+            VLiteral literal(node);                                                            \
+            auto col_ptr = literal.get_column_ptr();                                           \
+            auto val = extract_value_from_column<TYPE_##NAME>(col_ptr);                        \
+            return std::make_optional(std::pair<CppType, ColumnPtr> {val, col_ptr});           \
+        };                                                                                     \
+        if (is_list) {                                                                         \
+            auto empty_cvr = ColumnValueRange<TYPE_##NAME>::create_empty_column_value_range(   \
+                    is_nullable, precision, scale);                                            \
+            bool list_has_null = false;                                                        \
+            bool list_has_value = false;                                                       \
+            for (const auto& node : tb.list_values) {                                          \
+                auto parsed = parse_texpr_node(node);                                          \
+                if (!parsed) {                                                                 \
+                    list_has_null = true;                                                      \
+                    continue;                                                                  \
+                }                                                                              \
+                auto& [val, col_ptr] = *parsed;                                                \
+                boundary.literal_columns.push_back(std::move(col_ptr));                        \
+                static_cast<void>(empty_cvr.add_fixed_value(val));                             \
+                list_has_value = true;                                                         \
+            }                                                                                  \
+            if (list_has_value) {                                                              \
+                cvr.intersection(empty_cvr);                                                   \
+            }                                                                                  \
+            if (list_has_null && is_nullable) {                                                \
+                cvr.set_contain_null(true);                                                    \
+            }                                                                                  \
+        } else {                                                                               \
+            if (tb.__isset.range_start) {                                                      \
+                auto parsed = parse_texpr_node(tb.range_start);                                \
+                if (parsed) {                                                                  \
+                    auto& [val, col_ptr] = *parsed;                                            \
+                    boundary.literal_columns.push_back(std::move(col_ptr));                    \
+                    static_cast<void>(cvr.add_range(FILTER_LARGER_OR_EQUAL, val));             \
+                }                                                                              \
+            }                                                                                  \
+            if (tb.__isset.range_end) {                                                        \
+                auto parsed = parse_texpr_node(tb.range_end);                                  \
+                if (parsed) {                                                                  \
+                    auto& [val, col_ptr] = *parsed;                                            \
+                    boundary.literal_columns.push_back(std::move(col_ptr));                    \
+                    /* Multi-column RANGE projection emits a CLOSED upper bound (see       */  \
+                    /* TPartitionBoundary.range_end_inclusive comment); single-column RANGE */ \
+                    /* keeps the natural OPEN upper bound matching Doris semantics.         */ \
+                    SQLFilterOp upper_op =                                                     \
+                            (tb.__isset.range_end_inclusive && tb.range_end_inclusive)         \
+                                    ? FILTER_LESS_OR_EQUAL                                     \
+                                    : FILTER_LESS;                                             \
+                    static_cast<void>(cvr.add_range(upper_op, val));                           \
+                }                                                                              \
+            }                                                                                  \
+        }                                                                                      \
+        boundary.boundary_cvr = std::move(cvr);                                                \
+        parsed_ok = true;                                                                      \
+        break;                                                                                 \
     }
 
         switch (ptype) {
@@ -182,6 +218,21 @@ void RuntimeFilterPartitionPruner::_try_prune_by_single_rf(
     for (const auto& pb : boundaries_it->second) {
         if (_pruned_partition_ids.contains(pb.partition_id) ||
             newly_pruned.contains(pb.partition_id)) {
+            continue;
+        }
+
+        // Conservative skip: if the partition's value set logically includes
+        // NULL (e.g. LIST partition with a NULL key), we cannot soundly prune
+        // it without inspecting the RF's null-awareness. The current
+        // ColumnValueRange::intersection() collapses fixed-value paths to
+        // "empty" purely on the typed value sets and ignores contain_null on
+        // either side, so a null-aware RF could falsely declare an empty
+        // intersection and we would wrongly prune a partition whose NULL rows
+        // actually match the RF. Skipping here is always safe; supporting
+        // null-aware pruning is a future optimization.
+        bool partition_contains_null =
+                std::visit([](const auto& cvr) { return cvr.contain_null(); }, pb.boundary_cvr);
+        if (partition_contains_null) {
             continue;
         }
 

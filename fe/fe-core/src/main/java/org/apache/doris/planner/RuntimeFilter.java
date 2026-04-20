@@ -294,7 +294,7 @@ public final class RuntimeFilter {
         // Gated by session variable `enable_runtime_filter_partition_prune`.
         ConnectContext rfPruneCtx = ConnectContext.get();
         boolean enableRfPartitionPrune = rfPruneCtx != null
-                && rfPruneCtx.getSessionVariable().getEnableRuntimeFilterPartitionPrune();
+                && rfPruneCtx.getSessionVariable().isEnableRuntimeFilterPartitionPrune();
         if (enableRfPartitionPrune) {
             Map<Integer, TTargetExprMonotonicity> monoMap = new HashMap<>();
             for (RuntimeFilterTarget target : targets) {

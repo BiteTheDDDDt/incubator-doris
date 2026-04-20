@@ -22,6 +22,7 @@ import org.apache.doris.analysis.ExprToSqlVisitor;
 import org.apache.doris.analysis.ExprToThriftVisitor;
 import org.apache.doris.analysis.LiteralExpr;
 import org.apache.doris.analysis.MaxLiteral;
+import org.apache.doris.analysis.NullLiteral;
 import org.apache.doris.analysis.SlotDescriptor;
 import org.apache.doris.analysis.SlotId;
 import org.apache.doris.analysis.SlotRef;
@@ -1214,7 +1215,7 @@ public class OlapScanNode extends ScanNode {
         ConnectContext rfPruneCtx = ConnectContext.get();
         if (!runtimeFilters.isEmpty()
                 && rfPruneCtx != null
-                && rfPruneCtx.getSessionVariable().getEnableRuntimeFilterPartitionPrune()) {
+                && rfPruneCtx.getSessionVariable().isEnableRuntimeFilterPartitionPrune()) {
             setPartitionBoundaries(msg.olap_scan_node);
         }
 
@@ -1271,16 +1272,24 @@ public class OlapScanNode extends ScanNode {
     private void addRangeBoundaries(List<TPartitionBoundary> boundaries, long partitionId,
             RangePartitionItem rangeItem, List<Column> partColumns,
             Map<String, Integer> partColToSlotId) {
-        // Doris RANGE partition membership is based on lexicographic PartitionKey
-        // comparison across all partition columns, not on independent per-column
-        // ranges. Projecting a multi-column range like [(1,1),(1,5)) onto its
-        // first column yields the empty interval [1,1), which would let the BE
-        // wrongly prune partitions whose rows actually match the RF. Until we
-        // can serialize a provably correct projection, only emit boundaries for
-        // single-column RANGE partitions.
-        if (partColumns.size() != 1) {
-            return;
-        }
+        // We always project a (possibly multi-column) RANGE partition onto its
+        // first partition column, since the BE pruner only consumes per-column
+        // boundaries. Projection rules (lex compare semantics):
+        //
+        //   single column [L, U):
+        //       projection = [L, U)              → range_end_inclusive = false
+        //
+        //   multi-column [(L1, L2, ...), (U1, U2, ...)):
+        //       k1 = L1 is reachable (inner tuple can be ≥ (L2, ...))
+        //       k1 ∈ (L1, U1) is fully reachable
+        //       k1 = U1 may be reachable via inner tuple < (U2, ...)
+        //       projection = [L1, U1] (CLOSED both ends, conservative)
+        //                                        → range_end_inclusive = true
+        //
+        // The half-open form [L1, U1) for multi-column would be a strict
+        // UNDER-approximation. Example: partition [(1,1), (1,5)) projects to
+        // {1}, but [1, 1) is empty and would let the BE wrongly prune the
+        // partition for an RF like k1 = 1.
         String colName = partColumns.get(0).getName();
         Integer slotId = partColToSlotId.get(colName);
         if (slotId == null) {
@@ -1304,6 +1313,9 @@ public class OlapScanNode extends ScanNode {
                         ExprToThriftVisitor.treeToThrift(upper).getNodes().get(0));
             }
         }
+        if (partColumns.size() > 1) {
+            boundary.setRangeEndInclusive(true);
+        }
         boundaries.add(boundary);
     }
 
@@ -1314,36 +1326,31 @@ public class OlapScanNode extends ScanNode {
             return;
         }
         List<PartitionKey> partitionKeys = listItem.getItems();
-        // For list partitions, collect distinct values per column.
-        // If any value of a column in this partition is NULL, we cannot
-        // currently represent that on the BE side (the pruner has no NULL
-        // boundary support and would either crash or treat NULL as ""). Drop
-        // the whole boundary for that column so the BE will not attempt to
-        // prune this partition by it. Doing nothing is always safe; emitting
-        // a wrong boundary is not.
+        // For LIST partitions, emit per-column distinct value sets. NULL keys
+        // are emitted as NULL_LITERAL TExprNode so the BE parser can translate
+        // them into ColumnValueRange::set_contain_null(true) rather than
+        // treating NULL as an ordinary fixed value (which would crash the
+        // typed value extractor in the parser).
         for (int i = 0; i < partColumns.size(); i++) {
             String colName = partColumns.get(i).getName();
             Integer slotId = partColToSlotId.get(colName);
             if (slotId == null) {
                 continue;
             }
-            List<TExprNode> listValues = new ArrayList<>(partitionKeys.size());
-            boolean hasNull = false;
-            for (PartitionKey pk : partitionKeys) {
-                LiteralExpr literalExpr = pk.getKeys().get(i);
-                if (literalExpr.isNullLiteral()) {
-                    hasNull = true;
-                    break;
-                }
-                listValues.add(
-                        ExprToThriftVisitor.treeToThrift(literalExpr).getNodes().get(0));
-            }
-            if (hasNull || listValues.isEmpty()) {
-                continue;
-            }
             TPartitionBoundary boundary = new TPartitionBoundary();
             boundary.setPartitionId(partitionId);
             boundary.setSlotId(slotId);
+            List<TExprNode> listValues = new ArrayList<>(partitionKeys.size());
+            for (PartitionKey pk : partitionKeys) {
+                LiteralExpr literalExpr = pk.getKeys().get(i);
+                if (literalExpr.isNullLiteral()) {
+                    listValues.add(ExprToThriftVisitor.treeToThrift(
+                            NullLiteral.create(literalExpr.getType())).getNodes().get(0));
+                } else {
+                    listValues.add(
+                            ExprToThriftVisitor.treeToThrift(literalExpr).getNodes().get(0));
+                }
+            }
             boundary.setListValues(listValues);
             boundaries.add(boundary);
         }
