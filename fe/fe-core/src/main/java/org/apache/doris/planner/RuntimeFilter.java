@@ -291,29 +291,35 @@ public final class RuntimeFilter {
         // When an RF target is a direct SlotRef on a partition column, the
         // mapping from column value to partition is monotonic (identity), so
         // the BE can use the RF values to prune partitions for that target.
-        Map<Integer, TTargetExprMonotonicity> monoMap = new HashMap<>();
-        for (RuntimeFilterTarget target : targets) {
-            if (target.expr instanceof SlotRef && target.node instanceof OlapScanNode) {
-                SlotRef slotRef = (SlotRef) target.expr;
-                Column col = slotRef.getColumn();
-                if (col != null) {
-                    OlapScanNode scanNode = (OlapScanNode) target.node;
-                    OlapTable table = scanNode.getOlapTable();
-                    PartitionType partType = table.getPartitionInfo().getType();
-                    if (partType == PartitionType.RANGE || partType == PartitionType.LIST) {
-                        for (Column partCol : table.getPartitionInfo().getPartitionColumns()) {
-                            if (partCol.getName().equalsIgnoreCase(col.getName())) {
-                                monoMap.put(target.node.getId().asInt(),
-                                        TTargetExprMonotonicity.MONOTONIC_INCREASING);
-                                break;
+        // Gated by session variable `enable_runtime_filter_partition_prune`.
+        ConnectContext rfPruneCtx = ConnectContext.get();
+        boolean enableRfPartitionPrune = rfPruneCtx != null
+                && rfPruneCtx.getSessionVariable().getEnableRuntimeFilterPartitionPrune();
+        if (enableRfPartitionPrune) {
+            Map<Integer, TTargetExprMonotonicity> monoMap = new HashMap<>();
+            for (RuntimeFilterTarget target : targets) {
+                if (target.expr instanceof SlotRef && target.node instanceof OlapScanNode) {
+                    SlotRef slotRef = (SlotRef) target.expr;
+                    Column col = slotRef.getColumn();
+                    if (col != null) {
+                        OlapScanNode scanNode = (OlapScanNode) target.node;
+                        OlapTable table = scanNode.getOlapTable();
+                        PartitionType partType = table.getPartitionInfo().getType();
+                        if (partType == PartitionType.RANGE || partType == PartitionType.LIST) {
+                            for (Column partCol : table.getPartitionInfo().getPartitionColumns()) {
+                                if (partCol.getName().equalsIgnoreCase(col.getName())) {
+                                    monoMap.put(target.node.getId().asInt(),
+                                            TTargetExprMonotonicity.MONOTONIC_INCREASING);
+                                    break;
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-        if (!monoMap.isEmpty()) {
-            tFilter.setPlanIdToTargetMonotonicity(monoMap);
+            if (!monoMap.isEmpty()) {
+                tFilter.setPlanIdToTargetMonotonicity(monoMap);
+            }
         }
 
         return tFilter;
