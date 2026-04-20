@@ -114,6 +114,9 @@ void RuntimeFilterPartitionPruner::parse_boundaries(
             }                                                                                  \
             if (list_has_null && is_nullable) {                                                \
                 cvr.set_contain_null(true);                                                    \
+                if (!list_has_value) {                                                         \
+                    boundary.only_null = true;                                                 \
+                }                                                                              \
             }                                                                                  \
         } else {                                                                               \
             if (tb.__isset.range_start) {                                                      \
@@ -215,24 +218,35 @@ void RuntimeFilterPartitionPruner::_try_prune_by_single_rf(
         return;
     }
 
+    // Pre-compute whether the RF "matches NULL" -- i.e. whether the RF would
+    // accept a row whose probe value is NULL. This is encoded by the set's
+    // contain_null() (see FilterBase::contain_null = _null_aware && _contain_null).
+    // For BINARY_PRED predicates (=, <, >, <=, >=) NULL never compares true,
+    // so they never match a NULL probe row -- treat as not containing NULL.
+    auto hybrid_set_for_null = impl->get_set_func();
+    bool rf_contains_null = hybrid_set_for_null && hybrid_set_for_null->contain_null();
+
     for (const auto& pb : boundaries_it->second) {
         if (_pruned_partition_ids.contains(pb.partition_id) ||
             newly_pruned.contains(pb.partition_id)) {
             continue;
         }
 
-        // Conservative skip: if the partition's value set logically includes
-        // NULL (e.g. LIST partition with a NULL key), we cannot soundly prune
-        // it without inspecting the RF's null-awareness. The current
-        // ColumnValueRange::intersection() collapses fixed-value paths to
-        // "empty" purely on the typed value sets and ignores contain_null on
-        // either side, so a null-aware RF could falsely declare an empty
-        // intersection and we would wrongly prune a partition whose NULL rows
-        // actually match the RF. Skipping here is always safe; supporting
-        // null-aware pruning is a future optimization.
+        // NULL handling:
+        //   A partition row whose key is NULL matches the RF iff `rf_contains_null`.
+        //   - only_null partition (rows are exclusively NULL): prunable iff !rf_contains_null.
+        //   - mixed (NULL + concrete values): if rf_contains_null, NULL rows alone
+        //     prevent pruning. Otherwise NULL rows can never match, so we ignore
+        //     contain_null and fall through to the regular non-NULL intersection.
         bool partition_contains_null =
                 std::visit([](const auto& cvr) { return cvr.contain_null(); }, pb.boundary_cvr);
-        if (partition_contains_null) {
+        if (pb.only_null) {
+            if (!rf_contains_null) {
+                newly_pruned.insert(pb.partition_id);
+            }
+            continue;
+        }
+        if (partition_contains_null && rf_contains_null) {
             continue;
         }
 

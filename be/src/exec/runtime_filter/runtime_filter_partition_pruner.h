@@ -76,6 +76,11 @@ private:
         SlotId slot_id = 0;
         bool is_nullable = false;
         ColumnValueRangeType boundary_cvr;
+        // True if the partition's value set is exactly {NULL} (e.g. LIST
+        // partition whose only key is NULL). The CVR alone cannot encode
+        // "only NULL" -- it stays as the whole range with contain_null=true
+        // -- so we track it explicitly to enable accurate pruning.
+        bool only_null = false;
         // Keep VLiteral column data alive so StringRef values remain valid.
         std::vector<ColumnPtr> literal_columns;
     };
